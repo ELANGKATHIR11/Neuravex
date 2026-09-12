@@ -9,16 +9,36 @@
 
 $$\boxed{\max \frac{\text{REAL\ Multi-Task\ Quality}}{\text{FLOPs}}}$$
 
-### The Neuravex Model Family Tiers
+### The Neuravex Model Family Spectrum (By Weight & Scale)
 
-| Variant | Base Channels | Depth Factor | Params (M) | ONNX Size | Primary Target |
-|---|---|---|---|---|---|
-| **Neuravex-Nano** | 16 | 0.33 | **1.48 M** | **5.69 MB** | Microcontrollers, Edge AI, Drones, Ultra-Low Latency Robotics |
-| **Neuravex-Small** | 32 | 0.67 | **6.07 M** | **23.21 MB** | Edge GPUs, Embedded Jetson, Real-Time Mobile Applications |
-| **Neuravex-Medium** | 48 | 1.00 | **18.28 M** | **69.73 MB** | Server-side Real-Time Processing, Autonomous Navigation |
-| **Neuravex-Large** | 64 | 1.33 | **34.12 M** | **130.40 MB** | High-Precision Dense Perception & Multi-Camera Systems |
+The Neuravex family is engineered as four specialized, standalone models scaling from edge microcontrollers to heavy multi-camera server environments:
 
-Neuravex couples structural **RepConv reparameterization** (fusing $3\times3 + 1\times1 + \text{Identity}$ into a single inference convolution) with a **Primary Detection Fast Path**, **Self-Supervised EMA Teacher Distillation**, **Photometric Monocular Depth**, and a **Bandit Meta-Controller**—delivering up to **106.9 FPS** on local RTX 5060 silicon while seamlessly supporting 2D detection, dense 3D bounding geometry, metric DEM estimation, and multi-layer segmentation.
+| Model Variant | Checkpoint Weight (.pt) | ONNX Export | Parameters | 640x640 FLOPs | Base Ch | Depth Mul | Primary Deployment Target |
+|---|---|---|---|---|---|---|---|
+| 🟢 **Neuravex-Nano** | **6.98 MB** | **5.69 MB** | **1.79 M** | **10.19 G** | 16 | 0.33 | Microcontrollers, Raspberry Pi, Drones, IoT Edge |
+| 🔵 **Neuravex-Small** | **27.92 MB** | **23.21 MB** | **7.27 M** | **41.04 G** | 32 | 0.67 | NVIDIA Jetson (Nano/Orin), Mobile Vision, Robotics |
+| 🟠 **Neuravex-Medium** | **69.97 MB** | **58.14 MB** | **18.28 M** | **96.51 G** | 48 | 1.00 | Real-Time Edge Servers, Autonomous Driving, Industrial QA |
+| 🔴 **Neuravex-Large** | **137.49 MB** | **114.20 MB** | **35.96 M** | **179.48 G** | 64 | 1.33 | Multi-Camera Dense Perception, Cloud Video Analytics |
+
+#### 1. 🟢 `Neuravex-Nano` (Ultra-Lightweight / 6.98 MB)
+- **Weight**: 6.98 MB (1.79M parameters)
+- **Purpose**: Minimal compute footprint for edge microcontrollers, embedded IoT, and battery-constrained robots.
+- **Performance**: 10.19 GFLOPs at 640x640 (2.51 GFLOPs at 320x320) delivering **106.9 FPS** on RTX 5060 silicon.
+
+#### 2. 🔵 `Neuravex-Small` (Balanced Real-Time / 27.92 MB)
+- **Weight**: 27.92 MB (7.27M parameters)
+- **Purpose**: Ideal balance of real-time multi-task quality and speed on embedded platforms (NVIDIA Jetson, consumer GPUs).
+- **Performance**: 41.04 GFLOPs at 640x640 delivering **93.0 FPS** at 320x320 with robust 90.5% noise retention.
+
+#### 3. 🟠 `Neuravex-Medium` (High-Throughput Perception / 69.97 MB)
+- **Weight**: 69.97 MB (18.28M parameters)
+- **Purpose**: Industrial inspection, intelligent video analytics, and autonomous driving with higher feature capacity.
+- **Performance**: 96.51 GFLOPs at 640x640 offering dense multi-task representation (2D + 3D + Depth + DEM).
+
+#### 4. 🔴 `Neuravex-Large` (Maximum Capacity / 137.49 MB)
+- **Weight**: 137.49 MB (35.96M parameters)
+- **Purpose**: Server-grade multi-camera perception, complex urban scenes, and dense 3D bounding accuracy.
+- **Performance**: 179.48 GFLOPs at 640x640 for maximum feature richness and extreme geometric precision.
 
 ---
 
