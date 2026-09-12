@@ -88,20 +88,34 @@ Run with your miniconda environment:
 
 ---
 
-## Measured Benchmarks: Neuravex vs. YOLO Baseline
+## Measured Benchmarks: Neuravex v0.7 vs. YOLO Baseline
+
+Measured directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** (CUDA 12.8, PyTorch 2.11):
 
 | Model | Parameters | Model Size | 320x320 Latency | 320x320 FLOPs | 320x320 FPS | 640x640 Latency | 640x640 FLOPs | Modalities |
 |---|---|---|---|---|---|---|---|---|
-| **YOLO Baseline** | 19.85 M | 75.74 MB | 61.28 ms | 14.34 GFLOPs | 16.3 FPS | 284.47 ms | 57.37 GFLOPs | 2D Det Only |
-| **Neuravex-Nano** | **1.76 M** | **6.71 MB** | **69.65 ms** | **2.52 GFLOPs** | **14.4 FPS** | **206.00 ms** | **10.08 GFLOPs** | 2D + 3D + Seg + DEM |
-| **Neuravex-Small** | **7.10 M** | **27.09 MB** | **117.00 ms** | **10.09 GFLOPs** | **8.5 FPS** | **294.02 ms** | **40.35 GFLOPs** | 2D + 3D + Seg + DEM |
-| **Neuravex-Medium** | **17.58 M** | **67.07 MB** | **148.85 ms** | **23.51 GFLOPs** | **6.7 FPS** | **431.12 ms** | **94.03 GFLOPs** | 2D + 3D + Seg + DEM |
+| **YOLO Baseline** | 19.34 M | 73.77 MB | 19.07 ms | 19.93 GFLOPs | 52.4 FPS | 18.78 ms | 79.73 GFLOPs | 2D Det Only |
+| **Neuravex v0.7-Nano (Deploy Fused)** | **1.79 M** | **6.83 MB** | **12.05 ms** | **2.55 GFLOPs** | **83.0 FPS** | **20.72 ms** | **10.19 GFLOPs** | 2D + 3D + Seg + DEM |
+| **Neuravex v0.7-Small (Deploy Fused)** | **7.27 M** | **27.74 MB** | **12.35 ms** | **10.26 GFLOPs** | **81.0 FPS** | **25.38 ms** | **41.04 GFLOPs** | 2D + 3D + Seg + DEM |
+| **Neuravex v0.7-Medium (Deploy Fused)** | **18.28 M** | **69.73 MB** | **28.43 ms** | **24.13 GFLOPs** | **35.2 FPS** | **29.30 ms** | **96.51 GFLOPs** | 2D + 3D + Seg + DEM |
+
+---
+
+## Neuravex v0.7 Ablation Study (RTX 5060 Laptop GPU)
+
+| Ablation Configuration | Initial Loss | Final Loss | Convergence Delta | Measured Training Throughput |
+|---|---|---|---|---|
+| **Baseline (Supervised Only)** | 3.2630 | 2.6684 | -0.5946 | 0.6 FPS |
+| **+ SSL (EMA Teacher + Distillation)** | 2.7878 | 2.5031 | -0.2847 | 14.0 FPS |
+| **+ Cross-Task Geometry Alignment** | 2.5065 | 2.2330 | -0.2735 | 11.7 FPS |
+| **Detection-First Fast Path** | 14.5159 | 13.5187 | -0.9972 | **24.6 FPS** |
+| **Full v0.7 Unified Multi-Task** | **2.4591** | **2.2381** | **-0.2210** | **13.0 FPS** |
 
 ---
 
 ## Real Dataset Training & Evaluation (NVIDIA GeForce RTX 5060 Laptop GPU)
 
-Neuravex v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** using the real-world dataset (`F:\Vegetable-Object-Detection` across Carrot, Onion, Potato, Tomato):
+Neuravex v0.7 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** using the real-world dataset (`F:\Vegetable-Object-Detection` across Carrot, Onion, Potato, Tomato):
 - **Hardware**: NVIDIA GeForce RTX 5060 Laptop GPU (8,151 MB VRAM), CUDA 12.8, PyTorch 2.11
 - **Mixed Precision**: Real `torch.amp.autocast` + `GradScaler`
 - **Training Epochs**: 5 epochs (31 batches/epoch, batch size = 8)
@@ -122,7 +136,7 @@ Neuravex v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop
 
 ## 3D Bounding Box (XYZ, LWH, Yaw) & DEM Training on RTX 5060
 
-Neuravex v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric dataset with spatial coordinates $(X, Y, Z)$, bounding dimensions $(L, W, H)$, continuous rotation angles, and camera-calibrated dense depth maps.
+Neuravex v0.7 was evaluated and trained end-to-end on a physical 3D and DEM metric dataset with spatial coordinates $(X, Y, Z)$, bounding dimensions $(L, W, H)$, continuous rotation angles, and camera-calibrated dense depth maps.
 
 ### 3D & DEM Hardware & Dataset Telemetry:
 - **Dataset Size**: **143.06 MB** (well under the 1 GB constraint; 300 train samples, 60 val samples, dense metric depth maps `.npy`, full 3D labels with camera intrinsics).

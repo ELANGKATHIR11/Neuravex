@@ -39,7 +39,12 @@ class Neuravex(nn.Module):
         self.seg_head = MultiLayerSegmentationHead(in_channels=neck_c, num_classes=num_classes, embed_dim=seg_embed, num_parts=num_parts)
         self.dem_head = CameraAwareDEM(in_channels=neck_c)
 
-    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None) -> dict:
+    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None, tasks: tuple = None) -> dict:
+        """
+        tasks: tuple of active tasks. If None, runs all configured modalities.
+        For detection-only inference: pass tasks=('det',), which bypasses seg and DEM heads
+        saving significant FLOPs and latency!
+        """
         B, _, H, W = x.shape
         out_hw = (H, W)
 
@@ -47,25 +52,43 @@ class Neuravex(nn.Module):
         p3, p4, p5 = self.backbone(x)
         q3, q4, q5 = self.neck(p3, p4, p5)
 
-        # 2. True Bidirectional Cross-Task Fusion across task tokens
-        q3_det, q3_seg, q3_dep = self.fusion_p3(q3, q3, q3)
-
-        # 3. Dense depth prediction (consuming q3_dep)
-        depth_out = self.dem_head(q3_dep, q4, q5, out_hw, intrinsics=intrinsics)
-
-        # 4. Dense multi-layer segmentation (consuming q3_seg)
-        seg_out = self.seg_head(q3_seg, q4, q5, out_hw)
-
-        # 5. Multi-scale detection and 3D prediction (consuming q3_det)
-        det_feats = [q3_det, q4, q5]
-        det_out = self.det_head(det_feats, intrinsics=intrinsics)
-
-        # Merge outputs into unified dictionary
         outputs = {}
-        outputs.update(det_out)
-        outputs.update(seg_out)
-        outputs.update(depth_out)
+
+        if tasks is None or "det" in tasks or "geometry_3d" in tasks:
+            # 2. Bidirectional Cross-Task Fusion across task tokens
+            if tasks is not None and len(tasks) == 1 and ("det" in tasks or "geometry_3d" in tasks):
+                q3_det = q3
+            else:
+                q3_det, q3_seg, q3_dep = self.fusion_p3(q3, q3, q3)
+
+            # Multi-scale detection and 3D prediction
+            det_feats = [q3_det, q4, q5]
+            det_out = self.det_head(det_feats, intrinsics=intrinsics)
+            outputs.update(det_out)
+        else:
+            q3_seg = q3
+            q3_dep = q3
+
+        # Optional task adapters
+        if tasks is None or "depth" in tasks or "dssl" in tasks:
+            if "q3_dep" not in locals():
+                q3_dep = q3
+            depth_out = self.dem_head(q3_dep, q4, q5, out_hw, intrinsics=intrinsics)
+            outputs.update(depth_out)
+
+        if tasks is None or "semantic" in tasks or "instance" in tasks or "boundary" in tasks:
+            if "q3_seg" not in locals():
+                q3_seg = q3
+            seg_out = self.seg_head(q3_seg, q4, q5, out_hw)
+            outputs.update(seg_out)
+
         return outputs
+
+    def switch_to_deploy(self):
+        """Switches all reparameterizable blocks in the backbone to fused 3x3 convolutions."""
+        for m in self.modules():
+            if m is not self and hasattr(m, "switch_to_deploy"):
+                m.switch_to_deploy()
 
 # Alias for backward-compatibility
 YOLO27 = Neuravex

@@ -11,18 +11,24 @@ from ..loss.consistency_loss import TransformAlignedConsistencyLoss
 from ..loss.multitask_loss import AdaptiveTaskLoss
 from ..data.augmentation import GeometricMultiViewAugment
 
+from ..ssl.ssl_teacher import EMATeacher, MultiViewSSLLoss
+from ..ssl.semi_supervised import SemiSupervisedPseudoLabeler
+from ..loss.cross_task_temporal import CrossTaskGeometryLoss
+from ..engine.adaptive_compute import KnowledgeDistillationLoss
+
 class YOLO27MultiTaskTrainer:
     """
-    Complete end-to-end multi-task trainer for YOLO27 v0.6.
+    Complete end-to-end multi-task trainer for Neuravex v0.7.
     Connects:
-      Batch -> Augmentation -> Model -> Assigner -> Loss functions (with DFL and metric depth) -> Adaptive weighting -> Backward -> Optimizer
+      Batch -> Augmentation -> Model -> Assigner -> Loss functions -> EMA Teacher SSL -> Geometry -> Adaptive weighting -> Backward -> Optimizer
     """
-    def __init__(self, model, optimizer, device="cpu", num_classes: int = 80, clip_grad_norm: float = 10.0, use_amp: bool = False):
+    def __init__(self, model, optimizer, device="cpu", num_classes: int = 80, clip_grad_norm: float = 10.0, use_amp: bool = False, enable_ssl: bool = True):
         self.model = model.to(device)
         self.optimizer = optimizer
         self.device = device
         self.clip_grad_norm = clip_grad_norm
         self.use_amp = use_amp
+        self.enable_ssl = enable_ssl
         self.scaler = torch.amp.GradScaler("cuda", enabled=use_amp and torch.cuda.is_available())
 
         # Sub-modules
@@ -31,8 +37,15 @@ class YOLO27MultiTaskTrainer:
         self.consistency_loss_fn = TransformAlignedConsistencyLoss()
         self.augmenter = GeometricMultiViewAugment(p_flip=0.5)
 
+        # v0.7 SSL & Distillation Modules
+        self.teacher = EMATeacher(self.model, alpha=0.999) if enable_ssl else None
+        self.ssl_loss_fn = MultiViewSSLLoss()
+        self.cross_geom_loss_fn = CrossTaskGeometryLoss()
+        self.kd_loss_fn = KnowledgeDistillationLoss()
+        self.pseudo_labeler = SemiSupervisedPseudoLabeler(num_classes=num_classes)
+
         # Multi-task adaptive loss with uncertainty weighting
-        tasks = ["det", "semantic", "instance", "boundary", "mask_quality", "depth", "geometry_3d", "consistency"]
+        tasks = ["det", "semantic", "instance", "boundary", "mask_quality", "depth", "geometry_3d", "consistency", "ssl", "cross_geo"]
         self.task_loss_module = AdaptiveTaskLoss(tasks).to(device)
         self.optimizer.add_param_group({"params": self.task_loss_module.parameters(), "lr": optimizer.param_groups[0]["lr"]})
 
@@ -141,6 +154,25 @@ class YOLO27MultiTaskTrainer:
             else:
                 losses["consistency"] = out["class_logits"].sum() * 0.0
 
+            # 3.9 v0.7 SSL Teacher Distillation
+            if self.teacher is not None and task_masks.get("ssl", 1.0) > 0:
+                with torch.no_grad():
+                    out_teacher = self.teacher(images)
+                loss_ssl = self.ssl_loss_fn(out, out_teacher)
+                losses["ssl"] = loss_ssl
+            else:
+                losses["ssl"] = out["class_logits"].sum() * 0.0
+
+            # 3.10 Cross-Task Geometry Alignment
+            if task_masks.get("cross_geo", 1.0) > 0 and "depth_map" in out and "semantic_logits" in out and "pred_xyz" in out:
+                loss_geo = self.cross_geom_loss_fn(
+                    out["pred_boxes"], out["pred_xyz"],
+                    out["semantic_logits"], out["depth_map"]
+                )
+                losses["cross_geo"] = loss_geo
+            else:
+                losses["cross_geo"] = out["class_logits"].sum() * 0.0
+
             # 4. Total adaptive loss
             total_loss, raw_dict, weighted_dict, weights = self.task_loss_module(losses, task_masks=task_masks)
 
@@ -157,6 +189,10 @@ class YOLO27MultiTaskTrainer:
             all_params = list(self.model.parameters()) + list(self.task_loss_module.parameters())
             grad_norm = nn.utils.clip_grad_norm_(all_params, max_norm=self.clip_grad_norm)
             self.optimizer.step()
+
+        # 6. Update EMA Teacher parameters
+        if self.teacher is not None:
+            self.teacher.update(self.model)
 
         return {
             "total_loss": total_loss.item(),

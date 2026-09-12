@@ -5,8 +5,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from neuravex.models.neuravex import build_yolo27, YOLO27
-from neuravex_v0_3 import neuravex as YOLO27_v04
+from neuravex.models.neuravex import build_neuravex, Neuravex
+from yolo27_v0_3 import YOLO27 as YOLO27_v04
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters()), sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -66,15 +66,20 @@ def run_benchmarks():
 
     # 1. Models setup
     model_v04 = YOLO27_v04().to(device)
-    model_v05_nano = build_yolo27(size="nano").to(device)
-    model_v05_small = build_yolo27(size="small").to(device)
-    model_v05_medium = build_yolo27(size="medium").to(device)
+    model_v07_nano = build_neuravex(size="nano").to(device)
+    model_v07_nano.switch_to_deploy()
+
+    model_v07_small = build_neuravex(size="small").to(device)
+    model_v07_small.switch_to_deploy()
+
+    model_v07_medium = build_neuravex(size="medium").to(device)
+    model_v07_medium.switch_to_deploy()
 
     models = {
-        "YOLO27 v0.4 (Baseline)": model_v04,
-        "YOLO27 v0.5-Nano": model_v05_nano,
-        "YOLO27 v0.5-Small": model_v05_small,
-        "YOLO27 v0.5-Medium": model_v05_medium
+        "YOLO Baseline": model_v04,
+        "Neuravex v0.7-Nano (Full)": model_v07_nano,
+        "Neuravex v0.7-Small (Full)": model_v07_small,
+        "Neuravex v0.7-Medium (Full)": model_v07_medium
     }
 
     # Parameter counts & sizes
