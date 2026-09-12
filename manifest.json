@@ -1,5 +1,5 @@
 {
-  "version": "YOLO27 v0.5",
+  "version": "YOLO27 v0.6",
   "modules": [
     "2D anchor-free multi-scale detection (P3, P4, P5 strides 8, 16, 32)",
     "Task-aligned SimOTA dynamic assignment",

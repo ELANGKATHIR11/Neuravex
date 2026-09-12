@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="yolo27",
-    version="0.5.0",
+    version="0.6.0",
     author="ELANGKATHIR11",
-    description="YOLO27 v0.5: Unified End-to-End Multi-Task Vision Architecture",
+    description="YOLO27 v0.6: Unified End-to-End Multi-Task Vision Architecture",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ELANGKATHIR11/YOLO27",

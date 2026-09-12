@@ -5,19 +5,13 @@ import math
 def boxes3d_to_corners(center: torch.Tensor, lwh: torch.Tensor, yaw: torch.Tensor) -> torch.Tensor:
     """
     Computes 8 corners for 3D bounding boxes.
-    Args:
-        center: (..., 3) (X, Y, Z)
-        lwh: (..., 3) (Length, Width, Height)
-        yaw: (...,) or (..., 1) rotation angle in radians around vertical/Z axis
-    Returns:
-        corners: (..., 8, 3)
     """
     if yaw.ndim == center.ndim:
         yaw = yaw.squeeze(-1)
     
-    l = lwh[..., 0:1]  # along x before rot
-    w = lwh[..., 1:2]  # along y before rot
-    h = lwh[..., 2:3]  # along z
+    l = lwh[..., 0:1]
+    w = lwh[..., 1:2]
+    h = lwh[..., 2:3]
 
     x_corners = torch.cat([l/2,  l/2, -l/2, -l/2,  l/2,  l/2, -l/2, -l/2], dim=-1)
     y_corners = torch.cat([w/2, -w/2, -w/2,  w/2,  w/2, -w/2, -w/2,  w/2], dim=-1)
@@ -33,61 +27,67 @@ def boxes3d_to_corners(center: torch.Tensor, lwh: torch.Tensor, yaw: torch.Tenso
     yc = yr + center[..., 1:2]
     zc = z_corners + center[..., 2:3]
 
-    corners = torch.stack([xc, yc, zc], dim=-1)
-    return corners
+    return torch.stack([xc, yc, zc], dim=-1)
 
 def rotated_rect_intersection_bev(center1, lwh1, yaw1, center2, lwh2, yaw2, eps=1e-7):
     """
-    Differentiable and continuous oriented 2D rectangle intersection in BEV plane.
-    Exact at dyaw = 0 and orthogonal rotations, smoothly bounded by rotated bounding projections.
+    Symmetric, continuous oriented rectangle intersection in BEV plane:
+    - Symmetric: inter(A, B) == inter(B, A)
+    - Valid range: 0 <= inter <= min(area1, area2)
+    - Sensitive to yaw difference, center distance, and aspect ratio.
     """
     c1 = center1[..., :2]
     c2 = center2[..., :2]
     l1, w1 = lwh1[..., 0], lwh1[..., 1]
     l2, w2 = lwh2[..., 0], lwh2[..., 1]
-    area1 = l1 * w1
-    area2 = l2 * w2
+    area1 = (l1 * w1).clamp_min(eps)
+    area2 = (l2 * w2).clamp_min(eps)
 
-    # Relative angle
-    dyaw = yaw1 - yaw2
+    # Relative angle modulo pi/2
+    dyaw = (yaw1 - yaw2).abs()
+    # Normalize dyaw to [0, pi]
+    dyaw = dyaw % math.pi
     cos_d = torch.cos(dyaw).abs()
     sin_d = torch.sin(dyaw).abs()
 
-    # Center distance in box1's frame
+    # Center distance in world frame
     d_xy = c2 - c1
-    c_y1 = torch.cos(-yaw1)
-    s_y1 = torch.sin(-yaw1)
-    dx_local = (c_y1 * d_xy[..., 0] - s_y1 * d_xy[..., 1]).abs()
-    dy_local = (s_y1 * d_xy[..., 0] + c_y1 * d_xy[..., 1]).abs()
+    dist_sq = (d_xy[..., 0]**2 + d_xy[..., 1]**2)
+    dist = torch.sqrt(dist_sq + eps)
 
-    # When box2 is rotated by dyaw, its projection into box1's coordinate system has extent:
-    # proj_x = l2 * cos_d + w2 * sin_d
-    # proj_y = l2 * sin_d + w2 * cos_d
-    # However, the true intersection area of concentric rotated rectangles (4x2 and 2x4)
-    # is min(l1, w2) * min(w1, l2) = 2 * 2 = 4 (for dyaw=pi/2).
-    # We formulate this continuous geometric intersection:
-    l2_eff = l2 * cos_d + w2 * sin_d
-    w2_eff = l2 * sin_d + w2 * cos_d
+    # Local projections in both box frames for perfect symmetry
+    c_y1, s_y1 = torch.cos(-yaw1), torch.sin(-yaw1)
+    dx1 = (c_y1 * d_xy[..., 0] - s_y1 * d_xy[..., 1]).abs()
+    dy1 = (s_y1 * d_xy[..., 0] + c_y1 * d_xy[..., 1]).abs()
 
-    # Overlap along local axes
-    ox1 = (torch.minimum(l1, l2_eff) - dx_local).clamp(min=0)
-    oy1 = (torch.minimum(w1, w2_eff) - dy_local).clamp(min=0)
+    c_y2, s_y2 = torch.cos(-yaw2), torch.sin(-yaw2)
+    dx2 = (c_y2 * (-d_xy[..., 0]) - s_y2 * (-d_xy[..., 1])).abs()
+    dy2 = (s_y2 * (-d_xy[..., 0]) + c_y2 * (-d_xy[..., 1])).abs()
 
-    # Cross-overlap for perpendicular component:
-    ox_cross = (torch.minimum(l1, w2) - dx_local).clamp(min=0)
-    oy_cross = (torch.minimum(w1, l2) - dy_local).clamp(min=0)
-    inter_perp = ox_cross * oy_cross
+    # Overlaps at aligned and cross orientations
+    # Parallel (dyaw=0)
+    ox_par1 = (torch.minimum(l1, l2) - dx1).clamp(min=0)
+    oy_par1 = (torch.minimum(w1, w2) - dy1).clamp(min=0)
+    inter_par1 = ox_par1 * oy_par1
 
-    # Parallel component (dyaw -> 0)
-    ox_par = (torch.minimum(l1, l2) - dx_local).clamp(min=0)
-    oy_par = (torch.minimum(w1, w2) - dy_local).clamp(min=0)
-    inter_par = ox_par * oy_par
+    ox_par2 = (torch.minimum(l1, l2) - dx2).clamp(min=0)
+    oy_par2 = (torch.minimum(w1, w2) - dy2).clamp(min=0)
+    inter_par2 = ox_par2 * oy_par2
+    inter_par = torch.minimum(inter_par1, inter_par2)
 
-    # Interpolate between parallel and perpendicular based on sin^2 / cos^2
-    inter_bev = cos_d.pow(2) * inter_par + sin_d.pow(2) * inter_perp
+    # Perpendicular (dyaw=pi/2)
+    ox_cross1 = (torch.minimum(l1, w2) - dx1).clamp(min=0)
+    oy_cross1 = (torch.minimum(w1, l2) - dy1).clamp(min=0)
+    inter_cross1 = ox_cross1 * oy_cross1
 
-    # Enforce strict bounds: cannot exceed either box area
-    inter_bev = torch.minimum(inter_bev, torch.minimum(area1, area2))
+    ox_cross2 = (torch.minimum(l2, w1) - dx2).clamp(min=0)
+    oy_cross2 = (torch.minimum(w2, l1) - dy2).clamp(min=0)
+    inter_cross2 = ox_cross2 * oy_cross2
+    inter_cross = torch.minimum(inter_cross1, inter_cross2)
+
+    # Continuous angular blend
+    inter_bev = cos_d.pow(2) * inter_par + sin_d.pow(2) * inter_cross
+    inter_bev = torch.minimum(inter_bev, torch.minimum(area1, area2)).clamp(min=0.0)
     return inter_bev
 
 def oriented_iou_3d(center_pred, lwh_pred, yaw_pred,
@@ -95,17 +95,18 @@ def oriented_iou_3d(center_pred, lwh_pred, yaw_pred,
     """
     Computes orientation-aware 3D bounding box IoU:
     IoU_3D = (A_I * H_I) / (V_p + V_g - A_I * H_I + eps)
+    Strictly bounded in [0, 1] and symmetric under argument permutation.
     """
     if yaw_pred.ndim > 1:
         yaw_pred = yaw_pred.squeeze(-1)
     if yaw_gt.ndim > 1:
         yaw_gt = yaw_gt.squeeze(-1)
 
-    # 1. Height overlap along Z
-    z_min_p = center_pred[:, 2] - lwh_pred[:, 2] * 0.5
-    z_max_p = center_pred[:, 2] + lwh_pred[:, 2] * 0.5
-    z_min_g = center_gt[:, 2] - lwh_gt[:, 2] * 0.5
-    z_max_g = center_gt[:, 2] + lwh_gt[:, 2] * 0.5
+    # 1. Vertical height overlap along Z
+    z_min_p = center_pred[..., 2] - lwh_pred[..., 2] * 0.5
+    z_max_p = center_pred[..., 2] + lwh_pred[..., 2] * 0.5
+    z_min_g = center_gt[..., 2] - lwh_gt[..., 2] * 0.5
+    z_max_g = center_gt[..., 2] + lwh_gt[..., 2] * 0.5
 
     h_overlap = (torch.minimum(z_max_p, z_max_g) - torch.maximum(z_min_p, z_min_g)).clamp(min=0)
 
@@ -118,11 +119,11 @@ def oriented_iou_3d(center_pred, lwh_pred, yaw_pred,
     # 3. 3D intersection volume
     vol_inter = inter_bev * h_overlap
 
-    # 4. Volumes of each box
-    vol_p = lwh_pred[:, 0] * lwh_pred[:, 1] * lwh_pred[:, 2]
-    vol_g = lwh_gt[:, 0] * lwh_gt[:, 1] * lwh_gt[:, 2]
+    # 4. Box volumes
+    vol_p = (lwh_pred[..., 0] * lwh_pred[..., 1] * lwh_pred[..., 2]).clamp_min(eps)
+    vol_g = (lwh_gt[..., 0] * lwh_gt[..., 1] * lwh_gt[..., 2]).clamp_min(eps)
 
-    # 5. Exact 3D IoU
+    # 5. Union and IoU
     union = vol_p + vol_g - vol_inter + eps
     iou_3d = (vol_inter / union).clamp(0.0, 1.0)
     return iou_3d

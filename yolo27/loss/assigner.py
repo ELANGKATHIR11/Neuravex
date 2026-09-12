@@ -5,10 +5,10 @@ from ..geometry.box_ops import box_cxcywh_to_xyxy, box_iou_2d
 
 class TaskAlignedAssigner(nn.Module):
     """
-    Task-Aligned Assigner (SimOTA / TAL style) for anchor-free multi-scale object detection.
-    Aligns classification and box regression alignment metric:
+    Standard Task-Aligned Assigner (TAL) for anchor-free multi-scale object detection.
+    Computes alignment metric:
         t = s^alpha * IoU^beta
-    Selects top-k anchors per ground-truth bounding box.
+    Normalizes target alignment scores such that the maximum score per GT is 1.0.
     """
     def __init__(self, topk: int = 10, num_classes: int = 80, alpha: float = 0.5, beta: float = 6.0, eps: float = 1e-9):
         super().__init__()
@@ -31,11 +31,11 @@ class TaskAlignedAssigner(nn.Module):
             gt_bboxes: (B, max_gt, 4) xyxy ground truth boxes
             mask_gt: (B, max_gt, 1) boolean mask indicating valid GT boxes
         Returns:
-            target_labels: (B, N_anchors) class target (0 to num_classes-1, or background)
+            target_labels: (B, N_anchors) class target
             target_bboxes: (B, N_anchors, 4) aligned box targets
-            target_scores: (B, N_anchors, num_classes) soft alignment target scores
+            target_scores: (B, N_anchors, num_classes) normalized soft alignment target scores
             fg_mask: (B, N_anchors) boolean mask of assigned foreground anchors
-            target_gt_idx: (B, N_anchors) index of matched GT for 3D/mask supervision
+            target_gt_idx: (B, N_anchors) index of matched GT
         """
         B, N, C = pd_scores.shape
         max_gt = gt_bboxes.shape[1]
@@ -59,14 +59,14 @@ class TaskAlignedAssigner(nn.Module):
             b_pd_boxes = pd_bboxes[b]  # (N, 4)
             b_pd_scores = pd_scores[b]  # (N, C)
 
-            # 1. Check anchor centers inside GT box (in_gts mask)
-            x = anc_points[:, 0:1]  # (N, 1)
+            # 1. Candidate selection: anchor points inside GT boxes
+            x = anc_points[:, 0:1]
             y = anc_points[:, 1:2]
-            in_x = (x >= b_gt_boxes[:, 0:1].T) & (x <= b_gt_boxes[:, 2:3].T)  # (N, M)
+            in_x = (x >= b_gt_boxes[:, 0:1].T) & (x <= b_gt_boxes[:, 2:3].T)
             in_y = (y >= b_gt_boxes[:, 1:2].T) & (y <= b_gt_boxes[:, 3:4].T)
             is_in_gts = (in_x & in_y).T  # (M, N)
 
-            # Fallback if no anchor falls strictly within GT box (e.g. tiny box): use center proximity
+            # Fallback for tiny/extreme boxes: assign nearest anchor center
             for m in range(int(n_gt)):
                 if not is_in_gts[m].any():
                     gt_cx = (b_gt_boxes[m, 0] + b_gt_boxes[m, 2]) * 0.5
@@ -74,15 +74,14 @@ class TaskAlignedAssigner(nn.Module):
                     dist = (anc_points[:, 0] - gt_cx).pow(2) + (anc_points[:, 1] - gt_cy).pow(2)
                     is_in_gts[m, dist.argmin()] = True
 
-            # 2. Pairwise IoU between predicted boxes and GT boxes
+            # 2. Pairwise IoU
             pairwise_iou = box_iou_2d(b_gt_boxes, b_pd_boxes)  # (M, N)
 
-            # 3. Alignment metric: s^alpha * (IoU + 0.1)^beta
+            # 3. Alignment metric: s^alpha * IoU^beta
             cls_score_gt = b_pd_scores[:, b_gt_labels].T  # (M, N)
             align_metric = (cls_score_gt.clamp_min(self.eps).pow(self.alpha) * 
-                            (pairwise_iou + 0.1).pow(self.beta))
+                            (pairwise_iou + 0.05).pow(self.beta))
 
-            # Filter candidates: must be inside GT box
             align_metric = align_metric * is_in_gts.float()
 
             # 4. Top-K candidates per GT
@@ -92,9 +91,9 @@ class TaskAlignedAssigner(nn.Module):
             candidate_mask.scatter_(dim=-1, index=topk_idx, value=True)
             candidate_mask = candidate_mask & is_in_gts
 
-            # 5. Resolve conflicts if an anchor is assigned to multiple GTs
+            # 5. Cost matrix and GT conflict resolution
             cost_matrix = align_metric * candidate_mask.float()
-            max_metric_per_anchor, best_gt_for_anchor = cost_matrix.max(dim=0)  # (N,)
+            max_metric_per_anchor, best_gt_for_anchor = cost_matrix.max(dim=0)
 
             anchor_assigned = (max_metric_per_anchor > self.eps) & candidate_mask.any(dim=0)
             assigned_indices = anchor_assigned.nonzero(as_tuple=True)[0]
@@ -106,9 +105,17 @@ class TaskAlignedAssigner(nn.Module):
                 target_bboxes[b, assigned_indices] = b_gt_boxes[matched_gt]
                 target_gt_idx[b, assigned_indices] = matched_gt
 
-                soft_scores = (pairwise_iou[matched_gt, assigned_indices]).clamp(0.0, 1.0)
-                # Assign soft alignment score
-                for idx, gt_cls, s_val in zip(assigned_indices, b_gt_labels[matched_gt], soft_scores):
-                    target_scores[b, idx, gt_cls] = max(float(s_val), 0.5)
+                # Standard target normalization:
+                # normalize soft score by max metric for that GT, multiplied by IoU
+                for m in range(int(n_gt)):
+                    m_anchors = assigned_indices[matched_gt == m]
+                    if len(m_anchors) == 0:
+                        continue
+                    m_metrics = max_metric_per_anchor[m_anchors]
+                    m_max = m_metrics.max().clamp_min(self.eps)
+                    m_ious = pairwise_iou[m, m_anchors].clamp(0.0, 1.0)
+                    norm_scores = (m_metrics / m_max) * m_ious
+                    c_id = b_gt_labels[m].item()
+                    target_scores[b, m_anchors, c_id] = norm_scores.clamp(0.0, 1.0)
 
         return target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx

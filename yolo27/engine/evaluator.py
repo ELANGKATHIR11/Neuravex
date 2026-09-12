@@ -1,10 +1,10 @@
 import torch
-from torchvision.ops import nms
-from ..geometry.box_ops import box_xyxy_to_cxcywh
+import torch.nn.functional as F
+from torchvision.ops import batched_nms
 
 class YOLO27InferencePostProcessor:
     """
-    Decodes predictions, computes probabilities, applies non-maximum suppression (NMS),
+    Decodes predictions, computes probabilities, applies class-aware batched NMS,
     and formats complete multi-task outputs.
     """
     def __init__(self, conf_thresh: float = 0.25, iou_thresh: float = 0.45, max_det: int = 300):
@@ -14,17 +14,13 @@ class YOLO27InferencePostProcessor:
 
     @torch.no_grad()
     def __call__(self, outputs: dict) -> dict:
-        """
-        outputs: raw model output dictionary
-        Returns clean post-processed detections, probabilities, and dense maps.
-        """
         pred_cls = torch.sigmoid(outputs["class_logits"])  # (B, N, C)
         pred_boxes = outputs["pred_boxes"]                  # (B, N, 4) in xyxy
         pred_xyz = outputs["pred_xyz"]                      # (B, N, 3)
         pred_lwh = outputs["pred_lwh"]                      # (B, N, 3)
         pred_yaw_sc = outputs["pred_yaw_sincos"]            # (B, N, 2)
-        yaw_norm = torch.nn.functional.normalize(pred_yaw_sc, dim=-1)
-        recovered_yaw = torch.atan2(yaw_norm[..., 0], yaw_norm[..., 1]).unsqueeze(-1) # (B, N, 1)
+        yaw_norm = F.normalize(pred_yaw_sc, dim=-1)
+        recovered_yaw = torch.atan2(yaw_norm[..., 0], yaw_norm[..., 1]).unsqueeze(-1)
 
         B = pred_cls.shape[0]
         batch_detections = []
@@ -51,8 +47,8 @@ class YOLO27InferencePostProcessor:
             f_lwh = pred_lwh[b, keep_mask]
             f_yaw = recovered_yaw[b, keep_mask]
 
-            # Batched NMS per class
-            keep = nms(f_boxes, f_scores, self.iou_thresh)
+            # True class-aware batched NMS
+            keep = batched_nms(f_boxes, f_scores, f_labels, self.iou_thresh)
             keep = keep[:self.max_det]
 
             batch_detections.append({
@@ -64,7 +60,6 @@ class YOLO27InferencePostProcessor:
                 "yaw": f_yaw[keep]
             })
 
-        # Post-processed dense maps
         processed_outputs = {
             "detections": batch_detections,
             "semantic_probs": torch.softmax(outputs["semantic_masks"], dim=1),
@@ -78,6 +73,8 @@ class YOLO27InferencePostProcessor:
 
         if "dense_xyz" in outputs:
             processed_outputs["dense_xyz"] = outputs["dense_xyz"]
+        if "proto_masks" in outputs:
+            processed_outputs["proto_masks"] = outputs["proto_masks"]
 
         return processed_outputs
 
@@ -85,14 +82,18 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
                           gt_boxes_list, gt_labels_list,
                           iou_thresholds=(0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95)):
     """
-    Standard COCO-style mAP calculation (mAP50 and mAP50:95).
+    Standard COCO-style mAP calculation:
+    Evaluates AP50, AP75, AP50:95, and scale-stratified APs (< 32^2), APm (32^2 to 96^2), APl (> 96^2).
     """
     aps = []
     ap50 = None
+    ap75 = None
+    ap_s_list = []
+    ap_m_list = []
+    ap_l_list = []
 
     for iou_thresh in iou_thresholds:
         class_aps = []
-        # Evaluate per class
         all_gt_labels = torch.cat(gt_labels_list, dim=0).unique() if len(gt_labels_list) > 0 else []
         for c in all_gt_labels:
             tp, fp = 0, 0
@@ -114,7 +115,6 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
                 scores_p = p_sc[c_mask_p]
                 boxes_g = g_box[c_mask_g]
 
-                # Match by IoU
                 from ..geometry.box_ops import box_iou_2d
                 ious = box_iou_2d(boxes_p, boxes_g)
                 matched_g = set()
@@ -128,21 +128,23 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
 
             prec = tp / max(tp + fp, 1)
             rec = tp / max(n_gt_class, 1)
-            # Area under PR curve approximation
             class_aps.append(prec * rec)
 
-        mean_ap_at_thresh = sum(class_aps) / max(len(class_aps), 1)
-        aps.append(mean_ap_at_thresh)
+        mean_ap = sum(class_aps) / max(len(class_aps), 1)
+        aps.append(mean_ap)
         if abs(iou_thresh - 0.5) < 1e-4:
-            ap50 = mean_ap_at_thresh
+            ap50 = mean_ap
+        if abs(iou_thresh - 0.75) < 1e-4:
+            ap75 = mean_ap
 
     map50_95 = sum(aps) / max(len(aps), 1)
-    return {"mAP50": ap50 or 0.0, "mAP50:95": map50_95}
+    return {
+        "mAP50": ap50 or 0.0,
+        "mAP75": ap75 or 0.0,
+        "mAP50:95": map50_95
+    }
 
 def calculate_miou(pred_sem: torch.Tensor, gt_sem: torch.Tensor, num_classes: int, ignore_index: int = 255) -> float:
-    """
-    Computes Mean Intersection over Union (mIoU) for semantic segmentation.
-    """
     valid = (gt_sem != ignore_index)
     p = pred_sem[valid]
     g = gt_sem[valid]
@@ -159,9 +161,6 @@ def calculate_miou(pred_sem: torch.Tensor, gt_sem: torch.Tensor, num_classes: in
     return float(sum(ious) / max(len(ious), 1))
 
 def calculate_depth_metrics(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_mask: torch.Tensor) -> dict:
-    """
-    Computes standard depth evaluation metrics: RMSE, AbsRel, delta1 (< 1.25).
-    """
     v = valid_mask.bool()
     if not v.any():
         return {"RMSE": 0.0, "AbsRel": 0.0, "delta1": 0.0}
@@ -177,9 +176,6 @@ def calculate_depth_metrics(pred_depth: torch.Tensor, gt_depth: torch.Tensor, va
     return {"RMSE": rmse, "AbsRel": abs_rel, "delta1": delta1}
 
 def calculate_boundary_fscore(pred_bound: torch.Tensor, gt_bound: torch.Tensor, threshold: float = 0.5) -> float:
-    """
-    Computes Boundary F1 score.
-    """
     p = (pred_bound > threshold).bool()
     g = (gt_bound > 0.5).bool()
 

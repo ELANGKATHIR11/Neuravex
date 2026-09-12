@@ -47,11 +47,16 @@ class RepBlock(nn.Module):
 class Backbone(nn.Module):
     """
     Hierarchical multi-scale backbone producing feature maps P3, P4, P5
-    at strides 8, 16, 32.
+    at strides 8, 16, 32 with functional depth_mul scaling.
     """
     def __init__(self, base_c=48, depth_mul=1.0):
         super().__init__()
         b = base_c
+        self.depth_mul = depth_mul
+
+        def num_blocks(n):
+            return max(round(n * depth_mul), 1)
+
         # Stem: stride 2
         self.stem = nn.Sequential(
             ConvBNAct(3, b, 3, 2),
@@ -60,28 +65,22 @@ class Backbone(nn.Module):
         # Stage 2: stride 4
         self.s2 = nn.Sequential(
             ConvBNAct(b, b * 2, 3, 2),
-            RepBlock(b * 2),
-            RepBlock(b * 2)
+            *[RepBlock(b * 2) for _ in range(num_blocks(2))]
         )
         # Stage 3 (P3): stride 8
         self.s3 = nn.Sequential(
             ConvBNAct(b * 2, b * 4, 3, 2),
-            RepBlock(b * 4),
-            RepBlock(b * 4),
-            RepBlock(b * 4)
+            *[RepBlock(b * 4) for _ in range(num_blocks(3))]
         )
         # Stage 4 (P4): stride 16
         self.s4 = nn.Sequential(
             ConvBNAct(b * 4, b * 8, 3, 2),
-            RepBlock(b * 8),
-            RepBlock(b * 8),
-            RepBlock(b * 8)
+            *[RepBlock(b * 8) for _ in range(num_blocks(3))]
         )
         # Stage 5 (P5): stride 32
         self.s5 = nn.Sequential(
             ConvBNAct(b * 8, b * 16, 3, 2),
-            RepBlock(b * 16),
-            RepBlock(b * 16)
+            *[RepBlock(b * 16) for _ in range(num_blocks(2))]
         )
 
     def forward(self, x):

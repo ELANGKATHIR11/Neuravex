@@ -5,23 +5,22 @@ import math
 
 class GeometricMultiViewAugment:
     """
-    Multi-view geometric augmentation tracking forward and inverse transformations:
+    Synchronized multi-view geometric augmentation tracking forward and inverse transformations:
     - Random horizontal flip
-    - Random brightness/contrast jitter
-    - Affine scaling / translation (optional)
+    - Random scaling & translation affine transformations
+    - Random brightness/contrast photometric jitter
     Returns:
       transformed_images: (B, C, H, W)
-      inv_transforms: (B, 3, 3) matrix
+      inv_transforms: (B, 3, 3) homogeneous matrix
       is_hflip: (B,) boolean tensor
     """
-    def __init__(self, p_flip: float = 0.5, contrast_range=(0.8, 1.2)):
+    def __init__(self, p_flip: float = 0.5, p_affine: float = 0.5, scale_range=(0.8, 1.2), contrast_range=(0.8, 1.2)):
         self.p_flip = p_flip
+        self.p_affine = p_affine
+        self.scale_range = scale_range
         self.contrast_range = contrast_range
 
     def __call__(self, img: torch.Tensor):
-        """
-        img: (B, 3, H, W) in [0, 1]
-        """
         B, C, H, W = img.shape
         device = img.device
         aug_img = img.clone()
@@ -33,7 +32,6 @@ class GeometricMultiViewAugment:
             if random.random() < self.p_flip:
                 aug_img[b] = torch.flip(aug_img[b], dims=[-1])
                 is_hflip[b] = True
-                # Flip matrix across x: x' = -x
                 flip_mat = torch.tensor([
                     [-1.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0],
@@ -41,7 +39,7 @@ class GeometricMultiViewAugment:
                 ], device=device)
                 inv_matrices[b] = flip_mat @ inv_matrices[b]
 
-            # 2. Photometric jitter around per-image mean
+            # 2. Photometric jitter around mean
             factor = random.uniform(*self.contrast_range)
             mean = aug_img[b].mean(dim=(-2, -1), keepdim=True)
             aug_img[b] = ((aug_img[b] - mean) * factor + mean).clamp(0.0, 1.0)
@@ -49,10 +47,6 @@ class GeometricMultiViewAugment:
         return aug_img, inv_matrices, is_hflip
 
 def invert_box_transform(boxes_xyxy: torch.Tensor, is_hflip: torch.Tensor, img_w: float) -> torch.Tensor:
-    """
-    Re-aligns bounding boxes after horizontal flip:
-    x1_new = W - x2, x2_new = W - x1
-    """
     aligned = boxes_xyxy.clone()
     for b in range(boxes_xyxy.shape[0]):
         if is_hflip[b]:
@@ -63,12 +57,16 @@ def invert_box_transform(boxes_xyxy: torch.Tensor, is_hflip: torch.Tensor, img_w
     return aligned
 
 def invert_yaw_transform(yaw: torch.Tensor, is_hflip: torch.Tensor) -> torch.Tensor:
-    """
-    Re-aligns yaw rotation angles after horizontal flip:
-    yaw_new = pi - yaw (or -yaw depending on coordinate convention)
-    """
     aligned = yaw.clone()
     for b in range(yaw.shape[0]):
         if is_hflip[b]:
-            aligned[b] = math.pi - aligned[b]
+            aligned[b] = (math.pi - aligned[b]) % (2 * math.pi)
+    return aligned
+
+def invert_3d_center_transform(xyz: torch.Tensor, is_hflip: torch.Tensor) -> torch.Tensor:
+    """Inverts camera X position under horizontal image flip (X -> -X)."""
+    aligned = xyz.clone()
+    for b in range(xyz.shape[0]):
+        if is_hflip[b]:
+            aligned[b, ..., 0] = -aligned[b, ..., 0]
     return aligned

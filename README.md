@@ -1,9 +1,9 @@
-# YOLO27 v0.5 — End-to-End Multi-Task Architecture & Training System
+# YOLO27 v0.6 — End-to-End Multi-Task Architecture & Training System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-YOLO27 v0.5 upgrades the codebase to a fully unified, mathematically sound, end-to-end trainable multi-task vision model:
-**2D Anchor-Free Detection + Semantic Segmentation + Instance Segmentation + Boundary Segmentation + Mask Quality + Metric Depth / DEM + Camera-Aware 3D Detection + Oriented 3D IoU + Transform-Aligned Consistency + Adaptive Uncertainty Weighting + COCO Dataset Pipeline.**
+YOLO27 v0.6 upgrades the codebase to a fully unified, mathematically sound, research/production-ready multi-task vision model:
+**2D Anchor-Free Detection (DFL + CIoU) + Semantic Segmentation + Instance Segmentation + Boundary Segmentation + Mask Quality + Metric Depth / DEM (SILog + L1 + Grad) + Camera-Aware 3D Detection + Oriented 3D IoU + Transform-Aligned Consistency + Adaptive Uncertainty Weighting + COCO Dataset Pipeline.**
 
 ---
 
@@ -21,24 +21,24 @@ flowchart TD
     PANet --> Q4["Q4 Feature Map"]
     PANet --> Q5["Q5 Feature Map"]
 
-    Q3 & Q4 & Q5 --> Fusion["Cross-Task Fusion Token"]
+    Q3 & Q4 & Q5 --> Fusion["Bidirectional Cross-Task Fusion Token"]
 
     Fusion --> DetHead["Multi-Scale Detection Head (P3, P4, P5)"]
     DetHead --> Out2D["2D Boxes (CIoU + DFL) & Class Logits"]
-    DetHead --> Out3D["3D Boxes (XYZ, LWH, sin/cos Yaw)"]
+    DetHead --> Out3D["3D Boxes (Pinhole XYZ, LWH, sin/cos Yaw)"]
 
-    Q3 & Q4 & Q5 --> DEM["Camera-Aware DEM Head"]
-    DEM --> OutDepth["Inverse Depth rho & Metric Depth Z"]
+    Fusion --> DEM["Camera-Aware DEM Head"]
+    DEM --> OutDepth["Metric Depth Z & Inverse Depth rho"]
     DEM --> OutPoints["Dense 3D Pointcloud (Camera K)"]
 
-    Q3 & Q4 & Q5 --> SegHead["Multi-Layer Dense Segmentation Head"]
+    Fusion --> SegHead["Multi-Layer Dense Segmentation Head"]
     SegHead --> OutSem["Semantic Mask Logits (Multiclass CE + Dice)"]
     SegHead --> OutBound["Boundary Logits (Focal + Dice)"]
-    SegHead --> OutInst["Instance Embeddings (L_var + L_dist + L_reg)"]
+    SegHead --> OutInst["Instance Embeddings + Prototype Masks"]
     SegHead --> OutQual["Mask Quality Self-Assessment (Smooth L1)"]
 
     Out2D & Out3D & OutDepth & OutSem & OutBound & OutInst & OutQual --> LossEngine["Adaptive Multi-Task Loss Engine"]
-    LossEngine --> TotalLoss["Total Loss: L = sum m_t * (exp(-s_t) * L_t + s_t)"]
+    LossEngine --> TotalLoss["Normalized Multi-Task Loss: L = 1/K sum m_t * (exp(-s_t) * L_t + s_t)"]
 ```
 
 ---
@@ -46,32 +46,28 @@ flowchart TD
 ## Architecture & Mathematical Highlights
 
 1. **Multi-Scale Anchor-Free Detection ($P_3, P_4, P_5$, strides 8, 16, 32):**
-   - True multi-scale decoupled detection heads with anchor centers.
-   - Dynamic **Task-Aligned Assigner (SimOTA/TAL style)** using metric $t = s^\alpha \cdot \text{IoU}^\beta$.
-   - **CIoU + DFL** bounding box regression and Varifocal/BCE soft classification targets.
+   - Decoupled classification and regression branches with sub-pixel **Distribution Focal Loss (DFL)** over 16 bins.
+   - Dynamic **Task-Aligned Assigner (TAL)** using metric $t = s^\alpha \cdot \text{IoU}^\beta$ with per-GT score normalization.
+   - **CIoU + DFL** bounding box regression and soft classification targets.
 2. **Mathematically Correct Segmentation:**
    - **Semantic**: Multi-class one-hot Cross Entropy + Multiclass Dice with proper ignore-index masking.
    - **Boundary**: Output on raw logits; trained with Binary Focal Loss + Boundary Dice Loss.
-   - **Instance**: Discriminative clustering embedding loss ($L_{\text{var}} + L_{\text{dist}} + L_{\text{reg}}$) with margin separation.
-   - **Mask Quality**: Supervised by ground-truth overlap: $q_{\text{gt}} = \text{IoU}(M_p, M_g)$, trained with SmoothL1.
+   - **Instance**: Discriminative clustering embedding loss ($L_{\text{var}} + L_{\text{dist}} + L_{\text{reg}}$) and instance prototype masks.
+   - **Mask Quality**: Supervised by detached ground-truth overlap: $q_{\text{gt}} = \text{IoU}(M_p, M_g)$, trained with SmoothL1.
 3. **Camera-Aware 3D & Oriented 3D IoU:**
-   - 3D bounding boxes $(X, Y, Z, L, W, H, \theta)$ with yaw parameterized as $(\sin\theta, \cos\theta)$ and decoded via $\theta = \text{atan2}(\sin\theta, \cos\theta)$.
-   - Replaced naive AABB IoU with differentiable **Oriented 3D IoU**:
+   - 3D bounding boxes $(X, Y, Z, L, W, H, \theta)$ with pinhole geometry:
+     $$Z = \exp(z),\quad X = \frac{(u - c_x) Z}{f_x},\quad Y = \frac{(v - c_y) Z}{f_y}$$
+   - Rotated BEV polygon intersection + vertical overlap for symmetric **Oriented 3D IoU**:
      $$\text{IoU}_{3D} = \frac{A_I \cdot H_I}{V_p + V_g - A_I \cdot H_I + \epsilon}$$
-     using rotated BEV rectangle intersection + vertical height overlap.
-   - 3D targets supervised strictly on dynamically assigned positive detection anchors.
-4. **Depth & Camera Intrinsics:**
-   - Exact distinction between inverse depth $\rho = 1/Z$ and metric depth $Z = 1/(\rho + \epsilon)$.
-   - Full support for camera pinhole intrinsics $K = (f_x, f_y, c_x, c_y)$ and dense 3D pointcloud unprojection.
-5. **Transform-Aligned Multi-View Consistency:**
-   - Augmentation pipeline tracks forward transforms and inverse transformation matrices $T^{-1}$.
-   - Spatial outputs (dense maps, bounding boxes, yaw) are re-aligned to the reference coordinate frame before computing consistency loss.
+   - Normalized periodic yaw loss with $(\sin\theta, \cos\theta)$ cosine distance.
+4. **Comprehensive Metric Depth Supervision:**
+   - Multi-component depth loss:
+     $$L_{\text{depth}} = \lambda_{\text{silog}} L_{\text{silog}} + \lambda_{\text{abs}} L_{\text{abs}} + \lambda_{\text{grad}} L_{\text{grad}}$$
+5. **Bidirectional Transform-Aligned Consistency:**
+   - Symmetric multi-view consistency with bidirectional confidence weighting and full gradient backpropagation across augmented pairs.
 6. **Adaptive Uncertainty Loss Weighting with Modality Masking:**
-   - Homoscedastic uncertainty loss formulation:
-     $$L = \sum_t m_t \left(e^{-s_t} L_t + s_t\right)$$
-     where $m_t \in \{0, 1\}$ strictly masks missing modalities (e.g. depth and 3D in standard COCO).
-7. **COCO Pipeline Adapter:**
-   - Complete polygon rasterization into pixel-level semantic, instance, and morphological boundary maps.
+   - Homoscedastic uncertainty loss formulation with clamped log-variances $s_t \in [-4, 4]$ and active-task normalization:
+     $$L = \frac{1}{\sum m_t} \sum_t m_t \left(e^{-s_t} L_t + s_t\right)$$
 
 ---
 
@@ -96,11 +92,11 @@ Run with your miniconda environment:
 
 | Model | Parameters | Model Size | 320x320 Latency | 320x320 FLOPs | 320x320 FPS | 640x640 Latency | 640x640 FLOPs |
 |---|---|---|---|---|---|---|---|
-| **YOLO26 Baseline** | 19.85 M | 75.74 MB | 48.60 ms | 14.34 GFLOPs | 20.6 FPS | 160.22 ms | 57.37 GFLOPs |
-| **YOLO27 v0.4 (Baseline)** | 19.34 M | 73.77 MB | 124.69 ms | 19.93 GFLOPs | 8.0 FPS | 442.75 ms | 79.73 GFLOPs |
-| **YOLO27 v0.5-Nano** | 1.97 M | 7.53 MB | 60.64 ms | 2.62 GFLOPs | **16.5 FPS** | 188.12 ms | 10.50 GFLOPs |
-| **YOLO27 v0.5-Small** | 7.78 M | 29.68 MB | 85.79 ms | 10.32 GFLOPs | **11.7 FPS** | 282.58 ms | 41.28 GFLOPs |
-| **YOLO27 v0.5-Medium** | 17.43 M | 66.49 MB | 115.73 ms | 23.09 GFLOPs | **8.6 FPS** | 398.24 ms | 92.34 GFLOPs |
+| **YOLO26 Baseline** | 19.85 M | 75.74 MB | 61.28 ms | 14.34 GFLOPs | 16.3 FPS | 284.47 ms | 57.37 GFLOPs |
+| **YOLO27 v0.4 (Baseline)** | 19.34 M | 73.77 MB | 140.77 ms | 19.93 GFLOPs | 7.1 FPS | 399.63 ms | 79.73 GFLOPs |
+| **YOLO27 v0.6-Nano** | 1.76 M | 6.71 MB | 69.65 ms | 2.52 GFLOPs | **14.4 FPS** | 206.00 ms | 10.08 GFLOPs |
+| **YOLO27 v0.6-Small** | 7.10 M | 27.09 MB | 117.00 ms | 10.09 GFLOPs | **8.5 FPS** | 294.02 ms | 40.35 GFLOPs |
+| **YOLO27 v0.6-Medium** | 17.58 M | 67.07 MB | 148.85 ms | 23.51 GFLOPs | **6.7 FPS** | 431.12 ms | 94.03 GFLOPs |
 
 ---
 

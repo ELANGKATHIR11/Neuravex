@@ -5,8 +5,9 @@ from .backbone import ConvBNAct, RepBlock
 
 class BidirectionalCrossTaskFusion(nn.Module):
     """
-    Lightweight bidirectional cross-task feature fusion:
+    True Bidirectional Cross-Task Feature Fusion with all outputs consumed:
     F_i' = F_i + sum_{j != i} G_{ij}(F_i, F_j) * F_j
+    Produces specialized, refined representations for det, seg, and depth.
     """
     def __init__(self, channels: int):
         super().__init__()
@@ -27,7 +28,17 @@ class BidirectionalCrossTaskFusion(nn.Module):
             nn.Conv2d(channels // 2, channels, 1),
             nn.Sigmoid()
         )
+        self.gate_seg_from_depth = nn.Sequential(
+            ConvBNAct(channels * 2, channels // 2, 1),
+            nn.Conv2d(channels // 2, channels, 1),
+            nn.Sigmoid()
+        )
         self.gate_depth_from_det = nn.Sequential(
+            ConvBNAct(channels * 2, channels // 2, 1),
+            nn.Conv2d(channels // 2, channels, 1),
+            nn.Sigmoid()
+        )
+        self.gate_depth_from_seg = nn.Sequential(
             ConvBNAct(channels * 2, channels // 2, 1),
             nn.Conv2d(channels // 2, channels, 1),
             nn.Sigmoid()
@@ -37,11 +48,13 @@ class BidirectionalCrossTaskFusion(nn.Module):
         g_ds = self.gate_det_from_seg(torch.cat([f_det, f_seg], dim=1))
         g_dd = self.gate_det_from_depth(torch.cat([f_det, f_depth], dim=1))
         g_sd = self.gate_seg_from_det(torch.cat([f_seg, f_det], dim=1))
+        g_sdep = self.gate_seg_from_depth(torch.cat([f_seg, f_depth], dim=1))
         g_dpd = self.gate_depth_from_det(torch.cat([f_depth, f_det], dim=1))
+        g_dps = self.gate_depth_from_seg(torch.cat([f_depth, f_seg], dim=1))
 
         f_det_fused = f_det + g_ds * f_seg + g_dd * f_depth
-        f_seg_fused = f_seg + g_sd * f_det
-        f_depth_fused = f_depth + g_dpd * f_det
+        f_seg_fused = f_seg + g_sd * f_det + g_sdep * f_depth
+        f_depth_fused = f_depth + g_dpd * f_det + g_dps * f_seg
         return f_det_fused, f_seg_fused, f_depth_fused
 
 class PANetNeck(nn.Module):

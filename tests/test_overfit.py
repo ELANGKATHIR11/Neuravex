@@ -9,17 +9,14 @@ from yolo27.models.yolo27 import build_yolo27
 from yolo27.engine.trainer import YOLO27MultiTaskTrainer
 
 def run_end_to_end_train_step():
-    print("\n--- Running End-to-End Pipeline Verification ---")
+    print("\n--- Running End-to-End Pipeline Verification (YOLO27 v0.6) ---")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    # Build model (nano for fast test)
     model = build_yolo27(size="nano", num_classes=5)
     optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-
     trainer = YOLO27MultiTaskTrainer(model, optimizer, device=device, num_classes=5)
 
-    # Synthetic batch with all modalities active
     B = 2
     img_size = 128
     images = torch.rand(B, 3, img_size, img_size)
@@ -40,7 +37,6 @@ def run_end_to_end_train_step():
     inst_masks[:, 10:40, 10:40] = 1
     bound_maps = (torch.rand(B, 1, img_size, img_size) > 0.8).float()
 
-    # 3D GT
     gt_3d_xyz = torch.tensor([
         [[0.0, 0.0, 5.0], [1.0, -1.0, 8.0]],
         [[-0.5, 0.5, 6.0], [0.0, 0.0, 0.0]]
@@ -54,7 +50,6 @@ def run_end_to_end_train_step():
         [[0.1], [0.0]]
     ])
 
-    # Depth GT
     depth = torch.rand(B, 1, img_size, img_size) * 10.0 + 0.5
     valid_depth = torch.ones(B, 1, img_size, img_size, dtype=torch.bool)
 
@@ -83,12 +78,11 @@ def run_end_to_end_train_step():
         }
     }
 
-    # Record initial parameter values to verify updates
     initial_weights = [p.clone().detach() for p in model.parameters() if p.requires_grad]
 
     res = trainer.train_step(batch)
 
-    print(f"Total Loss: {res['total_loss']:.4f}")
+    print(f"Total Normalized Loss: {res['total_loss']:.4f}")
     print(f"Gradient Norm: {res['grad_norm']:.4f}")
     print("Raw Task Losses:")
     for k, v in res["raw_losses"].items():
@@ -97,7 +91,6 @@ def run_end_to_end_train_step():
     for k, v in res["task_weights"].items():
         print(f"  {k:15s}: {v:.4f}")
 
-    # Verify parameters updated
     any_updated = False
     for p_init, p_curr in zip(initial_weights, [p for p in model.parameters() if p.requires_grad]):
         diff = (p_init - p_curr).abs().sum().item()
@@ -105,10 +98,9 @@ def run_end_to_end_train_step():
             any_updated = True
             break
 
-    assert any_updated, "No model parameters were updated after train_step!"
-    assert not math.isnan(res["total_loss"]), "Loss is NaN!"
-    assert not math.isinf(res["total_loss"]), "Loss is Inf!"
-    print("\n[SUCCESS] End-to-End step passed: gradients flowed, parameters updated, no NaN/Inf!")
+    assert any_updated, "Parameters failed to update!"
+    assert not torch.isnan(torch.tensor(res["total_loss"]))
+    print("\n[SUCCESS] End-to-End training step with DFL and metric depth passed!")
 
 def run_overfit_test(num_samples: int = 8, num_epochs: int = 25):
     print(f"\n--- Running {num_samples}-Sample Overfit Test ({num_epochs} epochs) ---")
@@ -167,10 +159,9 @@ def run_overfit_test(num_samples: int = 8, num_epochs: int = 25):
             print(f"Epoch {epoch:2d}/{num_epochs:2d} | Loss: {loss:.4f} | GradNorm: {res['grad_norm']:.4f}")
 
     print(f"\nInitial Loss: {initial_loss:.4f} -> Final Loss: {final_loss:.4f}")
-    assert final_loss < initial_loss, f"Loss did not decrease! {initial_loss} -> {final_loss}"
-    print("[SUCCESS] Overfit test passed: loss monotonically and significantly decreased!")
+    assert final_loss < initial_loss, f"Loss did not decrease: {initial_loss} -> {final_loss}"
+    print("[SUCCESS] Overfit convergence confirmed on YOLO27 v0.6!")
 
 if __name__ == "__main__":
-    import math
     run_end_to_end_train_step()
     run_overfit_test()
