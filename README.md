@@ -1,6 +1,6 @@
 # YOLO27 v0.6 — End-to-End Multi-Task Architecture & Training System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 YOLO27 v0.6 upgrades the codebase to a fully unified, mathematically sound, research/production-ready multi-task vision model:
 **2D Anchor-Free Detection (DFL + CIoU) + Semantic Segmentation + Instance Segmentation + Boundary Segmentation + Mask Quality + Metric Depth / DEM (SILog + L1 + Grad) + Camera-Aware 3D Detection + Oriented 3D IoU + Transform-Aligned Consistency + Adaptive Uncertainty Weighting + COCO Dataset Pipeline.**
@@ -167,4 +167,4 @@ YOLO27 v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](file:///c:/Users/elang/Downloads/YOLO27_v0_4/LICENSE) file for full details.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see the [LICENSE](file:///c:/Users/elang/Downloads/YOLO27_v0_4/LICENSE) file for full details.
