@@ -1,0 +1,85 @@
+import torch
+import torch.nn as nn
+from .backbone import Backbone
+from .neck import PANetNeck, BidirectionalCrossTaskFusion
+from .heads_det import MultiScaleDetectionHead
+from .heads_seg import MultiLayerSegmentationHead
+from .heads_depth import CameraAwareDEM
+from ..geometry.camera import CameraIntrinsics
+
+class YOLO27(nn.Module):
+    """
+    YOLO27 v0.5 — Unified Multi-Task Vision Architecture.
+    Tasks:
+      1. 2D Multi-scale anchor-free detection (P3, P4, P5 at strides 8, 16, 32)
+      2. 3D detection: (X, Y, Z), (L, W, H), yaw (sin theta, cos theta)
+      3. Semantic segmentation (multiclass raw logits)
+      4. Boundary segmentation (raw logits for BCE/Dice)
+      5. Instance discriminative embeddings
+      6. Mask quality prediction (IoU self-assessment)
+      7. Dense inverse depth & metric depth (DEM)
+      8. Cross-task bidirectional feature fusion
+    """
+    def __init__(self, num_classes: int = 80, base_c: int = 48, seg_embed: int = 16, num_parts: int = 16):
+        super().__init__()
+        self.num_classes = num_classes
+        self.base_c = base_c
+        neck_c = base_c * 4  # e.g., 192 for base=48
+
+        # Backbone & FPN Neck
+        self.backbone = Backbone(base_c=base_c)
+        self.neck = PANetNeck(base_c=base_c)
+
+        # Cross-Task Fusion
+        self.fusion_p3 = BidirectionalCrossTaskFusion(neck_c)
+
+        # Task Heads
+        self.det_head = MultiScaleDetectionHead(in_channels=neck_c, num_classes=num_classes)
+        self.seg_head = MultiLayerSegmentationHead(in_channels=neck_c, num_classes=num_classes, embed_dim=seg_embed, num_parts=num_parts)
+        self.dem_head = CameraAwareDEM(in_channels=neck_c)
+
+    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None) -> dict:
+        B, _, H, W = x.shape
+        out_hw = (H, W)
+
+        # 1. Multi-scale feature extraction
+        p3, p4, p5 = self.backbone(x)
+        q3, q4, q5 = self.neck(p3, p4, p5)
+
+        # 2. Dense depth prediction
+        depth_out = self.dem_head(q3, q4, q5, out_hw, intrinsics=intrinsics)
+
+        # 3. Dense multi-layer segmentation
+        seg_out = self.seg_head(q3, q4, q5, out_hw)
+
+        # 4. Cross-task fusion on high-resolution P3 before detection
+        # Create representation tokens
+        q3_det, _, _ = self.fusion_p3(q3, q3, q3)
+        det_feats = [q3_det, q4, q5]
+
+        # 5. Multi-scale detection and 3D prediction
+        det_out = self.det_head(det_feats)
+
+        # Merge outputs into unified dictionary
+        outputs = {}
+        outputs.update(det_out)
+        outputs.update(seg_out)
+        outputs.update(depth_out)
+        return outputs
+
+def build_yolo27(size: str = "medium", num_classes: int = 80) -> YOLO27:
+    """
+    Factory function for scalable YOLO27 v0.5 variants:
+      nano: base_c = 16 (~1.8M params)
+      small: base_c = 32 (~7.5M params)
+      medium: base_c = 48 (~17.5M params) - Default
+      large: base_c = 64 (~31M params)
+    """
+    configs = {
+        "nano": 16,
+        "small": 32,
+        "medium": 48,
+        "large": 64
+    }
+    base = configs.get(size.lower(), 48)
+    return YOLO27(num_classes=num_classes, base_c=base)
