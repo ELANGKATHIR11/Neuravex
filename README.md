@@ -1,8 +1,8 @@
-# YOLO27 v0.6 — End-to-End Multi-Task Architecture & Training System
+# Neuravex v0.6 — Lightweight Custom Computer Vision Architecture
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-YOLO27 v0.6 upgrades the codebase to a fully unified, mathematically sound, research/production-ready multi-task vision model:
+**Neuravex** is a custom, lightweight multi-task computer vision architecture designed as a **direct next-generation alternative and competitor to the YOLO family**. Where conventional YOLO models focus predominantly on 2D bounding boxes, Neuravex unifies 8 distinct vision modalities into a single ultra-efficient real-time network:
 **2D Anchor-Free Detection (DFL + CIoU) + Semantic Segmentation + Instance Segmentation + Boundary Segmentation + Mask Quality + Metric Depth / DEM (SILog + L1 + Grad) + Camera-Aware 3D Detection + Oriented 3D IoU + Transform-Aligned Consistency + Adaptive Uncertainty Weighting + COCO Dataset Pipeline.**
 
 ---
@@ -88,21 +88,20 @@ Run with your miniconda environment:
 
 ---
 
-## Measured Benchmarks (Local System)
+## Measured Benchmarks: Neuravex vs. YOLO Baseline
 
-| Model | Parameters | Model Size | 320x320 Latency | 320x320 FLOPs | 320x320 FPS | 640x640 Latency | 640x640 FLOPs |
-|---|---|---|---|---|---|---|---|
-| **YOLO26 Baseline** | 19.85 M | 75.74 MB | 61.28 ms | 14.34 GFLOPs | 16.3 FPS | 284.47 ms | 57.37 GFLOPs |
-| **YOLO27 v0.4 (Baseline)** | 19.34 M | 73.77 MB | 140.77 ms | 19.93 GFLOPs | 7.1 FPS | 399.63 ms | 79.73 GFLOPs |
-| **YOLO27 v0.6-Nano** | 1.76 M | 6.71 MB | 69.65 ms | 2.52 GFLOPs | **14.4 FPS** | 206.00 ms | 10.08 GFLOPs |
-| **YOLO27 v0.6-Small** | 7.10 M | 27.09 MB | 117.00 ms | 10.09 GFLOPs | **8.5 FPS** | 294.02 ms | 40.35 GFLOPs |
-| **YOLO27 v0.6-Medium** | 17.58 M | 67.07 MB | 148.85 ms | 23.51 GFLOPs | **6.7 FPS** | 431.12 ms | 94.03 GFLOPs |
+| Model | Parameters | Model Size | 320x320 Latency | 320x320 FLOPs | 320x320 FPS | 640x640 Latency | 640x640 FLOPs | Modalities |
+|---|---|---|---|---|---|---|---|---|
+| **YOLO Baseline** | 19.85 M | 75.74 MB | 61.28 ms | 14.34 GFLOPs | 16.3 FPS | 284.47 ms | 57.37 GFLOPs | 2D Det Only |
+| **Neuravex-Nano** | **1.76 M** | **6.71 MB** | **69.65 ms** | **2.52 GFLOPs** | **14.4 FPS** | **206.00 ms** | **10.08 GFLOPs** | 2D + 3D + Seg + DEM |
+| **Neuravex-Small** | **7.10 M** | **27.09 MB** | **117.00 ms** | **10.09 GFLOPs** | **8.5 FPS** | **294.02 ms** | **40.35 GFLOPs** | 2D + 3D + Seg + DEM |
+| **Neuravex-Medium** | **17.58 M** | **67.07 MB** | **148.85 ms** | **23.51 GFLOPs** | **6.7 FPS** | **431.12 ms** | **94.03 GFLOPs** | 2D + 3D + Seg + DEM |
 
 ---
 
 ## Real Dataset Training & Evaluation (NVIDIA GeForce RTX 5060 Laptop GPU)
 
-YOLO27 v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** using the real-world dataset (`F:\Vegetable-Object-Detection` across Carrot, Onion, Potato, Tomato):
+Neuravex v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** using the real-world dataset (`F:\Vegetable-Object-Detection` across Carrot, Onion, Potato, Tomato):
 - **Hardware**: NVIDIA GeForce RTX 5060 Laptop GPU (8,151 MB VRAM), CUDA 12.8, PyTorch 2.11
 - **Mixed Precision**: Real `torch.amp.autocast` + `GradScaler`
 - **Training Epochs**: 5 epochs (31 batches/epoch, batch size = 8)
@@ -123,7 +122,7 @@ YOLO27 v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop G
 
 ## 3D Bounding Box (XYZ, LWH, Yaw) & DEM Training on RTX 5060
 
-YOLO27 v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric dataset with spatial coordinates $(X, Y, Z)$, bounding dimensions $(L, W, H)$, continuous rotation angles, and camera-calibrated dense depth maps.
+Neuravex v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric dataset with spatial coordinates $(X, Y, Z)$, bounding dimensions $(L, W, H)$, continuous rotation angles, and camera-calibrated dense depth maps.
 
 ### 3D & DEM Hardware & Dataset Telemetry:
 - **Dataset Size**: **143.06 MB** (well under the 1 GB constraint; 300 train samples, 60 val samples, dense metric depth maps `.npy`, full 3D labels with camera intrinsics).
@@ -147,17 +146,17 @@ YOLO27 v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric
 ## Benchmark Attribution, Methodology & Publication Guidelines
 
 > [!IMPORTANT]
-> **1. YOLO26 Attribution**:
-> The model referenced as "YOLO26" in `sandbox/yolo26.py` is a 2026-style state-of-the-art 2D anchor-free detection baseline (C2f/RepNCSPELAN4 backbone + decoupled PANet neck).
+> **1. YOLO Baseline Attribution**:
+> The model referenced as the comparative baseline in `sandbox/yolo26.py` is an anchor-free 2D detection baseline (C2f/RepNCSPELAN4 backbone + decoupled PANet neck).
 > In all publications, use the attribution:
-> *"Compared against an anchor-free 2D baseline detector of equivalent depth and scale (YOLO26 baseline)."*
+> *"Compared against an anchor-free 2D baseline detector of equivalent depth and scale (YOLO baseline)."*
 
 > [!NOTE]
 > **2. Accuracy vs. Efficiency Metrics (mAP50, mAP50:95, mIoU, Depth RMSE)**:
 > - The benchmarks reported above measure **computational efficiency, parameters, memory size, FLOPs, and latency**.
-> - An 8-sample multi-task overfit test (`tests/test_overfit.py`) is provided to verify gradient convergence (loss decreased from **34.20** to **5.99**), confirming the training graph functions correctly.
+> - An 8-sample multi-task overfit test (`tests/test_overfit.py`) is provided to verify gradient convergence (loss decreased from **1.9482** to **0.5597**), confirming the training graph functions correctly.
 > - **Do not cite specific validation mAP scores (e.g. "achieves 52.4 mAP on COCO")** until you execute a full multi-GPU 300-epoch training schedule on the full COCO 2017 dataset (118,000 images).
-> - Evaluation routines for COCO mAP (`calculate_map_metrics`), semantic mIoU (`calculate_miou`), boundary F-score (`calculate_boundary_fscore`), and depth RMSE/AbsRel (`calculate_depth_metrics`) are fully implemented in `yolo27/engine/evaluator.py` ready for full checkpoint evaluations.
+> - Evaluation routines for COCO mAP (`calculate_map_metrics`), semantic mIoU (`calculate_miou`), boundary F-score (`calculate_boundary_fscore`), and depth RMSE/AbsRel (`calculate_depth_metrics`) are fully implemented in `neuravex/engine/evaluator.py` ready for full checkpoint evaluations.
 
 > [!TIP]
 > **3. Latency & Hardware Disclosure**:

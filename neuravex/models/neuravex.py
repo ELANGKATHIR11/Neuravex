@@ -7,10 +7,10 @@ from .heads_seg import MultiLayerSegmentationHead
 from .heads_depth import CameraAwareDEM
 from ..geometry.camera import CameraIntrinsics
 
-class YOLO27(nn.Module):
+class Neuravex(nn.Module):
     """
-    YOLO27 v0.6 — Unified Multi-Task Vision Architecture.
-    Tasks:
+    Neuravex v0.6 — Lightweight Custom Computer Vision Architecture.
+    Direct next-generation competitor to the YOLO family, unifying 2D/3D and Dense Multitask CV:
       1. 2D Multi-scale anchor-free detection (P3, P4, P5 at strides 8, 16, 32) with DFL
       2. 3D detection: (X, Y, Z), (L, W, H), yaw (sin theta, cos theta) with pinhole geometry
       3. Semantic segmentation (multiclass raw logits)
@@ -67,9 +67,12 @@ class YOLO27(nn.Module):
         outputs.update(depth_out)
         return outputs
 
-def build_yolo27(size: str = "medium", num_classes: int = 80) -> YOLO27:
+# Alias for backward-compatibility
+YOLO27 = Neuravex
+
+def build_neuravex(size: str = "medium", num_classes: int = 80) -> Neuravex:
     """
-    Factory function for scalable YOLO27 v0.6 variants:
+    Factory function for scalable Neuravex variants:
       nano: base_c = 16, depth_mul = 0.33
       small: base_c = 32, depth_mul = 0.67
       medium: base_c = 48, depth_mul = 1.0
@@ -82,4 +85,6 @@ def build_yolo27(size: str = "medium", num_classes: int = 80) -> YOLO27:
         "large": (64, 1.33)
     }
     base, d_mul = configs.get(size.lower(), (48, 1.0))
-    return YOLO27(num_classes=num_classes, base_c=base, depth_mul=d_mul)
+    return Neuravex(num_classes=num_classes, base_c=base, depth_mul=d_mul)
+
+build_yolo27 = build_neuravex

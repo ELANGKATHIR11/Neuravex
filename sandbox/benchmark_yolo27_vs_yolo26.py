@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sandbox.yolo26 import YOLO26
-from yolo27.models.yolo27 import build_yolo27
+from neuravex.models.neuravex import build_yolo27
 
 def count_parameters(model):
     total = sum(p.numel() for p in model.parameters())

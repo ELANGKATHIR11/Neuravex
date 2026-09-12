@@ -7,9 +7,9 @@ import torch.optim as optim
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from yolo27.models.yolo27 import build_yolo27
-from yolo27.engine.trainer import YOLO27MultiTaskTrainer
-from yolo27.data.multitask_3d_dataset import Multitask3DDataset, multitask_3d_collate_fn
+from neuravex.models.neuravex import build_yolo27
+from neuravex.engine.trainer import neuravexMultiTaskTrainer
+from neuravex.data.multitask_3d_dataset import Multitask3DDataset, multitask_3d_collate_fn
 
 def train_3d_and_dem_rtx5060(epochs=6, batch_size=8, img_size=320):
     print("=" * 80)

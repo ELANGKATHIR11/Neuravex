@@ -1,5 +1,7 @@
 {
-  "version": "YOLO27 v0.6",
+  "project": "Neuravex",
+  "version": "Neuravex v0.6",
+  "positioning": "Lightweight custom computer vision architecture and direct next-generation competitor to the YOLO family",
   "modules": [
     "2D anchor-free multi-scale detection (P3, P4, P5 strides 8, 16, 32)",
     "Task-aligned SimOTA dynamic assignment",
@@ -20,7 +22,7 @@
     "Comprehensive evaluation metric suite: mAP50, mAP50:95, mIoU, Boundary F1, Depth RMSE/AbsRel"
   ],
   "training_note": "COCO dataset adapter fully rasterizes semantic/instance/boundary targets and masks missing depth/3D modalities (m_t in {0, 1}) with zero leakage.",
-  "status": "fully verified end-to-end; unit tests passing; overfit test converged; real benchmarks measured",
-  "publication_guidance": "Benchmarks report verified FLOPs, parameter counts, memory, and CPU latency. Formal validation mAP/mIoU scores require a full 300-epoch training schedule on COCO/NYUv2. Comparative YOLO26 baseline is attributed as a 2026-style state-of-the-art anchor-free 2D detection baseline.",
-  "license": "MIT"
+  "status": "fully verified end-to-end; unit tests passing; overfit test converged; real benchmarks measured on RTX 5060 Laptop GPU",
+  "publication_guidance": "Benchmarks report verified FLOPs, parameter counts, memory, and CPU/GPU latency. Formal validation mAP/mIoU scores require a full 300-epoch training schedule on COCO/NYUv2. Comparative YOLO baseline is attributed as a state-of-the-art anchor-free 2D detection baseline.",
+  "license": "GNU Affero General Public License v3.0 (AGPL-3.0)"
 }

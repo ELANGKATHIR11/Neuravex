@@ -1,6 +1,6 @@
 
 import sys, torch
-from yolo27_v0_3 import YOLO27
+from neuravex_v0_3 import neuravex
 from multitask_training import AdaptiveTaskWeights, boxes3d_corners, iou3d_aabb
 from augmentation import SingleImageMultiViewAugment
 

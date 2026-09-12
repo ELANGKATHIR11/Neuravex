@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from yolo27.engine.evaluator import (
+from neuravex.engine.evaluator import (
     calculate_map_metrics,
     calculate_miou,
     calculate_depth_metrics,

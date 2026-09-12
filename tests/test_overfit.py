@@ -5,8 +5,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from yolo27.models.yolo27 import build_yolo27
-from yolo27.engine.trainer import YOLO27MultiTaskTrainer
+from neuravex.models.neuravex import build_yolo27
+from neuravex.engine.trainer import YOLO27MultiTaskTrainer
 
 def run_end_to_end_train_step():
     print("\n--- Running End-to-End Pipeline Verification (YOLO27 v0.6) ---")

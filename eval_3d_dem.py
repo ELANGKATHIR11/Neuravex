@@ -3,9 +3,9 @@ Evaluation script for YOLO27 v0.6 3D bounding boxes and DEM Depth on validation 
 """
 import torch
 from torch.utils.data import DataLoader
-from yolo27.models.yolo27 import build_yolo27
-from yolo27.data.multitask_3d_dataset import Multitask3DDataset, multitask_3d_collate_fn
-from yolo27.geometry.oriented_iou3d import oriented_iou_3d, rotated_rect_intersection_bev
+from neuravex.models.neuravex import build_yolo27
+from neuravex.data.multitask_3d_dataset import Multitask3DDataset, multitask_3d_collate_fn
+from neuravex.geometry.oriented_iou3d import oriented_iou_3d, rotated_rect_intersection_bev
 
 def evaluate_3d_dem():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

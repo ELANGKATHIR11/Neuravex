@@ -5,8 +5,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from yolo27.models.yolo27 import build_yolo27, YOLO27
-from yolo27_v0_3 import YOLO27 as YOLO27_v04
+from neuravex.models.neuravex import build_yolo27, YOLO27
+from neuravex_v0_3 import neuravex as YOLO27_v04
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters()), sum(p.numel() for p in model.parameters() if p.requires_grad)

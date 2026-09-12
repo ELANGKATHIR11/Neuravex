@@ -5,22 +5,22 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from yolo27.geometry.box_ops import box_cxcywh_to_xyxy, box_xyxy_to_cxcywh, box_iou_2d, bbox_ciou
-from yolo27.geometry.oriented_iou3d import oriented_iou_3d, boxes3d_to_corners
-from yolo27.geometry.camera import CameraIntrinsics, depth_to_inverse, inverse_to_depth
-from yolo27.loss.assigner import TaskAlignedAssigner
-from yolo27.loss.detection_loss import DetectionLoss, dfl_loss
-from yolo27.loss.segmentation_loss import (
+from neuravex.geometry.box_ops import box_cxcywh_to_xyxy, box_xyxy_to_cxcywh, box_iou_2d, bbox_ciou
+from neuravex.geometry.oriented_iou3d import oriented_iou_3d, boxes3d_to_corners
+from neuravex.geometry.camera import CameraIntrinsics, depth_to_inverse, inverse_to_depth
+from neuravex.loss.assigner import TaskAlignedAssigner
+from neuravex.loss.detection_loss import DetectionLoss, dfl_loss
+from neuravex.loss.segmentation_loss import (
     multiclass_dice_loss, semantic_segmentation_loss,
     boundary_loss, mask_quality_loss, discriminative_instance_loss
 )
-from yolo27.loss.depth_3d_loss import comprehensive_metric_depth_loss, loss_3d_detection
-from yolo27.data.augmentation import (
+from neuravex.loss.depth_3d_loss import comprehensive_metric_depth_loss, loss_3d_detection
+from neuravex.data.augmentation import (
     GeometricMultiViewAugment, invert_box_transform,
     invert_yaw_transform, invert_3d_center_transform
 )
-from yolo27.models.yolo27 import build_yolo27
-from yolo27.engine.evaluator import (
+from neuravex.models.neuravex import build_yolo27
+from neuravex.engine.evaluator import (
     YOLO27InferencePostProcessor,
     calculate_map_metrics,
     calculate_miou,

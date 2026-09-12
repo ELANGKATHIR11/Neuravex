@@ -165,3 +165,5 @@ class YOLO27MultiTaskTrainer:
             "weighted_losses": weighted_dict,
             "task_weights": weights
         }
+
+NeuravexMultiTaskTrainer = YOLO27MultiTaskTrainer

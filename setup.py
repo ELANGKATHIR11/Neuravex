@@ -4,13 +4,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="yolo27",
+    name="neuravex",
     version="0.6.0",
     author="ELANGKATHIR11",
-    description="YOLO27 v0.6: Unified End-to-End Multi-Task Vision Architecture",
+    description="Neuravex v0.6: Lightweight Custom Computer Vision Architecture & Direct Competitor to YOLO",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ELANGKATHIR11/YOLO27",
+    url="https://github.com/ELANGKATHIR11/Neuravex",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -6,15 +6,15 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from yolo27.models.yolo27 import build_yolo27
-from yolo27.engine.evaluator import (
+from neuravex.models.neuravex import build_yolo27
+from neuravex.engine.evaluator import (
     YOLO27InferencePostProcessor,
     calculate_map_metrics,
     calculate_miou,
     calculate_boundary_fscore,
     calculate_depth_metrics
 )
-from yolo27.data.real_vegetable_dataset import RealVegetableDataset, real_dataset_collate_fn
+from neuravex.data.real_vegetable_dataset import RealVegetableDataset, real_dataset_collate_fn
 
 def evaluate_on_dgpu():
     print("=" * 75)

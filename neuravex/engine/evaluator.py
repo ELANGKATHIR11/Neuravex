@@ -187,3 +187,6 @@ def calculate_boundary_fscore(pred_bound: torch.Tensor, gt_bound: torch.Tensor, 
     rec = tp / max(tp + fn, 1)
     f1 = 2 * (prec * rec) / max(prec + rec, 1e-6)
     return float(f1)
+
+NeuravexInferencePostProcessor = YOLO27InferencePostProcessor
+
