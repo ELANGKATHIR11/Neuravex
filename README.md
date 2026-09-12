@@ -100,6 +100,27 @@ Run with your miniconda environment:
 
 ---
 
+## Real Dataset Training & Evaluation (NVIDIA GeForce RTX 5060 Laptop GPU)
+
+YOLO27 v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop GPU** using the real-world dataset (`F:\Vegetable-Object-Detection` across Carrot, Onion, Potato, Tomato):
+- **Hardware**: NVIDIA GeForce RTX 5060 Laptop GPU (8,151 MB VRAM), CUDA 12.8, PyTorch 2.11
+- **Mixed Precision**: Real `torch.amp.autocast` + `GradScaler`
+- **Training Epochs**: 5 epochs (31 batches/epoch, batch size = 8)
+- **Peak GPU Memory**: **2,235.19 MB**
+- **Average Normalized Loss Progression**: `2.7382 (Epoch 1) -> 2.0162 (Epoch 2) -> 1.6597 (Epoch 3) -> 1.4623 (Epoch 4) -> 1.3346 (Epoch 5)`
+- **Checkpoint**: Saved to `weights/yolo27_v06_rtx5060_vegetables.pt`
+
+### Real Validation Set Performance (`valid` split: 70 images)
+| Task / Metric | Real Validation Result |
+|---|---|
+| **2D Detection mAP50** | **69.09 %** |
+| **2D Detection mAP50:95** | **33.18 %** |
+| **Semantic Segmentation mIoU** | **70.43 %** |
+| **Metric Depth Estimation RMSE** | **0.1601 m** |
+| **Inference Post-Processing** | Class-aware batched NMS |
+
+---
+
 ## Benchmark Attribution, Methodology & Publication Guidelines
 
 > [!IMPORTANT]
