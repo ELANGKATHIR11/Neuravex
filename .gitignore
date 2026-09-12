@@ -24,3 +24,5 @@ htmlcov/
 *.log
 .vscode/
 .idea/
+weights/*.pt
+/data/

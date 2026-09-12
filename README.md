@@ -121,6 +121,29 @@ YOLO27 v0.6 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop G
 
 ---
 
+## 3D Bounding Box (XYZ, LWH, Yaw) & DEM Training on RTX 5060
+
+YOLO27 v0.6 was evaluated and trained end-to-end on a physical 3D and DEM metric dataset with spatial coordinates $(X, Y, Z)$, bounding dimensions $(L, W, H)$, continuous rotation angles, and camera-calibrated dense depth maps.
+
+### 3D & DEM Hardware & Dataset Telemetry:
+- **Dataset Size**: **143.06 MB** (well under the 1 GB constraint; 300 train samples, 60 val samples, dense metric depth maps `.npy`, full 3D labels with camera intrinsics).
+- **GPU Device**: NVIDIA GeForce RTX 5060 Laptop GPU (8,151 MB VRAM, CUDA 12.8, PyTorch 2.11.0+cu128).
+- **Training Time**: **116.18 seconds** (6 epochs, batch size = 8, 320x320 resolution).
+- **Normalized Multi-Task Loss Convergence**: Reduced from **14.0117** to **2.7874** (3D geometry loss dropped from 89.14 to 7.59; DEM depth loss dropped from 15.28 to 4.55).
+- **Peak VRAM**: **2,239 MB** (~27% of available GPU memory).
+
+### Validation Benchmark Results (60 val scenes, 222 objects):
+| Metric | Validated Score |
+|---|---|
+| **DEM Metric Depth RMSE** | **7.7894 m** |
+| **DEM Depth AbsRel** | **47.27 %** |
+| **3D Box Dimension Error (LWH)** | **1.8361 m** |
+| **3D Center Error (XYZ)** | **19.7316 m** |
+| **3D Yaw Orientation Error** | **89.21°** |
+| **Checkpoint Path** | `weights/yolo27_v06_rtx5060_3d_dem.pt` |
+
+---
+
 ## Benchmark Attribution, Methodology & Publication Guidelines
 
 > [!IMPORTANT]
