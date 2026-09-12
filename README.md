@@ -1,9 +1,12 @@
-# Neuravex v0.6 — Lightweight Custom Computer Vision Architecture
+# Neuravex v0.7 — Ultra-Lightweight Custom Multi-Task Vision Architecture
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-**Neuravex** is a custom, lightweight multi-task computer vision architecture designed as a **direct next-generation alternative and competitor to the YOLO family**. Where conventional YOLO models focus predominantly on 2D bounding boxes, Neuravex unifies 8 distinct vision modalities into a single ultra-efficient real-time network:
-**2D Anchor-Free Detection (DFL + CIoU) + Semantic Segmentation + Instance Segmentation + Boundary Segmentation + Mask Quality + Metric Depth / DEM (SILog + L1 + Grad) + Camera-Aware 3D Detection + Oriented 3D IoU + Transform-Aligned Consistency + Adaptive Uncertainty Weighting + COCO Dataset Pipeline.**
+**Neuravex v0.7** is an ultra-lightweight, high-throughput multi-task computer vision architecture built as a **direct next-generation alternative and competitor to the YOLO family**. Engineered with the primary objective of maximizing **Real Detection Quality per FLOP**:
+
+$$\max \frac{\text{REAL\ Detection\ Quality}}{\text{FLOPs}}$$
+
+Neuravex couples structural **RepConv reparameterization** (fusing $3\times3 + 1\times1 + \text{Identity}$ into a single inference convolution) with a **Primary Detection Fast Path**, **Self-Supervised EMA Teacher Distillation**, **Photometric Monocular Depth**, and a **Bandit Meta-Controller**—delivering up to **83.0 FPS** on RTX 5060 Laptop GPU while preserving dense 3D, DEM, and multi-layer segmentation capabilities.
 
 ---
 
@@ -16,29 +19,33 @@ flowchart TD
     Stem --> P4["P4 Feature Map (Stride 16)"]
     Stem --> P5["P5 Feature Map (Stride 32)"]
 
-    P3 & P4 & P5 --> PANet["Bidirectional PANet Neck"]
-    PANet --> Q3["Q3 Feature Map"]
-    PANet --> Q4["Q4 Feature Map"]
-    PANet --> Q5["Q5 Feature Map"]
+    subgraph Core["Efficient Reparameterizable Core (RepConv + P-RepBlock)"]
+        P3 & P4 & P5 --> PANet["Bidirectional Depthwise PANet Neck"]
+        PANet --> Q3["Q3 Feature Map"]
+        PANet --> Q4["Q4 Feature Map"]
+        PANet --> Q5["Q5 Feature Map"]
+    end
 
-    Q3 & Q4 & Q5 --> Fusion["Bidirectional Cross-Task Fusion Token"]
+    subgraph FastPath["Detection-First Primary Stream (Zero Bloat)"]
+        Q3 & Q4 & Q5 --> Router["Adaptive Compute Router"]
+        Router --> DetHead["Shared Multi-Scale Detection Head (P3, P4, P5)"]
+        DetHead --> Out2D["2D Boxes (CIoU + 16-bin DFL) & Class Logits"]
+        DetHead --> Out3D["3D Boxes (Pinhole XYZ, LWH, sin/cos Yaw)"]
+    end
 
-    Fusion --> DetHead["Multi-Scale Detection Head (P3, P4, P5)"]
-    DetHead --> Out2D["2D Boxes (CIoU + DFL) & Class Logits"]
-    DetHead --> Out3D["3D Boxes (Pinhole XYZ, LWH, sin/cos Yaw)"]
+    subgraph Auxiliary["Shared-Core Optional Adapters (Train / Multi-Task)"]
+        Q3 --> Fusion["Bidirectional Cross-Task Fusion Token"]
+        Fusion --> DEM["Camera-Aware DEM Head (Z = 1/rho, Pointcloud)"]
+        Fusion --> SegHead["Multi-Layer Segmentation (Semantic, Boundary, Prototype Instances)"]
+    end
 
-    Fusion --> DEM["Camera-Aware DEM Head"]
-    DEM --> OutDepth["Metric Depth Z & Inverse Depth rho"]
-    DEM --> OutPoints["Dense 3D Pointcloud (Camera K)"]
-
-    Fusion --> SegHead["Multi-Layer Dense Segmentation Head"]
-    SegHead --> OutSem["Semantic Mask Logits (Multiclass CE + Dice)"]
-    SegHead --> OutBound["Boundary Logits (Focal + Dice)"]
-    SegHead --> OutInst["Instance Embeddings + Prototype Masks"]
-    SegHead --> OutQual["Mask Quality Self-Assessment (Smooth L1)"]
-
-    Out2D & Out3D & OutDepth & OutSem & OutBound & OutInst & OutQual --> LossEngine["Adaptive Multi-Task Loss Engine"]
-    LossEngine --> TotalLoss["Normalized Multi-Task Loss: L = 1/K sum m_t * (exp(-s_t) * L_t + s_t)"]
+    subgraph SSL["Self-Supervised & Meta-Learning Engine (v0.7)"]
+        Teacher["Momentum EMA Teacher (no-grad)"] --> Distill["Multi-Scale Feature Distillation (L_ssl)"]
+        Teacher --> Pseudo["Entropy-Filtered Dynamic Pseudo-Labeler"]
+        DEM --> Photo["Photometric Reprojection Loss (SSIM + L1 + Smoothness)"]
+        DetHead & SegHead & DEM --> CrossGeo["Cross-Task Geometry Alignment"]
+        Bandit["RL / Bandit Meta-Controller"] --> Sched["Dynamic Loss Weight & Augmentation Policy"]
+    end
 ```
 
 ---
@@ -175,6 +182,35 @@ Neuravex v0.7 was evaluated and trained end-to-end on a physical 3D and DEM metr
 > [!TIP]
 > **3. Latency & Hardware Disclosure**:
 > Latency was profiled under PyTorch 2.11 CPU mode (batch size = 1). When publishing or presenting, state the exact CPU/GPU device used to ensure full scientific reproducibility.
+
+---
+
+## Packages & Environment
+
+Neuravex is engineered for minimal dependency footprint and maximum hardware efficiency:
+
+| Package | Minimum Version | Purpose |
+|---|---|---|
+| **`torch`** | `>= 2.0.0` | Tensor compute, autograd, mixed-precision `torch.amp.autocast`, `GradScaler` |
+| **`torchvision`** | `>= 0.15.0` | Fast batched NMS operator (`batched_nms`), computer vision tensor transforms |
+| **`numpy`** | `>= 1.20.0` | High-performance numerical operations and metric depth raster array processing |
+| **`opencv-python`** | `>= 4.5.0` | Image I/O, color space transformations, and geometric morphological processing |
+| **`Pillow`** | `>= 8.0.0` | Image handling and augmentation support |
+| **`pycocotools`** | *(Optional)* | COCO dataset annotation decoding and official evaluation tools |
+
+### Quick Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ELANGKATHIR11/Neuravex.git
+cd Neuravex
+
+# Install core dependencies
+pip install -r requirements.txt
+
+# Install Neuravex in editable mode
+pip install -e .
+```
 
 ---
 
