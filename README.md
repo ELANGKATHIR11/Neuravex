@@ -80,17 +80,17 @@ flowchart TD
 
 ## Quickstart & Verification
 
-Run with your miniconda environment:
+Run with your Python environment:
 
 ```powershell
 # 1. Run unit test suite (box ops, oriented 3D IoU, camera, assigner, losses)
-& "C:\Users\elang\miniconda3\envs\dgpu-core\python.exe" tests\test_components.py
+python tests/test_components.py
 
 # 2. Run end-to-end backward pass and 8-sample overfit convergence test
-& "C:\Users\elang\miniconda3\envs\dgpu-core\python.exe" tests\test_overfit.py
+python tests/test_overfit.py
 
 # 3. Run real system benchmarks (FLOPs, latency, parameters, FPS)
-& "C:\Users\elang\miniconda3\envs\dgpu-core\python.exe" benchmark.py
+python benchmark.py
 ```
 
 ---
@@ -161,12 +161,12 @@ Neuravex v0.7 was trained directly on the local **NVIDIA GeForce RTX 5060 Laptop
 - **Checkpoint**: Saved to `weights/yolo27_v06_rtx5060_vegetables.pt`
 
 ### Real Validation Set Performance (`valid` split: 70 images)
-| Task / Metric | Real Validation Result |
+| Task / Metric | Real Measured Validation Result |
 |---|---|
-| **2D Detection mAP50** | **69.09 %** |
-| **2D Detection mAP50:95** | **33.18 %** |
-| **Semantic Segmentation mIoU** | **70.43 %** |
-| **Metric Depth Estimation RMSE** | **0.1601 m** |
+| **2D Detection mAP50** | **32.26 %** |
+| **2D Detection mAP50:95** | **13.11 %** |
+| **Semantic Segmentation mIoU** | **61.40 %** |
+| **Metric Depth Estimation RMSE** | **1.7196 m** |
 | **Inference Post-Processing** | Class-aware batched NMS |
 
 ---
