@@ -36,10 +36,15 @@ def depth_gradient_loss(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_
     return loss_x + loss_y
 
 def comprehensive_metric_depth_loss(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_mask: torch.Tensor,
-                                    lambda_silog: float = 1.0, lambda_abs: float = 0.5, lambda_grad: float = 0.5) -> torch.Tensor:
+                                    pred_confidence: torch.Tensor = None,
+                                    lambda_silog: float = 1.0, lambda_abs: float = 0.5, lambda_grad: float = 0.5,
+                                    lambda_conf: float = 0.2) -> torch.Tensor:
     """
     Full metric depth supervision:
-    L_depth = lambda_silog * L_silog + lambda_abs * L_abs + lambda_grad * L_grad
+    L_depth = lambda_silog * L_silog + lambda_abs * L_abs + lambda_grad * L_grad + lambda_conf * L_conf
+    Confidence is supervised via self-calibrated NLL:
+      L_conf = conf * |P - G| - log(conf + eps)
+    High confidence is rewarded when error is small, penalized when error is high.
     """
     v = valid_mask.bool()
     if v.sum() == 0:
@@ -49,7 +54,17 @@ def comprehensive_metric_depth_loss(pred_depth: torch.Tensor, gt_depth: torch.Te
     l_abs = F.l1_loss(pred_depth[v], gt_depth[v])
     l_grad = depth_gradient_loss(pred_depth, gt_depth, valid_mask)
 
-    return lambda_silog * l_silog + lambda_abs * l_abs + lambda_grad * l_grad
+    total_loss = lambda_silog * l_silog + lambda_abs * l_abs + lambda_grad * l_grad
+
+    if pred_confidence is not None:
+        c = pred_confidence[v].clamp(1e-4, 1.0 - 1e-4)
+        err = torch.abs(pred_depth[v] - gt_depth[v]).detach()
+        # Calibrate confidence: c should reflect accuracy (c ~ exp(-err))
+        # Negative log-likelihood style loss: c * err - log(c)
+        l_conf = (c * err - torch.log(c)).mean()
+        total_loss = total_loss + lambda_conf * l_conf
+
+    return total_loss
 
 def loss_3d_detection(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw_sincos: torch.Tensor,
                       gt_xyz: torch.Tensor, gt_lwh: torch.Tensor, gt_yaw: torch.Tensor,

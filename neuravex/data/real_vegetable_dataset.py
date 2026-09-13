@@ -6,7 +6,7 @@ import numpy as np
 
 class RealVegetableDataset(Dataset):
     """
-    Real dataset adapter for YOLO27 multi-task training using F:\\Vegetable-Object-Detection.
+    Real dataset adapter for Neuravex multi-task training using F:\\Vegetable-Object-Detection.
     Supports real images + real bounding boxes + real classes.
     Synthesizes dense semantic, boundary, and depth targets from real detection geometry.
     """
@@ -42,7 +42,7 @@ class RealVegetableDataset(Dataset):
         boxes = []
         labels = []
 
-        # 2. Load real YOLO labels [class cx cy w h]
+        # 2. Load real bounding box labels [class cx cy w h]
         if os.path.exists(lbl_path):
             with open(lbl_path, "r") as f:
                 for line in f:

@@ -19,9 +19,9 @@ from neuravex.data.augmentation import (
     GeometricMultiViewAugment, invert_box_transform,
     invert_yaw_transform, invert_3d_center_transform
 )
-from neuravex.models.neuravex import build_yolo27
+from neuravex.models.neuravex import build_neuravex
 from neuravex.engine.evaluator import (
-    YOLO27InferencePostProcessor,
+    NeuravexInferencePostProcessor,
     calculate_map_metrics,
     calculate_miou,
     calculate_depth_metrics,
@@ -142,11 +142,11 @@ def test_assigner_and_losses():
     print("  [PASS] Assigner and multi-task losses")
 
 def test_model_forward():
-    print("Testing YOLO27 v0.6 Model Forward with Depth Scaling...")
+    print("Testing Neuravex Model Forward with Depth Scaling...")
     # Test depth_mul scaling across sizes
-    model_nano = build_yolo27(size="nano", num_classes=80)
-    model_small = build_yolo27(size="small", num_classes=80)
-    model_med = build_yolo27(size="medium", num_classes=80)
+    model_nano = build_neuravex(size="nano", num_classes=80)
+    model_small = build_neuravex(size="small", num_classes=80)
+    model_med = build_neuravex(size="medium", num_classes=80)
 
     p_nano = sum(p.numel() for p in model_nano.parameters())
     p_small = sum(p.numel() for p in model_small.parameters())

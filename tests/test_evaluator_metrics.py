@@ -24,6 +24,8 @@ def test_evaluator_metrics():
 
     map_res = calculate_map_metrics(pred_boxes, pred_scores, pred_labels, gt_boxes, gt_labels)
     assert "mAP50" in map_res and "mAP50:95" in map_res
+    assert abs(map_res["mAP50"] - 1.0) < 1e-4, f"Expected mAP50=1.0, got {map_res['mAP50']}"
+    assert abs(map_res["mAP50:95"] - 0.85) < 1e-4, f"Expected mAP50:95=0.85, got {map_res['mAP50:95']}"
     print(f"  [PASS] calculate_map_metrics: mAP50={map_res['mAP50']:.4f}, mAP50:95={map_res['mAP50:95']:.4f}")
 
     # 2. Test mIoU calculation

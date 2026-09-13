@@ -7,23 +7,32 @@ from ..geometry.box_ops import box_cxcywh_to_xyxy
 class DistributionFocalLoss(nn.Module):
     """
     Distribution Focal Loss (DFL) module for fine-grained sub-pixel coordinate regression.
-    Converts reg_max discrete bins into continuous offset coordinates.
+    Supports both:
+      - reg_max > 1: Discrete distribution bins with expectation E[x] = sum(p_i * i)
+      - reg_max == 1: Direct coordinate regression (no DFL projection overhead)
     """
     def __init__(self, reg_max: int = 16):
         super().__init__()
         self.reg_max = reg_max
-        self.register_buffer("project", torch.linspace(0, reg_max - 1, reg_max))
+        if reg_max > 1:
+            self.register_buffer("project", torch.linspace(0, reg_max - 1, reg_max))
+        else:
+            self.register_buffer("project", torch.tensor([1.0]))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        x: (B, N, 4 * reg_max)
+        x: (B, N, 4 * reg_max) or (B, N, 4)
         Returns: (B, N, 4) continuous distances
         """
+        if self.reg_max == 1:
+            # Direct regression
+            return F.relu(x.view(x.shape[0], x.shape[1], 4))
+
         B, N, C = x.shape
         # Softmax over the reg_max distribution
         x_reshaped = x.view(B, N, 4, self.reg_max).softmax(dim=-1)
         # Expectation E[x] = sum(p_i * i)
-        out = (x_reshaped * self.project.to(x.device)).sum(dim=-1)
+        out = (x_reshaped * self.project.to(x.device, dtype=x.dtype)).sum(dim=-1)
         return out
 
 class MultiScaleDetectionHead(nn.Module):

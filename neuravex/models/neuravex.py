@@ -9,8 +9,8 @@ from ..geometry.camera import CameraIntrinsics
 
 class Neuravex(nn.Module):
     """
-    Neuravex v0.6 — Lightweight Custom Computer Vision Architecture.
-    Direct next-generation competitor to the YOLO family, unifying 2D/3D and Dense Multitask CV:
+    Neuravex — Lightweight Custom Computer Vision Architecture.
+    Unifying 2D/3D and Dense Multitask Computer Vision:
       1. 2D Multi-scale anchor-free detection (P3, P4, P5 at strides 8, 16, 32) with DFL
       2. 3D detection: (X, Y, Z), (L, W, H), yaw (sin theta, cos theta) with pinhole geometry
       3. Semantic segmentation (multiclass raw logits)
@@ -20,11 +20,12 @@ class Neuravex(nn.Module):
       7. Dense inverse depth & metric depth (DEM)
       8. True bidirectional cross-task feature fusion with dedicated task branches
     """
-    def __init__(self, num_classes: int = 80, base_c: int = 48, depth_mul: float = 1.0, seg_embed: int = 16, num_parts: int = 16):
+    def __init__(self, num_classes: int = 80, base_c: int = 48, depth_mul: float = 1.0, seg_embed: int = 16, num_parts: int = 16, reg_max: int = 16):
         super().__init__()
         self.num_classes = num_classes
         self.base_c = base_c
         self.depth_mul = depth_mul
+        self.reg_max = reg_max
         neck_c = base_c * 4
 
         # Backbone & FPN Neck
@@ -35,15 +36,22 @@ class Neuravex(nn.Module):
         self.fusion_p3 = BidirectionalCrossTaskFusion(neck_c)
 
         # Task Heads
-        self.det_head = MultiScaleDetectionHead(in_channels=neck_c, num_classes=num_classes)
+        self.det_head = MultiScaleDetectionHead(in_channels=neck_c, num_classes=num_classes, reg_max=reg_max)
         self.seg_head = MultiLayerSegmentationHead(in_channels=neck_c, num_classes=num_classes, embed_dim=seg_embed, num_parts=num_parts)
         self.dem_head = CameraAwareDEM(in_channels=neck_c)
 
-    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None, tasks: tuple = None) -> dict:
+        # Adaptive compute router for high-throughput detection
+        from ..engine.adaptive_compute import AdaptiveComputeRouter
+        self.router_p3 = AdaptiveComputeRouter(neck_c)
+
+    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None, tasks: tuple = None,
+                routing_threshold: float = 0.5, force_full_compute: bool = False) -> dict:
         """
         tasks: tuple of active tasks. If None, runs all configured modalities.
         For detection-only inference: pass tasks=('det',), which bypasses seg and DEM heads
         saving significant FLOPs and latency!
+        routing_threshold: confidence threshold for the adaptive router [0, 1].
+        force_full_compute: if True, deterministically executes all refinement blocks.
         """
         B, _, H, W = x.shape
         out_hw = (H, W)
@@ -61,6 +69,12 @@ class Neuravex(nn.Module):
             else:
                 q3_det, q3_seg, q3_dep = self.fusion_p3(q3, q3, q3)
 
+            # Adaptive Compute Router connected directly into Q3 detection stream
+            q3_det, routing_stats = self.router_p3(
+                q3_det, threshold=routing_threshold, force_full_compute=force_full_compute
+            )
+            outputs["routing_stats"] = routing_stats
+
             # Multi-scale detection and 3D prediction
             det_feats = [q3_det, q4, q5]
             det_out = self.det_head(det_feats, intrinsics=intrinsics)
@@ -70,7 +84,7 @@ class Neuravex(nn.Module):
             q3_dep = q3
 
         # Optional task adapters
-        if tasks is None or "depth" in tasks or "dssl" in tasks:
+        if tasks is None or "depth" in tasks or "dssl" in tasks or "dem" in tasks or "terrain" in tasks:
             if "q3_dep" not in locals():
                 q3_dep = q3
             depth_out = self.dem_head(q3_dep, q4, q5, out_hw, intrinsics=intrinsics)
@@ -90,10 +104,7 @@ class Neuravex(nn.Module):
             if m is not self and hasattr(m, "switch_to_deploy"):
                 m.switch_to_deploy()
 
-# Alias for backward-compatibility
-YOLO27 = Neuravex
-
-def build_neuravex(size: str = "medium", num_classes: int = 80) -> Neuravex:
+def build_neuravex(size: str = "medium", num_classes: int = 80, reg_max: int = 16) -> Neuravex:
     """
     Factory function for scalable Neuravex variants:
       nano: base_c = 16, depth_mul = 0.33
@@ -108,6 +119,4 @@ def build_neuravex(size: str = "medium", num_classes: int = 80) -> Neuravex:
         "large": (64, 1.33)
     }
     base, d_mul = configs.get(size.lower(), (48, 1.0))
-    return Neuravex(num_classes=num_classes, base_c=base, depth_mul=d_mul)
-
-build_yolo27 = build_neuravex
+    return Neuravex(num_classes=num_classes, base_c=base, depth_mul=d_mul, reg_max=reg_max)

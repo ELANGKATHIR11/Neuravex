@@ -6,11 +6,39 @@ class CameraIntrinsics:
     Supports converting between 2D pixel coordinates + depth and 3D camera coordinates (X, Y, Z).
     """
     def __init__(self, fx: float, fy: float, cx: float, cy: float, device="cpu"):
-        self.fx = fx
-        self.fy = fy
-        self.cx = cx
-        self.cy = cy
+        self.fx = float(fx)
+        self.fy = float(fy)
+        self.cx = float(cx)
+        self.cy = float(cy)
         self.device = device
+
+    def scale(self, scale_x: float, scale_y: float) -> "CameraIntrinsics":
+        """
+        Adjust intrinsics for isotropic or anisotropic image resizing:
+          fx' = fx * sx, fy' = fy * sy
+          cx' = cx * sx, cy' = cy * sy
+        """
+        return CameraIntrinsics(
+            fx=self.fx * scale_x,
+            fy=self.fy * scale_y,
+            cx=self.cx * scale_x,
+            cy=self.cy * scale_y,
+            device=self.device
+        )
+
+    def adjust_letterbox(self, scale: float, pad_x: float, pad_y: float) -> "CameraIntrinsics":
+        """
+        Adjust intrinsics after image letterboxing (scaling by `scale` followed by padding):
+          fx' = fx * scale, fy' = fy * scale
+          cx' = cx * scale + pad_x, cy' = cy * scale + pad_y
+        """
+        return CameraIntrinsics(
+            fx=self.fx * scale,
+            fy=self.fy * scale,
+            cx=self.cx * scale + pad_x,
+            cy=self.cy * scale + pad_y,
+            device=self.device
+        )
 
     def unproject_points(self, u: torch.Tensor, v: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         """

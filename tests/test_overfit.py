@@ -5,17 +5,17 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from neuravex.models.neuravex import build_yolo27
-from neuravex.engine.trainer import YOLO27MultiTaskTrainer
+from neuravex.models.neuravex import build_neuravex
+from neuravex.engine.trainer import NeuravexMultiTaskTrainer
 
 def run_end_to_end_train_step():
-    print("\n--- Running End-to-End Pipeline Verification (YOLO27 v0.6) ---")
+    print("\n--- Running End-to-End Pipeline Verification (Neuravex) ---")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
 
-    model = build_yolo27(size="nano", num_classes=5)
+    model = build_neuravex(size="nano", num_classes=5)
     optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    trainer = YOLO27MultiTaskTrainer(model, optimizer, device=device, num_classes=5)
+    trainer = NeuravexMultiTaskTrainer(model, optimizer, device=device, num_classes=5)
 
     B = 2
     img_size = 128
@@ -107,9 +107,9 @@ def run_overfit_test(num_samples: int = 8, num_epochs: int = 25):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(42)
 
-    model = build_yolo27(size="nano", num_classes=3)
+    model = build_neuravex(size="nano", num_classes=3)
     optimizer = optim.AdamW(model.parameters(), lr=2e-3, weight_decay=1e-5)
-    trainer = YOLO27MultiTaskTrainer(model, optimizer, device=device, num_classes=3)
+    trainer = NeuravexMultiTaskTrainer(model, optimizer, device=device, num_classes=3)
 
     img_size = 128
     images = torch.rand(num_samples, 3, img_size, img_size)
@@ -160,7 +160,7 @@ def run_overfit_test(num_samples: int = 8, num_epochs: int = 25):
 
     print(f"\nInitial Loss: {initial_loss:.4f} -> Final Loss: {final_loss:.4f}")
     assert final_loss < initial_loss, f"Loss did not decrease: {initial_loss} -> {final_loss}"
-    print("[SUCCESS] Overfit convergence confirmed on YOLO27 v0.6!")
+    print("[SUCCESS] Overfit convergence confirmed on Neuravex!")
 
 if __name__ == "__main__":
     run_end_to_end_train_step()

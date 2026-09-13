@@ -107,13 +107,14 @@ def test_v07_modules():
     print("8. Testing Adaptive Compute Router & KD Loss...")
     router = AdaptiveComputeRouter(channels=64).to(device)
     feat = torch.randn(2, 64, 40, 40, device=device)
-    fused_f, gate, ran_refine = router(feat)
+    fused_f, stats = router(feat)
     assert fused_f.shape == feat.shape
+    assert "gate" in stats and "expected_compute" in stats
     
     kd_fn = KnowledgeDistillationLoss()
     kd_loss = kd_fn(out_deploy["class_logits"], out_deploy["class_logits"])
     assert kd_loss.item() < 1e-4
-    print(f"   [PASS] Adaptive router gate: {gate.mean().item():.3f} | KD loss: {kd_loss.item():.6f}")
+    print(f"   [PASS] Adaptive router gate: {stats['gate'].mean().item():.3f} | KD loss: {kd_loss.item():.6f}")
 
     print("\n=================================================================")
     print(" ALL 8 NEURAVEX v0.7 UPGRADE MODULES VERIFIED SUCCESSFULLY!")

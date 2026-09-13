@@ -1,22 +1,25 @@
 """
-Evaluation script for YOLO27 v0.6 3D bounding boxes and DEM Depth on validation split.
+Evaluation script for Neuravex 3D bounding boxes and DEM Depth on validation split.
 """
+import os
 import torch
 from torch.utils.data import DataLoader
-from neuravex.models.neuravex import build_yolo27
+from neuravex.models.neuravex import build_neuravex
 from neuravex.data.multitask_3d_dataset import Multitask3DDataset, multitask_3d_collate_fn
 from neuravex.geometry.oriented_iou3d import oriented_iou_3d, rotated_rect_intersection_bev
 
 def evaluate_3d_dem():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Evaluating YOLO27 3D + DEM model on {device}...")
+    print(f"Evaluating Neuravex 3D + DEM model on {device}...")
     
     val_dataset = Multitask3DDataset(data_dir="data/synthetic_3d_dataset", split="val", img_size=320, num_classes=5)
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=multitask_3d_collate_fn)
     
-    model = build_yolo27(size="small", num_classes=5).to(device)
-    ckpt = torch.load("weights/yolo27_v06_rtx5060_3d_dem.pt", map_location=device, weights_only=False)
-    model.load_state_dict(ckpt["model_state_dict"])
+    model = build_neuravex(size="small", num_classes=5).to(device)
+    ckpt_path = "weights/neuravex_3d_dem_trained.pt"
+    if os.path.exists(ckpt_path):
+        ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
+        model.load_state_dict(ckpt["model_state_dict"])
     model.eval()
 
     total_depth_rmse = 0.0
@@ -111,7 +114,7 @@ def evaluate_3d_dem():
     mean_3d_iou = sum(iou_3ds) / max(1, len(iou_3ds))
 
     print("\n" + "="*70)
-    print(" YOLO27 v0.6 3D & DEM VALIDATION BENCHMARK RESULTS")
+    print(" NEURAVEX 3D & DEM VALIDATION BENCHMARK RESULTS")
     print("="*70)
     print(f"Validation Samples Evaluated : {total_samples}")
     print(f"Total 3D GT Objects Evaluated: {len(xyz_errors)}")

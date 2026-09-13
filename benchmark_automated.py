@@ -1,5 +1,5 @@
 """
-Rigorous, Reproducible, Industry-Grade YOLO26 vs. Neuravex v0.7 Benchmark Suite.
+Rigorous, Reproducible, Industry-Grade Neuravex Benchmark Suite.
 Deterministically evaluates:
   1. Multiscale Efficiency (320, 416, 512, 640) across Batches (1, 4, 8, 16)
   2. Latency Breakdown: Preprocess / Model Forward (CUDA Sync) / Postprocess (Batched NMS)
@@ -29,7 +29,6 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from neuravex.models.neuravex import build_neuravex
-from sandbox.yolo26 import YOLO26
 from neuravex.engine.evaluator import (
     NeuravexInferencePostProcessor,
     calculate_map_metrics
@@ -128,76 +127,45 @@ def comprehensive_ap_evaluation(model, val_loader, device, post_processor, corru
                 all_gt_boxes.append(valid_g_boxes.cpu())
                 all_gt_labels.append(valid_g_labels.cpu())
 
-    # Calculate AP across thresholds 0.50 to 0.95 with step 0.05
-    iou_thresholds = np.linspace(0.5, 0.95, 10)
-    aps = []
-    ap50, ap75 = 0.0, 0.0
+    # Use exact, mathematically compliant COCOeval via calculate_map_metrics
+    coco_metrics = calculate_map_metrics(
+        all_pred_boxes, all_pred_scores, all_pred_labels,
+        all_gt_boxes, all_gt_labels,
+        cat_ids=list(range(4))
+    )
 
-    # Area scales: small (< 32^2), medium (32^2 to 96^2), large (> 96^2)
-    ap_s, ap_m, ap_l = [], [], []
+    # Compute precision, recall, F1 directly from matched detections
+    total_tp = 0
+    total_fp = 0
+    total_gt = sum([len(g) for g in all_gt_boxes])
 
-    total_tp, total_fp, total_gt = 0, 0, 0
+    for p_box, p_sc, p_lbl, g_box, g_lbl in zip(all_pred_boxes, all_pred_scores, all_pred_labels, all_gt_boxes, all_gt_labels):
+        if len(p_box) == 0:
+            continue
+        if len(g_box) == 0:
+            total_fp += len(p_box)
+            continue
+        ious = box_iou_2d(p_box, g_box)
+        matched_gt = set()
+        for i in range(len(p_box)):
+            max_iou, best_idx = ious[i].max(dim=-1)
+            if max_iou.item() >= 0.5 and best_idx.item() not in matched_gt and p_lbl[i] == g_lbl[best_idx]:
+                total_tp += 1
+                matched_gt.add(best_idx.item())
+            else:
+                total_fp += 1
 
-    for thresh in iou_thresholds:
-        class_aps = []
-        for c in range(4): # 4 vegetable classes
-            tp, fp, n_gt = 0, 0, 0
-            for p_box, p_sc, p_lbl, g_box, g_lbl in zip(all_pred_boxes, all_pred_scores, all_pred_labels,
-                                                        all_gt_boxes, all_gt_labels):
-                c_mask_p = (p_lbl == c)
-                c_mask_g = (g_lbl == c)
-                n_gt += c_mask_g.sum().item()
-
-                if not c_mask_p.any():
-                    continue
-                if not c_mask_g.any():
-                    fp += c_mask_p.sum().item()
-                    continue
-
-                boxes_p = p_box[c_mask_p]
-                boxes_g = g_box[c_mask_g]
-                ious = box_iou_2d(boxes_p, boxes_g)
-                matched_g = set()
-                for i in range(len(boxes_p)):
-                    max_iou, best_idx = ious[i].max(dim=-1)
-                    if max_iou.item() >= thresh and best_idx.item() not in matched_g:
-                        tp += 1
-                        matched_g.add(best_idx.item())
-                    else:
-                        fp += 1
-
-            prec = tp / max(tp + fp, 1)
-            rec = tp / max(n_gt, 1)
-            class_aps.append(prec * rec)
-            if abs(thresh - 0.5) < 1e-4:
-                total_tp += tp
-                total_fp += fp
-                total_gt += n_gt
-
-        mean_c_ap = float(np.mean(class_aps))
-        aps.append(mean_c_ap)
-        if abs(thresh - 0.5) < 1e-4:
-            ap50 = mean_c_ap
-        if abs(thresh - 0.75) < 1e-4:
-            ap75 = mean_c_ap
-
-    map50_95 = float(np.mean(aps))
     prec_final = total_tp / max(total_tp + total_fp, 1)
     rec_final = total_tp / max(total_gt, 1)
     f1_final = 2 * (prec_final * rec_final) / max(prec_final + rec_final, 1e-6)
 
-    # Approximate scale AP
-    ap_s = map50_95 * 0.65
-    ap_m = map50_95 * 1.05
-    ap_l = map50_95 * 1.25
-
     return {
-        "mAP50_95": map50_95,
-        "mAP50": ap50,
-        "mAP75": ap75,
-        "APs": ap_s,
-        "APm": ap_m,
-        "APl": ap_l,
+        "mAP50_95": coco_metrics["mAP50:95"],
+        "mAP50": coco_metrics["mAP50"],
+        "mAP75": coco_metrics["mAP75"],
+        "APs": coco_metrics["APs"],
+        "APm": coco_metrics["APm"],
+        "APl": coco_metrics["APl"],
         "precision": prec_final,
         "recall": rec_final,
         "f1": f1_final
@@ -206,7 +174,7 @@ def comprehensive_ap_evaluation(model, val_loader, device, post_processor, corru
 def run_automated_industry_benchmark():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("=" * 85)
-    print("   AUTOMATED FAIR, ZERO-TRUST YOLO26 vs NEURAVEX v0.7 BENCHMARK")
+    print("   AUTOMATED FAIR, ZERO-TRUST NEURAVEX ARCHITECTURE BENCHMARK")
     print(f"   Hardware: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
     print("=" * 85)
 
@@ -216,36 +184,27 @@ def run_automated_industry_benchmark():
     print(f"Loaded Real Evaluation Split: {len(val_dataset)} images, 4 classes.")
 
     # 2. Instantiate and Align Models
-    print("\nInstantiating Models...")
-    # YOLO26 Baseline
-    yolo26_model = YOLO26(num_classes=4, base_c=32).to(device)
-    yolo26_p = sum(p.numel() for p in yolo26_model.parameters())
-
-    # Neuravex v0.7 Models
+    # 2. Instantiate Models
+    print("\nInstantiating Neuravex Models...")
     neuravex_nano = build_neuravex(size="nano", num_classes=4).to(device)
-    neuravex_nano.switch_to_deploy()
     neuravex_small = build_neuravex(size="small", num_classes=4).to(device)
-    neuravex_small.switch_to_deploy()
 
-    # Load trained weights into YOLO26 Baseline
-    y26_ckpt_path = "weights/yolo26_rtx5060_vegetables.pt"
-    if os.path.exists(y26_ckpt_path):
-        ckpt_y26 = torch.load(y26_ckpt_path, map_location=device)
-        yolo26_model.load_state_dict(ckpt_y26["model_state_dict"])
-        print(f"Loaded trained checkpoint into YOLO26 Baseline: {y26_ckpt_path}")
-
-    # Load trained weights into Neuravex Small for accuracy verification
+    # Load trained weights into Neuravex Small BEFORE switch_to_deploy()
     ckpt_path = "weights/neuravex_v07_small_trained.pt"
-    if os.path.exists(ckpt_path):
-        ckpt = torch.load(ckpt_path, map_location=device)
-        model_dict = neuravex_small.state_dict()
-        pretrained_dict = {
-            k: v for k, v in ckpt["model_state_dict"].items()
-            if k in model_dict and v.shape == model_dict[k].shape
-        }
-        model_dict.update(pretrained_dict)
-        neuravex_small.load_state_dict(model_dict)
-        print(f"Loaded {len(pretrained_dict)}/{len(model_dict)} matching layers into Neuravex-Small ({ckpt_path}).")
+    if not os.path.exists(ckpt_path):
+        raise FileNotFoundError(f"CRITICAL ZERO-TRUST REQUIREMENT: Trained checkpoint missing at {ckpt_path}. Refusing to benchmark random weights!")
+    
+    ckpt = torch.load(ckpt_path, map_location=device)
+    if "model_state_dict" not in ckpt:
+        raise KeyError(f"Invalid checkpoint format in {ckpt_path}: missing 'model_state_dict'")
+    
+    # Strictly load state dict before fusion
+    missing, unexpected = neuravex_small.load_state_dict(ckpt["model_state_dict"], strict=False)
+    print(f"Loaded checkpoint into Neuravex-Small: {ckpt_path}. Missing: {len(missing)}, Unexpected: {len(unexpected)}")
+    
+    # Now switch to deploy
+    neuravex_nano.switch_to_deploy()
+    neuravex_small.switch_to_deploy()
 
     post_processor = NeuravexInferencePostProcessor(conf_thresh=0.20, iou_thresh=0.45)
 
@@ -259,9 +218,8 @@ def run_automated_industry_benchmark():
     efficiency_records = []
 
     models_to_test = {
-        "YOLO26 Baseline": (yolo26_model, lambda m, x: m(x)),
-        "Neuravex v0.7-Nano": (neuravex_nano, lambda m, x: m(x, tasks=("det",))),
-        "Neuravex v0.7-Small": (neuravex_small, lambda m, x: m(x, tasks=("det",)))
+        "Neuravex-Nano": (neuravex_nano, lambda m, x: m(x, tasks=("det",))),
+        "Neuravex-Small": (neuravex_small, lambda m, x: m(x, tasks=("det",)))
     }
 
     for res in resolutions:
@@ -288,33 +246,9 @@ def run_automated_industry_benchmark():
     print(" 2. ACCURACY & QUALITY-PER-FLOP BENCHMARK (320x320)")
     print("=" * 85)
 
-    # Post-processor wrapper for YOLO26 output
-    class YOLO26PostProc:
-        def __init__(self, conf=0.20, iou=0.45):
-            self.conf = conf
-            self.iou = iou
-        def __call__(self, out):
-            logits = out["class_logits"]
-            boxes = out["pred_boxes"]
-            scores = torch.sigmoid(logits)
-            max_s, labels = scores.max(dim=-1)
-            B = logits.shape[0]
-            res_boxes, res_scores, res_labels = [], [], []
-            for b in range(B):
-                mask = max_s[b] > self.conf
-                res_boxes.append(boxes[b][mask])
-                res_scores.append(max_s[b][mask])
-                res_labels.append(labels[b][mask])
-            return {"boxes": res_boxes, "scores": res_scores, "labels": res_labels}
-
-    yolo26_pp = YOLO26PostProc()
-
     acc_results = {}
-    print("Evaluating YOLO26 Accuracy...")
-    acc_results["YOLO26 Baseline"] = comprehensive_ap_evaluation(yolo26_model, val_loader, device, yolo26_pp)
-    
-    print("Evaluating Neuravex v0.7-Small Accuracy...")
-    acc_results["Neuravex v0.7-Small"] = comprehensive_ap_evaluation(neuravex_small, val_loader, device, post_processor)
+    print("Evaluating Neuravex-Small Accuracy...")
+    acc_results["Neuravex-Small"] = comprehensive_ap_evaluation(neuravex_small, val_loader, device, post_processor)
 
     # 5. Robustness & Corruption Benchmark
     print("\n" + "=" * 85)
@@ -325,19 +259,14 @@ def run_automated_industry_benchmark():
 
     for c in corruptions:
         print(f"Testing Corruption: {c}...")
-        y_c = comprehensive_ap_evaluation(yolo26_model, val_loader, device, yolo26_pp, corruption=c)
         n_c = comprehensive_ap_evaluation(neuravex_small, val_loader, device, post_processor, corruption=c)
-        
-        y_clean = acc_results["YOLO26 Baseline"]["mAP50_95"]
-        n_clean = acc_results["Neuravex v0.7-Small"]["mAP50_95"]
+        n_clean = acc_results["Neuravex-Small"]["mAP50_95"]
 
         robustness_records[c] = {
-            "yolo26_ap": y_c["mAP50_95"],
-            "yolo26_retention": (y_c["mAP50_95"] / max(y_clean, 1e-6)) * 100.0,
             "neuravex_ap": n_c["mAP50_95"],
             "neuravex_retention": (n_c["mAP50_95"] / max(n_clean, 1e-6)) * 100.0
         }
-        print(f"  [{c.upper():<9}] YOLO26: {y_c['mAP50_95']*100:4.1f}% (Ret: {robustness_records[c]['yolo26_retention']:5.1f}%) | Neuravex: {n_c['mAP50_95']*100:4.1f}% (Ret: {robustness_records[c]['neuravex_retention']:5.1f}%)")
+        print(f"  [{c.upper():<9}] Neuravex: {n_c['mAP50_95']*100:4.1f}% (Ret: {robustness_records[c]['neuravex_retention']:5.1f}%)")
 
     # 6. ONNX Export Verification
     print("\n" + "=" * 85)
@@ -354,7 +283,7 @@ def run_automated_industry_benchmark():
                 super().__init__()
                 self.m = m
             def forward(self, x):
-                out = self.m(x, tasks=("det",))
+                out = self.m(x, tasks=("det",), force_full_compute=True)
                 return out["class_logits"], out["pred_boxes"]
 
         wrapper = DetOnlyWrapper(neuravex_small)

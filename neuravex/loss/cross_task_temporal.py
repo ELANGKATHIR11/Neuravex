@@ -49,18 +49,24 @@ class CrossTaskGeometryLoss(nn.Module):
         seg_grad = F.pad(s_dx, (0, 1, 0, 0)) + F.pad(s_dy, (0, 0, 0, 1))
 
         # Cosine alignment between depth gradient and segmentation boundary
-        edge_loss = (1.0 - F.cosine_similarity(depth_grad.flatten(1), seg_grad.flatten(1), dim=-1)).mean()
+        # Flatten spatial dims
+        dg_flat = depth_grad.flatten(1)
+        sg_flat = seg_grad.flatten(1)
+        cos_sim = F.cosine_similarity(dg_flat, sg_flat, dim=-1)
+        edge_loss = (1.0 - cos_sim).mean()
 
-        return proj_err * 0.01 + edge_loss * 0.1
+        total = proj_err * 0.05 + edge_loss * 0.1
+        return total
 
 class TemporalConsistencyLoss(nn.Module):
     """
     Temporal motion consistency across consecutive video frames (I_t, I_t1):
       L_temp = L_f + L_b + L_m + L_d + L_3D
-    Penalizes sudden drift while masking out valid moving objects and occlusions.
+    Penalizes sudden drift while applying motion compensation via motion_warp when provided.
     """
-    def __init__(self):
+    def __init__(self, eps: float = 1e-6):
         super().__init__()
+        self.eps = eps
 
     def forward(self, out_t: dict, out_t1: dict, motion_warp: torch.Tensor = None) -> torch.Tensor:
         # Feature drift
@@ -75,9 +81,16 @@ class TemporalConsistencyLoss(nn.Module):
         else:
             l_3d = torch.tensor(0.0, device=l_f.device)
 
-        # Dense depth temporal stability
+        # Dense depth temporal stability with optional motion compensation
         if "depth_map" in out_t and "depth_map" in out_t1:
-            l_d = F.l1_loss(out_t["depth_map"], out_t1["depth_map"].detach())
+            d_t = out_t["depth_map"]
+            d_t1 = out_t1["depth_map"].detach()
+            if motion_warp is not None and motion_warp.shape[-2:] == (2, 3):
+                # Affine motion compensation grid
+                B, C, H, W = d_t.shape
+                grid = F.affine_grid(motion_warp, [B, C, H, W], align_corners=False)
+                d_t1 = F.grid_sample(d_t1, grid, align_corners=False)
+            l_d = F.l1_loss(d_t, d_t1)
         else:
             l_d = torch.tensor(0.0, device=l_f.device)
 

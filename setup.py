@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="neuravex",
-    version="0.7.0",
+    version="0.1.0",
     author="ELANGKATHIR11",
-    description="Neuravex v0.7: Ultra-Lightweight Custom Multi-Task Computer Vision Architecture & Real-Time YOLO Competitor",
+    description="Neuravex v0.1: Efficient Unified Computer-Vision Architecture with Adaptive Specialization",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ELANGKATHIR11/Neuravex",

@@ -24,5 +24,6 @@ htmlcov/
 *.log
 .vscode/
 .idea/
-weights/*.pt
+weights/
+*.onnx
 /data/

@@ -8,14 +8,22 @@ class AdaptiveComputeRouter(nn.Module):
       y = f_base(x) + g(x) * f_refine(x),  g in [0, 1]
     Easy / high-confidence samples use cheap base path;
     Hard / ambiguous samples trigger refinement, strictly enforcing compute budgets.
+
+    Supports:
+      - Per-sample routing (individual batch samples route independently)
+      - Explicit compute budget enforcement
+      - Deterministic full-compute fallback for reproducible benchmarks / export
+      - Static vs. Expected vs. Executed FLOPs tracking
     """
-    def __init__(self, channels: int):
+    def __init__(self, channels: int, reduction: int = 8):
         super().__init__()
+        self.channels = channels
+        hidden = max(channels // reduction, 8)
         self.router = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, max(channels // 8, 8), 1),
+            nn.Conv2d(channels, hidden, 1),
             nn.SiLU(inplace=True),
-            nn.Conv2d(max(channels // 8, 8), 1, 1),
+            nn.Conv2d(hidden, 1, 1),
             nn.Sigmoid()
         )
         self.refine_block = nn.Sequential(
@@ -26,21 +34,100 @@ class AdaptiveComputeRouter(nn.Module):
             nn.BatchNorm2d(channels)
         )
 
-    def forward(self, feat: torch.Tensor, threshold: float = 0.5) -> tuple:
+        # Baseline and refinement relative compute cost weights (per-pixel FLOPs)
+        # Refine FLOPs: DW-conv (2 * 1 * 9 * c * H * W) + PW-conv (2 * c * c * H * W)
+        self.register_buffer("base_cost", torch.tensor(1.0))
+        self.register_buffer("refine_cost_multiplier", torch.tensor(1.5))
+
+    def forward(self, feat: torch.Tensor, threshold: float = 0.5, force_full_compute: bool = False) -> tuple:
         """
         feat: (B, C, H, W)
-        Returns: (fused_feat, gate_score, executed_refine_bool)
+        threshold: routing threshold in [0, 1]
+        force_full_compute: if True, deterministically executes refinement for all samples
+        Returns:
+          fused_feat: (B, C, H, W)
+          stats: dict containing gate_scores, active_ratio, expected_cost, executed_cost
         """
+        B, C, H, W = feat.shape
         gate = self.router(feat) # (B, 1, 1, 1)
 
-        # Dynamic early-exit / execution
-        if gate.mean() < threshold and not self.training:
-            # Skip refinement during inference when confident!
-            return feat, gate, False
+        if force_full_compute or self.training:
+            # In training or forced mode: full forward pass with soft gate weighting
+            refine = self.refine_block(feat)
+            out = feat + gate * refine
+            active_mask = (gate >= threshold).float()
+            active_ratio = active_mask.mean()
+            stats = {
+                "gate": gate,
+                "active_ratio": active_ratio,
+                "expected_compute": (1.0 + gate.mean() * self.refine_cost_multiplier),
+                "executed_compute": (1.0 + 1.0 * self.refine_cost_multiplier),
+                "fully_executed": True
+            }
+            return out, stats
 
-        refine = self.refine_block(feat)
-        out = feat + gate * refine
-        return out, gate, True
+        # Inference per-sample routing:
+        sample_active = (gate.view(B) >= threshold) # (B,) bool
+        active_ratio = float(sample_active.float().mean().item())
+
+        if not sample_active.any():
+            # 100% skipped refinement across entire batch!
+            stats = {
+                "gate": gate,
+                "active_ratio": 0.0,
+                "expected_compute": (1.0 + gate.mean() * self.refine_cost_multiplier),
+                "executed_compute": torch.tensor(1.0, device=feat.device),
+                "fully_executed": False
+            }
+            return feat, stats
+
+        if sample_active.all():
+            # 100% active refinement across entire batch
+            refine = self.refine_block(feat)
+            out = feat + gate * refine
+            stats = {
+                "gate": gate,
+                "active_ratio": 1.0,
+                "expected_compute": (1.0 + gate.mean() * self.refine_cost_multiplier),
+                "executed_compute": (1.0 + 1.0 * self.refine_cost_multiplier),
+                "fully_executed": True
+            }
+            return out, stats
+
+        # Heterogeneous batch: evaluate refinement only on active samples to save compute
+        out = feat.clone()
+        active_idx = sample_active.nonzero(as_tuple=True)[0]
+        active_feat = feat[active_idx]
+        active_refine = self.refine_block(active_feat)
+        out[active_idx] = active_feat + gate[active_idx] * active_refine
+
+        stats = {
+            "gate": gate,
+            "active_ratio": active_ratio,
+            "expected_compute": (1.0 + gate.mean() * self.refine_cost_multiplier),
+            "executed_compute": (1.0 + active_ratio * self.refine_cost_multiplier),
+            "fully_executed": False
+        }
+        return out, stats
+
+class ComputeBudgetLoss(nn.Module):
+    """
+    Budget-constrained loss enforcing target execution efficiency:
+    L = L_task + lambda_c * C_expected + lambda_l * Latency_expected
+    """
+    def __init__(self, target_budget: float = 0.5, lambda_compute: float = 0.1):
+        super().__init__()
+        self.target_budget = target_budget
+        self.lambda_compute = lambda_compute
+
+    def forward(self, routing_stats: dict) -> torch.Tensor:
+        if "gate" not in routing_stats:
+            return torch.tensor(0.0)
+        gate = routing_stats["gate"]
+        # Penalize mean gating that exceeds target compute budget
+        mean_gate = gate.mean()
+        budget_penalty = F.relu(mean_gate - self.target_budget).pow(2)
+        return self.lambda_compute * (mean_gate + budget_penalty * 5.0)
 
 class KnowledgeDistillationLoss(nn.Module):
     """

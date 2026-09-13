@@ -6,7 +6,6 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from neuravex.models.neuravex import build_neuravex, Neuravex
-from yolo27_v0_3 import YOLO27 as YOLO27_v04
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters()), sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -37,7 +36,7 @@ def estimate_flops(model, x):
         h.remove()
     return total_flops
 
-def benchmark_latency(model, x, num_warmup=10, num_runs=30):
+def benchmark_latency(model, x, num_warmup=15, num_runs=50):
     model.eval()
     with torch.no_grad():
         for _ in range(num_warmup):
@@ -58,28 +57,29 @@ def benchmark_latency(model, x, num_warmup=10, num_runs=30):
 
 def run_benchmarks():
     print("=" * 70)
-    print("      REAL BENCHMARK: YOLO27 v0.4 vs YOLO27 v0.5")
+    print("      REAL BENCHMARK: Neuravex Architecture Family")
     print("=" * 70)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Benchmark Device: {device}\n")
 
     # 1. Models setup
-    model_v04 = YOLO27_v04().to(device)
-    model_v07_nano = build_neuravex(size="nano").to(device)
-    model_v07_nano.switch_to_deploy()
+    model_nano = build_neuravex(size="nano").to(device)
+    model_small = build_neuravex(size="small").to(device)
+    model_medium = build_neuravex(size="medium").to(device)
+    model_large = build_neuravex(size="large").to(device)
 
-    model_v07_small = build_neuravex(size="small").to(device)
-    model_v07_small.switch_to_deploy()
-
-    model_v07_medium = build_neuravex(size="medium").to(device)
-    model_v07_medium.switch_to_deploy()
+    # Convert to deploy
+    model_nano.switch_to_deploy()
+    model_small.switch_to_deploy()
+    model_medium.switch_to_deploy()
+    model_large.switch_to_deploy()
 
     models = {
-        "YOLO Baseline": model_v04,
-        "Neuravex v0.7-Nano (Full)": model_v07_nano,
-        "Neuravex v0.7-Small (Full)": model_v07_small,
-        "Neuravex v0.7-Medium (Full)": model_v07_medium
+        "Neuravex Nano (Deploy)": model_nano,
+        "Neuravex Small (Deploy)": model_small,
+        "Neuravex Medium (Deploy)": model_medium,
+        "Neuravex Large (Deploy)": model_large
     }
 
     # Parameter counts & sizes

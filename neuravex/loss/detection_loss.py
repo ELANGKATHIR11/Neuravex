@@ -58,31 +58,37 @@ class DetectionLoss(nn.Module):
             pos_pred_boxes = pred_bboxes[fg_mask]
             pos_target_boxes = target_bboxes[fg_mask]
 
+            # 2. Box regression: CIoU + optional DFL
             ciou = bbox_ciou(pos_pred_boxes, pos_target_boxes)
             loss_box = (1.0 - ciou).sum() / num_pos
 
-            # DFL target computation: convert target boxes to (l, t, r, b) in stride units
-            B, N = fg_mask.shape
-            pos_anchors = anchor_points.unsqueeze(0).expand(B, N, 2)[fg_mask]
-            pos_strides = strides.unsqueeze(0).expand(B, N, 1)[fg_mask]
+            if self.reg_max > 1:
+                # DFL target computation: convert target boxes to (l, t, r, b) in stride units
+                B, N = fg_mask.shape
+                pos_anchors = anchor_points.unsqueeze(0).expand(B, N, 2)[fg_mask]
+                pos_strides = strides.unsqueeze(0).expand(B, N, 1)[fg_mask]
 
-            lt = (pos_anchors - pos_target_boxes[:, :2]) / pos_strides
-            rb = (pos_target_boxes[:, 2:] - pos_anchors) / pos_strides
-            target_ltrb = torch.cat([lt, rb], dim=-1).clamp(0, self.reg_max - 1.01)
+                lt = (pos_anchors - pos_target_boxes[:, :2]) / pos_strides
+                rb = (pos_target_boxes[:, 2:] - pos_anchors) / pos_strides
+                target_ltrb = torch.cat([lt, rb], dim=-1).clamp(0, self.reg_max - 1.01)
 
-            # Reshape predicted dist: (N_pos, 4, reg_max)
-            pos_dist = pred_dist[fg_mask].view(-1, 4, self.reg_max)
-            loss_dfl = 0.0
-            for i in range(4):
-                loss_dfl = loss_dfl + dfl_loss(pos_dist[:, i, :], target_ltrb[:, i])
-            loss_dfl = loss_dfl / 4.0
+                # Reshape predicted dist: (N_pos, 4, reg_max)
+                pos_dist = pred_dist[fg_mask].view(-1, 4, self.reg_max)
+                loss_dfl = 0.0
+                for i in range(4):
+                    loss_dfl = loss_dfl + dfl_loss(pos_dist[:, i, :], target_ltrb[:, i])
+                loss_dfl = loss_dfl / 4.0
+            else:
+                # Direct regression (reg_max == 1): no DFL bin distribution
+                loss_dfl = torch.tensor(0.0, device=pred_scores.device)
         else:
             loss_box = pred_bboxes.sum() * 0.0
             loss_dfl = pred_dist.sum() * 0.0
 
+        dfl_term = self.dfl_weight * loss_dfl if self.reg_max > 1 else 0.0
         total_loss = (self.cls_weight * loss_cls + 
                       self.box_weight * loss_box + 
-                      self.dfl_weight * loss_dfl)
+                      dfl_term)
 
         loss_dict = {
             "loss_cls": loss_cls.detach(),

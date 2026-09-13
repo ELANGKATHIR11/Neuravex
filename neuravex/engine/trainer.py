@@ -16,9 +16,9 @@ from ..ssl.semi_supervised import SemiSupervisedPseudoLabeler
 from ..loss.cross_task_temporal import CrossTaskGeometryLoss
 from ..engine.adaptive_compute import KnowledgeDistillationLoss
 
-class YOLO27MultiTaskTrainer:
+class NeuravexMultiTaskTrainer:
     """
-    Complete end-to-end multi-task trainer for Neuravex v0.7.
+    Complete end-to-end multi-task trainer for Neuravex.
     Connects:
       Batch -> Augmentation -> Model -> Assigner -> Loss functions -> EMA Teacher SSL -> Geometry -> Adaptive weighting -> Backward -> Optimizer
     """
@@ -33,7 +33,8 @@ class YOLO27MultiTaskTrainer:
 
         # Sub-modules
         self.assigner = TaskAlignedAssigner(topk=10, num_classes=num_classes)
-        self.det_loss_fn = DetectionLoss(num_classes=num_classes)
+        reg_max = getattr(model, "reg_max", 16)
+        self.det_loss_fn = DetectionLoss(num_classes=num_classes, reg_max=reg_max)
         self.consistency_loss_fn = TransformAlignedConsistencyLoss()
         self.augmenter = GeometricMultiViewAugment(p_flip=0.5)
 
@@ -106,11 +107,12 @@ class YOLO27MultiTaskTrainer:
             gt_sem_binary = (sem_gt.unsqueeze(1) > 0).float()
             losses["mask_quality"] = mask_quality_loss(out["mask_quality"], pred_sem_binary, gt_sem_binary)
 
-            # 3.6 Depth loss with SILog + L1 + Gradient
+            # 3.6 Depth loss with SILog + L1 + Gradient + Confidence calibration
             if "depth" in batch and task_masks.get("depth", 0) > 0:
                 gt_depth = batch["depth"].to(self.device)
                 valid_depth = batch["valid_depth"].to(self.device)
-                losses["depth"] = comprehensive_metric_depth_loss(out["depth_map"], gt_depth, valid_depth)
+                pred_conf = out.get("depth_confidence", None)
+                losses["depth"] = comprehensive_metric_depth_loss(out["depth_map"], gt_depth, valid_depth, pred_confidence=pred_conf)
             else:
                 losses["depth"] = out["depth_inverse"].sum() * 0.0
 
@@ -163,11 +165,13 @@ class YOLO27MultiTaskTrainer:
             else:
                 losses["ssl"] = out["class_logits"].sum() * 0.0
 
-            # 3.10 Cross-Task Geometry Alignment
-            if task_masks.get("cross_geo", 1.0) > 0 and "depth_map" in out and "semantic_logits" in out and "pred_xyz" in out:
+            # 3.10 Cross-Task Geometry Alignment (depth <-> projection, mask <-> depth edges)
+            if task_masks.get("cross_geo", 1.0) > 0 and "depth_map" in out and "semantic_masks" in out and "pred_xyz" in out:
+                batch_intrinsics = batch.get("intrinsics", None)
                 loss_geo = self.cross_geom_loss_fn(
                     out["pred_boxes"], out["pred_xyz"],
-                    out["semantic_logits"], out["depth_map"]
+                    out["semantic_masks"], out["depth_map"],
+                    intrinsics=batch_intrinsics
                 )
                 losses["cross_geo"] = loss_geo
             else:
@@ -201,5 +205,3 @@ class YOLO27MultiTaskTrainer:
             "weighted_losses": weighted_dict,
             "task_weights": weights
         }
-
-NeuravexMultiTaskTrainer = YOLO27MultiTaskTrainer

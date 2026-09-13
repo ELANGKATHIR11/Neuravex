@@ -1,38 +1,60 @@
 {
   "project": "Neuravex",
-  "version": "Neuravex v0.7",
-  "positioning": "Ultra-lightweight custom multi-task computer vision architecture and direct next-generation competitor to the YOLO family",
-  "modules": [
-    "2D anchor-free multi-scale detection (P3, P4, P5 strides 8, 16, 32)",
-    "RepConv reparameterizable 3x3 convolutions fused into single 3x3 convs for deployment",
-    "PartialChannelRepBlock (P-RepBlock) cutting FLOPs while preserving gradient diversity",
-    "Primary detection fast path bypassing auxiliary heads during pure detection inference",
-    "Multi-view EMA teacher (torch.no_grad) with multi-scale feature distillation",
-    "Class-balanced adaptive pseudo-label generator with predictive entropy filtering",
-    "Self-supervised photometric monocular depth loss (SSIM + L1 + edge-aware smoothness)",
-    "Cross-task 2D-3D geometric consistency and temporal motion stability",
-    "Self-supervised instance clustering over spatial, depth, and embedding affinity",
-    "RL / Bandit meta-controller for dynamic hyperparameter & resource budgeting",
-    "Adaptive compute router (early-exit) and knowledge distillation",
-    "Task-aligned SimOTA dynamic assignment",
-    "Complete IoU (CIoU) + DFL box regression",
-    "Multi-class Cross Entropy + Multiclass Dice with ignore-index",
-    "Morphological boundary loss on raw logits (Focal + Dice)",
-    "Discriminative instance embedding loss (L_var + L_dist + L_reg)",
-    "Mask quality self-assessment (IoU supervision SmoothL1)",
-    "Camera-aware DEM (inverse depth rho <-> metric depth Z)",
-    "Dense 3D pointcloud unprojection via camera intrinsics K",
-    "Oriented 3D IoU with rotated BEV polygon intersection",
-    "Object-specific 3D supervision on assigned positive detections",
-    "Multi-view geometric augmentation with inverse transform tracking",
-    "Confidence-weighted transform-aligned consistency loss",
-    "Lightweight bidirectional cross-task feature fusion",
-    "Adaptive uncertainty loss weighting with modality masking",
-    "COCO multi-task dataset adapter with polygon rasterization",
-    "Comprehensive evaluation metric suite: mAP50, mAP50:95, mIoU, Boundary F1, Depth RMSE/AbsRel"
+  "version": "Neuravex v0.1",
+  "identity": {
+    "name": "Neuravex v0.1",
+    "status": "OFFICIAL NEURAVEX v0.1",
+    "nature": "Independent computer-vision architecture. Not a YOLO derivative or variant.",
+    "purpose": "Efficient unified computer-vision architecture",
+    "primary_objective": "maximize REAL detection AP/FLOP subject to minimum latency + VRAM + parameters + deployment cost"
+  },
+  "architecture_foundation": {
+    "flow": "Input -> Partial/Rep Backbone -> Multi-scale PAN/FPN -> Adaptive Compute -> Task Heads",
+    "backbone": "Lightweight partial-channel reparameterizable backbone with RepConv branches, mathematically exact BN fusion, and depthwise partial channel efficiency",
+    "neck": "Multi-scale Path Aggregation Network (PANet) fusing P3, P4, P5 into Q3, Q4, Q5 with zero redundant convolutions",
+    "adaptive_compute": "Adaptive compute router with per-sample routing, explicit compute budgets, routing telemetry, static/expected/executed compute accounting, and deterministic full-compute fallback",
+    "heads": {
+      "detection": "Decoupled 2D classification + bounding box regression supporting both DFL (reg_max > 1) and Direct Regression (reg_max = 1)",
+      "geometry_3d": "Camera-aware 3D detection predicting (X,Y,Z), (L,W,H), yaw (sin/cos) with strict camera calibration verification",
+      "segmentation": "Semantic logits, boundary map, discriminative instance embeddings, mask quality, prototype masks (bypassed in det-only mode)",
+      "depth": "Dense metric depth map (Z = 1/rho) with valid-depth masking and calibrated camera geometry",
+      "dem": "Dense Elevation / Terrain model with explicit terrain != depth separation and metric elevation output"
+    }
+  },
+  "training_order_protocol": [
+    "COCO 2D",
+    "COCO detection + segmentation",
+    "KITTI depth",
+    "nuScenes/Waymo 3D",
+    "SemanticKITTI",
+    "USGS 3DEP DEM",
+    "unified multitask training"
   ],
-  "training_note": "Multi-task trainer supports both supervised, semi-supervised, and self-supervised learning with EMA teacher distillation and detection-first inference bypass.",
-  "status": "fully verified end-to-end; unit tests passing; overfit test converged; real benchmarks measured on RTX 5060 Laptop GPU (83 FPS Nano, 81 FPS Small)",
-  "publication_guidance": "Benchmarks report verified FLOPs, parameter counts, memory, and CPU/GPU latency. Formal validation mAP/mIoU scores require a full 300-epoch training schedule on COCO/NYUv2. Comparative YOLO baseline is attributed as a state-of-the-art anchor-free 2D detection baseline.",
+  "dataset_benchmark_labels": [
+    "FULL",
+    "SUBSET",
+    "SMOKE",
+    "NOT RUN"
+  ],
+  "claim_policy": {
+    "tags": ["[MEASURED]", "[REFERENCE]", "[ESTIMATED]", "[NOT RUN]"],
+    "rule": "Every reported number must carry an explicit classification tag. Estimates and references must never be converted into measured Neuravex results."
+  },
+  "baseline_separation": {
+    "OFFICIAL_REFERENCE": "Published official baseline results (e.g., official published YOLO benchmarks with full specification)",
+    "LOCAL_REPRO": "Pinned official implementation/checkpoint reproduced locally under identical hardware and measurement protocols"
+  },
+  "completion_gates": {
+    "gate_1_architecture_unit_tests": "PASSED",
+    "gate_2_forward_backward_amp": "PASSED",
+    "gate_3_checkpoint_save_load": "PASSED",
+    "gate_4_repconv_train_deploy_equivalence": "PASSED",
+    "gate_5_cocoeval_known_answer": "PASSED",
+    "gate_6_onnx_equivalence": "PASSED",
+    "gate_7_detection_training_convergence": "PASSED",
+    "gate_8_real_coco_val_ap": "PASSED",
+    "gate_9_efficiency_metrics_telemetry": "PASSED",
+    "gate_10_baseline_separation_compliance": "PASSED"
+  },
   "license": "GNU Affero General Public License v3.0 (AGPL-3.0)"
 }

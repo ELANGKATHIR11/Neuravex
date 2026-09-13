@@ -19,7 +19,7 @@ def boundary_from_binary_mask(mask: np.ndarray) -> np.ndarray:
 
 class COCOMultiTaskDataset(Dataset):
     """
-    Complete COCO Dataset adapter for YOLO27 v0.5 multi-task training:
+    Complete COCO Dataset adapter for Neuravex multi-task training:
     - Detection (bounding boxes & class labels)
     - Semantic segmentation (pixel-level class maps)
     - Instance segmentation (instance ID maps & embeddings)
