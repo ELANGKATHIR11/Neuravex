@@ -1,0 +1,67 @@
+{
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "device": "cuda:0"
+  },
+  "dataset": {
+    "name": "Indian Animals (Animals Dataset)",
+    "total_images": 326,
+    "classes": [
+      "Asiatic Lion",
+      "Indian Cow",
+      "Indian Dog",
+      "Indian Macaque",
+      "Langur",
+      "tiger"
+    ]
+  },
+  "neuravex": {
+    "tier": "Nano",
+    "parameters_M": 2.36,
+    "trained_weights": "neuravex_animals_best.pth (Distilled with YOLO26)",
+    "accuracy": 44.48,
+    "precision_macro": 0.4398,
+    "recall_macro": 0.421,
+    "f1_macro": 0.4043,
+    "mean_latency_ms": 51.48,
+    "median_latency_ms": 19.01,
+    "p95_latency_ms": 20.91,
+    "fps": 19.4,
+    "mean_iou": 0.0075,
+    "mean_giou": -0.2578,
+    "mean_diou": -0.2365,
+    "mean_ciou": -0.2373,
+    "mean_bos": 0.0022,
+    "bos_at_50": 0.0,
+    "bos_at_75": 0.0,
+    "multi_modal_features": {
+      "dense_depth_dem": true,
+      "mean_elevation_depth": 1.374,
+      "depth_variance": 0.001,
+      "metric_3d_bounding_box": true
+    }
+  },
+  "yolo26": {
+    "model": "Ultralytics YOLO11n (YOLO26 baseline)",
+    "parameters_M": 2.62,
+    "accuracy_zero_shot": 41.41,
+    "precision_macro": 0.3324,
+    "recall_macro": 0.3382,
+    "f1_macro": 0.3166,
+    "mean_latency_ms": 14.58,
+    "median_latency_ms": 12.63,
+    "p95_latency_ms": 13.85,
+    "fps": 68.6,
+    "mean_iou": 0.3631,
+    "mean_giou": 0.3242,
+    "mean_diou": 0.3309,
+    "mean_ciou": 0.329,
+    "mean_bos": 0.2764,
+    "bos_at_50": 20.2,
+    "bos_at_75": 6.4,
+    "multi_modal_features": {
+      "dense_depth_dem": false,
+      "metric_3d_bounding_box": false
+    }
+  }
+}
