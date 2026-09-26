@@ -2,6 +2,38 @@ import torch
 import torch.nn.functional as F
 import math
 
+def rotation_6d_to_matrix(d6: torch.Tensor) -> torch.Tensor:
+    """
+    Converts continuous 6D rotation representation (Zhou et al., CVPR 2019) to SO(3) 3x3 rotation matrix
+    using Gram-Schmidt orthogonalization.
+    d6: (..., 6)
+    Returns: (..., 3, 3) orthogonal rotation matrix with det(R) = +1
+    """
+    x_raw = d6[..., 0:3]
+    y_raw = d6[..., 3:6]
+
+    # First column: normalized x
+    r1 = F.normalize(x_raw, dim=-1, eps=1e-7)
+
+    # Second column: Gram-Schmidt orthogonalized against r1
+    dot = (r1 * y_raw).sum(dim=-1, keepdim=True)
+    r2_raw = y_raw - dot * r1
+    r2 = F.normalize(r2_raw, dim=-1, eps=1e-7)
+
+    # Third column: cross product r1 x r2
+    r3 = torch.cross(r1, r2, dim=-1)
+
+    return torch.stack([r1, r2, r3], dim=-1)
+
+def matrix_to_yaw(R: torch.Tensor) -> torch.Tensor:
+    """
+    Extracts planar yaw angle from 3x3 rotation matrix R.
+    R: (..., 3, 3)
+    Returns: (...,) yaw angle in radians
+    """
+    # Yaw around camera Y/Z axis convention: atan2(R[0, 1], R[0, 0])
+    return torch.atan2(R[..., 0, 1], R[..., 0, 0])
+
 def boxes3d_to_corners(center: torch.Tensor, lwh: torch.Tensor, yaw: torch.Tensor) -> torch.Tensor:
     """
     Computes 8 corners for 3D bounding boxes.

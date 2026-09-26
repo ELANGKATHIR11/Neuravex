@@ -1,0 +1,12 @@
+tier,parameters_M,target_hardware,device_type,input_resolution,mean_latency_ms,median_latency_ms,p95_latency_ms,fps,peak_vram_mb
+pico,0.52,CPU (No GPU / IoT),cpu,320x320,18.13,17.51,22.41,55.1,0.0
+femto,1.122,CPU (Raspberry Pi / Edge),cpu,320x320,16.26,15.64,20.98,61.5,0.0
+nano,2.33,CPU (Standard Host),cpu,512x512,29.13,28.73,31.95,34.3,0.0
+pico,0.52,RTX 5060 GPU,cuda,320x320,21.82,20.96,27.16,45.8,7.9
+femto,1.122,RTX 5060 GPU,cuda,320x320,20.91,20.15,26.02,47.8,13.0
+nano,2.33,RTX 5060 GPU,cuda,512x512,21.1,19.97,28.76,47.4,31.2
+micro,5.135,RTX 5060 GPU,cuda,640x640,25.18,24.55,31.65,39.7,62.0
+small,8.956,RTX 5060 GPU,cuda,640x640,23.9,23.38,28.82,41.8,90.0
+medium,21.843,RTX 5060 GPU,cuda,640x640,29.16,28.54,34.98,34.3,165.4
+YOLO11n Baseline,2.624,CPU (Standard Host),cpu,512x512,38.72,38.39,41.24,25.8,0.0
+YOLO11n Baseline,2.624,RTX 5060 GPU,cuda,640x640,17.05,16.96,25.07,58.7,72.1

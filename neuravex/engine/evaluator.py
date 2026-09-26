@@ -1,3 +1,4 @@
+from typing import Any, Dict, List, Optional, Union, cast
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -67,6 +68,25 @@ class NeuravexInferencePostProcessor:
             det_xyz = f_xyz[keep]
             det_lwh = f_lwh[keep]
             det_yaw = f_yaw[keep]
+
+            # Bounding Box Voting (IoU-Weighted BBox Fusion):
+            # Eliminates sub-pixel anchor quantization noise, tightening box boundaries and driving IoU and BoS higher
+            if len(det_boxes) > 0 and len(f_boxes) > len(det_boxes):
+                from ..geometry.box_ops import box_iou_2d
+                ious = box_iou_2d(det_boxes, f_boxes)  # (N_keep, N_all)
+                refined_boxes = []
+                for k in range(len(det_boxes)):
+                    same_class = (f_labels == det_labels[k])
+                    match_mask = same_class & (ious[k] >= 0.50)
+                    if match_mask.any():
+                        match_b = f_boxes[match_mask]
+                        match_s = f_scores[match_mask] * ious[k, match_mask]
+                        w_sum = match_s.sum().clamp_min(1e-6)
+                        voted_b = (match_b * match_s.unsqueeze(-1)).sum(dim=0) / w_sum
+                        refined_boxes.append(voted_b)
+                    else:
+                        refined_boxes.append(det_boxes[k])
+                det_boxes = torch.stack(refined_boxes, dim=0)
 
             batch_detections.append({
                 "boxes": det_boxes,
@@ -142,6 +162,15 @@ class NeuravexInferencePostProcessor:
                     dist = float(np.sqrt(x_cam ** 2 + y_cam ** 2 + z_cam ** 2))
                     d_conf = float(score)
 
+                # 3D Physical Dimensions & Orientation decoding
+                raw_l = float(det_lwh[i, 0].item()) if det_lwh.numel() > 0 else 1.0
+                raw_w = float(det_lwh[i, 1].item()) if det_lwh.numel() > 0 else 0.8
+                raw_h = float(det_lwh[i, 2].item()) if det_lwh.numel() > 0 else 1.2
+                dim_l = float(np.exp(raw_l)) if raw_l < 0.1 else max(0.2, raw_l)
+                dim_w = float(np.exp(raw_w)) if raw_w < 0.1 else max(0.2, raw_w)
+                dim_h = float(np.exp(raw_h)) if raw_h < 0.1 else max(0.2, raw_h)
+                yaw_deg = float(det_yaw[i, 0].item() * 180.0 / np.pi) if det_yaw.numel() > 0 else 0.0
+
                 frame_objects.append({
                     "id": i + 1,
                     "class": label,
@@ -153,15 +182,22 @@ class NeuravexInferencePostProcessor:
                     "z": z_cam,
                     "depth": z_cam,
                     "distance": dist,
-                    "depth_confidence": float(d_conf)
+                    "depth_confidence": float(d_conf),
+                    "dimensions3D": {
+                        "length": round(dim_l, 2),
+                        "width": round(dim_w, 2),
+                        "height": round(dim_h, 2)
+                    },
+                    "yawDeg": round(yaw_deg, 1)
                 })
+
 
             if tracker is not None:
                 frame_objects = tracker.step(frame_objects, dt=dt)
 
             batch_objects.append(frame_objects)
 
-        processed_outputs = {
+        processed_outputs: Dict[str, Any] = {
             "detections": batch_detections,
             "objects": batch_objects
         }
@@ -204,8 +240,8 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
       - AR1, AR10, AR100 (Average Recall)
     Strictly forbids AP = prec * rec heuristics or arbitrary multipliers.
     """
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
+    from pycocotools.coco import COCO  # type: ignore[import-untyped,import-not-found]
+    from pycocotools.cocoeval import COCOeval  # type: ignore[import-untyped,import-not-found]
 
     # 1. Discover all categories
     if cat_ids is not None:
@@ -223,7 +259,7 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
     coco_gt = COCO()
     images_info = []
     annotations_info = []
-    categories_info = [{"id": int(c), "name": f"class_{c}"} for c in all_categories]
+    categories_info = [{"id": int(c), "name": f"class_{c}", "supercategory": "object"} for c in all_categories]
 
     ann_id = 1
     num_images = len(gt_boxes_list)
@@ -313,7 +349,8 @@ def calculate_map_metrics(pred_boxes_list, pred_scores_list, pred_labels_list,
         return empty_result
 
     try:
-        coco_dt = coco_gt.loadRes(coco_dt_list)
+        # pycocotools accepts a list of dicts at runtime, but stubs only specify `resFile: str`
+        coco_dt = coco_gt.loadRes(cast(str, coco_dt_list))
         coco_eval = COCOeval(coco_gt, coco_dt, iouType="bbox")
         if iou_thresholds is not None:
             coco_eval.params.iouThrs = np.array(iou_thresholds)
@@ -419,4 +456,62 @@ def calculate_boundary_fscore(pred_bound: torch.Tensor, gt_bound: torch.Tensor, 
     rec = tp / max(tp + fn, 1)
     f1 = 2 * (prec * rec) / max(prec + rec, 1e-6)
     return float(f1)
+
+def calculate_bos_metrics(pred_boxes: torch.Tensor, gt_boxes: torch.Tensor) -> dict:
+    """
+    Evaluates 2D Bounding Box IoU and Box Overlap Score / Boundary Overlap Stability (BoS).
+    Returns:
+      - mean_iou: Mean Intersection over Union
+      - mean_bos: Mean Box Overlap Score (joint IoU + center alignment + scale consistency)
+      - bos_at_50: Percentage of detections with BoS >= 0.50
+      - bos_at_75: Percentage of detections with BoS >= 0.75
+    """
+    from ..geometry.box_ops import box_iou_2d, calculate_box_overlap_score
+    if len(pred_boxes) == 0 or len(gt_boxes) == 0:
+        return {"mean_iou": 0.0, "mean_bos": 0.0, "bos_at_50": 0.0, "bos_at_75": 0.0}
+
+    ious = box_iou_2d(pred_boxes, gt_boxes) # (N, M)
+    bos_mat = calculate_box_overlap_score(pred_boxes, gt_boxes) # (N, M)
+
+    max_ious, _ = ious.max(dim=1)
+    max_bos, _ = bos_mat.max(dim=1)
+
+    mean_iou = float(max_ious.mean().item())
+    mean_bos = float(max_bos.mean().item())
+    bos_at_50 = float((max_bos >= 0.50).float().mean().item())
+    bos_at_75 = float((max_bos >= 0.75).float().mean().item())
+
+    return {
+        "mean_iou": mean_iou,
+        "mean_bos": mean_bos,
+        "bos_at_50": bos_at_50,
+        "bos_at_75": bos_at_75
+    }
+
+def calculate_3d_iou_and_bos(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw: torch.Tensor,
+                             gt_xyz: torch.Tensor, gt_lwh: torch.Tensor, gt_yaw: torch.Tensor) -> dict:
+    """
+    Evaluates 3D Oriented Bounding Box IoU and 3D Boundary Overlap Score (BoS_3D).
+    """
+    from ..geometry.oriented_iou3d import oriented_iou_3d
+    if len(pred_xyz) == 0 or len(gt_xyz) == 0:
+        return {"mean_3d_iou": 0.0, "mean_3d_bos": 0.0, "iou3d_at_50": 0.0, "iou3d_at_75": 0.0}
+
+    iou_3d = oriented_iou_3d(pred_xyz, pred_lwh, pred_yaw, gt_xyz, gt_lwh, gt_yaw)
+    
+    # 3D spatial alignment
+    rho2_3d = ((pred_xyz - gt_xyz) ** 2).sum(dim=-1)
+    min_c = torch.min(pred_xyz - 0.5 * pred_lwh, gt_xyz - 0.5 * gt_lwh)
+    max_c = torch.max(pred_xyz + 0.5 * pred_lwh, gt_xyz + 0.5 * gt_lwh)
+    diag2 = ((max_c - min_c) ** 2).sum(dim=-1).clamp_min(1e-4)
+
+    bos_3d = (iou_3d * torch.exp(-torch.sqrt(rho2_3d / diag2))).clamp(0.0, 1.0)
+
+    return {
+        "mean_3d_iou": float(iou_3d.mean().item()),
+        "mean_3d_bos": float(bos_3d.mean().item()),
+        "iou3d_at_50": float((iou_3d >= 0.50).float().mean().item()),
+        "iou3d_at_75": float((iou_3d >= 0.75).float().mean().item())
+    }
+
 

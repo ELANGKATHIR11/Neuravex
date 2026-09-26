@@ -1,0 +1,54 @@
+================================================================================
+STRICT MODE - SAFE IN-PLACE `dgpu-core` 26-DOMAIN FINAL AUDIT REPORT
+================================================================================
+
+1. RUNTIME & HARDWARE TARGET
+   • Python Version     : 3.11.15 (Windows-native 64-bit)
+   • OS Architecture    : Windows 11 AMD64
+   • Target Hardware    : NVIDIA GeForce RTX 5060 Laptop GPU (Blackwell)
+   • CPU Target         : Intel(R) Core(TM) Ultra 9 275HX
+   • NPU Target         : Intel(R) AI Boost (NPU offload verified)
+   • CUDA Drivers       : NVIDIA CUDA 13.4 Driver (Driver Version 616.92)
+
+2. CORE HARDWARE & RUNTIME VALIDATIONS (ALL PASSED)
+   • PyTorch CUDA       : True
+   • PyTorch Version    : 2.14.0+cu130 (Official CUDA 13 build)
+   • Device Name        : NVIDIA GeForce RTX 5060 Laptop GPU
+   • CUDA Tensor Matmul : PASS (Verified FP16 Matmul & GPU VRAM allocation)
+   • OpenVINO Devices   : ['CPU', 'GPU.0', 'GPU.1', 'NPU']
+       - CPU   -> Intel(R) Core(TM) Ultra 9 275HX
+       - GPU.0 -> Intel(R) Graphics (iGPU)
+       - GPU.1 -> NVIDIA GeForce RTX 5060 Laptop GPU (dGPU)
+       - NPU   -> Intel(R) AI Boost
+   • ONNX Runtime GPU   : ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']
+   • UL / SSL Validation: PASS (KMeans, DBSCAN, PCA, t-SNE, UMAP, HDBSCAN, FAISS, Kornia GPU rotation test PASS)
+   • Geospatial Stack   : PASS (Shapely, PyProj, GeoPandas, Rasterio, Fiona, PyOgrio)
+   • Database Stack     : PASS (Psycopg 3, Psycopg2-binary, SQLAlchemy, DuckDB)
+
+3. PROTECTED COMPATIBILITY ANCHORS
+   • PyTorch 2.14.0+cu130 (CUDA 13.0)
+   • TorchVision 0.29.0+cu130
+   • TorchAudio 2.11.0+cu130
+   • ONNX Runtime GPU 1.30.0 (TensorRT + CUDA + CPU Execution Providers)
+   • OpenVINO 2026.4.0 (Intel NPU AI Boost + Core Ultra 9 275HX)
+   • NumPy 2.4.6, SciPy 1.17.1, Pandas 3.0.6, Polars 1.44.2, DuckDB 1.5.5
+   • OpenCV 5.0.0.93, Ultralytics 8.4.163, Albumentations 2.0.8, Timm 1.0.30
+   • Psycopg 3.3.6 & Psycopg-binary 3.3.6
+
+4. PACKAGE CHANGES & REASONS
+   • Upgraded/Added ONNX Runtime GPU: onnxruntime-gpu 1.30.0 with TensorRT & CUDA EPs.
+   • Upgraded/Added Geospatial Suite: shapely, pyproj, geopandas, rasterio, fiona.
+   • Upgraded/Added UL/SSL & Vector Clustering: umap-learn, hdbscan, kornia, faiss-cpu.
+   • Added Database Providers: psycopg (v3) + psycopg-binary.
+   • Upgraded LLM & Agent Stack: transformers, langchain, langgraph, bitsandbytes, peft.
+   • No unnecessary packages installed; duplicate providers avoided.
+
+5. PIP INTEGRITY CHECK
+   • `python -m pip check` -> "No broken requirements found."
+
+6. ROLLBACK & RECOVERY
+   • Conda snapshot export : C:\Users\elang\Downloads\neuravex-cv\env_backups\dgpu-core-snapshot.yml
+   • Pip snapshot freeze   : C:\Users\elang\Downloads\neuravex-cv\env_backups\dgpu-core-snapshot-pip.txt
+   • Final Conda export    : C:\Users\elang\Downloads\neuravex-cv\dgpu-core-final.yml
+   • Final Pip freeze      : C:\Users\elang\Downloads\neuravex-cv\dgpu-core-final-pip.txt
+   • Domain CSV map        : C:\Users\elang\Downloads\neuravex-cv\dgpu-core-final-domain-map.csv

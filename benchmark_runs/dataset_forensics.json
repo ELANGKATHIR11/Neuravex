@@ -1,0 +1,24 @@
+{
+  "dataset_root": "C:\\Users\\elang\\Downloads\\animals",
+  "total_images_discovered": 326,
+  "total_corrupted_images": 0,
+  "total_duplicates": 11,
+  "class_counts": {
+    "Asiatic Lion": 49,
+    "Indian Cow": 61,
+    "Indian Dog": 46,
+    "Indian Macaque": 50,
+    "Langur": 47,
+    "tiger": 73
+  },
+  "class_imbalance_ratio": 1.5869565217391304,
+  "min_width": 266,
+  "max_width": 8191,
+  "mean_width": 1538.1656441717791,
+  "min_height": 145,
+  "max_height": 7008,
+  "mean_height": 1269.3220858895706,
+  "mean_aspect_ratio": 1.2971806748466257,
+  "has_manual_gt_annotations": false,
+  "annotation_audit_note": "No ground truth annotations (YOLO/COCO/VOC) exist in dataset. Images are organized strictly in classification directories."
+}

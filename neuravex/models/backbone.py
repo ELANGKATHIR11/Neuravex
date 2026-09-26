@@ -99,14 +99,60 @@ class RepConv(nn.Module):
         b_fused = bn.bias - bn.running_mean * bn.weight / std
         return w_fused, b_fused
 
+class RepLKConv(nn.Module):
+    """
+    Reparameterizable Large-Kernel Conv (RepLK 7x7 + 3x3 + 1x1):
+    Expands effective receptive field to ViT scale without quadratic memory cost.
+    Training: 7x7 Depthwise Conv + 3x3 Depthwise Conv + 1x1 Conv
+    Deploy: Fused into a single equivalent 7x7 Depthwise Conv2d.
+    """
+    def __init__(self, c, k=7):
+        super().__init__()
+        self.c = c
+        self.k = k
+        pad = k // 2
+        self.conv_large = nn.Conv2d(c, c, k, 1, pad, groups=c, bias=False)
+        self.bn_large = nn.BatchNorm2d(c)
+        self.conv_small = nn.Conv2d(c, c, 3, 1, 1, groups=c, bias=False)
+        self.bn_small = nn.BatchNorm2d(c)
+        self.fused_conv = None
+
+    def forward(self, x):
+        if self.fused_conv is not None:
+            return self.fused_conv(x)
+        return self.bn_large(self.conv_large(x)) + self.bn_small(self.conv_small(x))
+
+    def switch_to_deploy(self):
+        if self.fused_conv is not None:
+            return
+        # Fuse BNs
+        std_l = (self.bn_large.running_var + self.bn_large.eps).sqrt()
+        w_l = self.conv_large.weight * (self.bn_large.weight / std_l).reshape(-1, 1, 1, 1)
+        b_l = self.bn_large.bias - self.bn_large.running_mean * self.bn_large.weight / std_l
+
+        std_s = (self.bn_small.running_var + self.bn_small.eps).sqrt()
+        w_s = self.conv_small.weight * (self.bn_small.weight / std_s).reshape(-1, 1, 1, 1)
+        b_s = self.bn_small.bias - self.bn_small.running_mean * self.bn_small.weight / std_s
+
+        pad_diff = (self.k - 3) // 2
+        w_s_padded = F.pad(w_s, [pad_diff, pad_diff, pad_diff, pad_diff])
+
+        w_fused = w_l + w_s_padded
+        b_fused = b_l + b_s
+
+        self.fused_conv = nn.Conv2d(self.c, self.c, self.k, 1, self.k // 2, groups=self.c, bias=True)
+        self.fused_conv.weight.data = w_fused
+        self.fused_conv.bias.data = b_fused
+        del self.conv_large, self.bn_large, self.conv_small, self.bn_small
+
 class PartialChannelRepBlock(nn.Module):
     """
-    Partial Channel RepBlock (P-RepBlock):
-    Applies reparameterizable convolutions and depthwise SE attention
+    Partial Channel RepBlock (P-RepBlock) with RepLK Large-Kernel 7x7 Depthwise Conv:
+    Applies reparameterizable 7x7 large-kernel convolutions and depthwise SE attention
     to a partial slice of channels while identity-passing the remainder.
-    Significantly cuts FLOPs and latency while preserving rich feature gradients!
+    Significantly cuts FLOPs and latency while matching ViT receptive field!
     """
-    def __init__(self, c, part_ratio=0.5, e=1.0):
+    def __init__(self, c, part_ratio=0.5, e=1.0, use_replk=True):
         super().__init__()
         self.c = c
         self.part_c = int(c * part_ratio)
@@ -114,20 +160,33 @@ class PartialChannelRepBlock(nn.Module):
         h = int(self.part_c * e)
 
         self.cv1 = RepConv(self.part_c, h, s=1)
-        self.dw = nn.Conv2d(h, h, 3, 1, 1, groups=h, bias=False)
-        self.bn_dw = nn.BatchNorm2d(h)
+        if use_replk:
+            self.dw = RepLKConv(h, k=7)
+        else:
+            self.dw = nn.Sequential(
+                nn.Conv2d(h, h, 3, 1, 1, groups=h, bias=False),
+                nn.BatchNorm2d(h)
+            )
         self.se = SqueezeExcitation(h)
         self.cv2 = ConvBNAct(h, self.part_c, 1)
 
     def forward(self, x):
         x_part, x_pass = torch.split(x, [self.part_c, self.pass_c], dim=1)
-        x_out = self.cv2(self.se(F.silu(self.bn_dw(self.dw(self.cv1(x_part))))))
+        x_out = self.cv2(self.se(F.silu(self.dw(self.cv1(x_part)))))
         out = torch.cat([x_part + x_out, x_pass], dim=1)
         return out
+
+    def switch_to_deploy(self):
+        if hasattr(self.cv1, "switch_to_deploy"):
+            self.cv1.switch_to_deploy()
+        if hasattr(self.dw, "switch_to_deploy"):
+            self.dw.switch_to_deploy()
+
 
 RepBlock = PartialChannelRepBlock
 
 class Backbone(nn.Module):
+
     """
     Hierarchical multi-scale backbone producing feature maps P3, P4, P5
     at strides 8, 16, 32 with functional depth_mul scaling.
@@ -173,3 +232,121 @@ class Backbone(nn.Module):
         p4 = self.s4(p3)
         p5 = self.s5(p4)
         return p3, p4, p5
+
+    def switch_to_deploy(self):
+        for m in self.modules():
+            if m is not self and hasattr(m, "switch_to_deploy"):
+                m.switch_to_deploy()
+
+
+class MaskedMultimodalAutoencoder(nn.Module):
+    """
+    Masked Multimodal Autoencoding (MMA-Neuravex):
+    Cross-modal self-supervised pre-training:
+      - Randomly masks a percentage of RGB image patches (e.g., 60%) and Depth tokens (e.g., 75%)
+      - Cross-modal transformer / bottleneck reconstructs missing visual patches from available depth
+        and missing depth tokens from available visual tokens.
+      - Forces representations to discover that visual texture implies 3D surface geometry,
+        and depth outlines indicate physical boundaries.
+    """
+    def __init__(self, backbone: Backbone, patch_size: int = 16, embed_dim: int = 256,
+                 rgb_mask_ratio: float = 0.60, depth_mask_ratio: float = 0.75):
+        super().__init__()
+        self.backbone = backbone
+        self.patch_size = patch_size
+        self.embed_dim = embed_dim
+        self.rgb_mask_ratio = rgb_mask_ratio
+        self.depth_mask_ratio = depth_mask_ratio
+
+        # Depth token projection
+        self.depth_proj = nn.Conv2d(1, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # Visual patch projection
+        self.rgb_proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
+
+        # Cross-modal fusion bottleneck
+        self.cross_fuse = nn.Sequential(
+            nn.Linear(embed_dim * 2, embed_dim),
+            nn.GELU(),
+            nn.Linear(embed_dim, embed_dim)
+        )
+
+        # Decoders
+        self.rgb_decoder = nn.Sequential(
+            nn.Linear(embed_dim, embed_dim),
+            nn.GELU(),
+            nn.Linear(embed_dim, 3 * patch_size * patch_size)
+        )
+        self.depth_decoder = nn.Sequential(
+            nn.Linear(embed_dim, embed_dim),
+            nn.GELU(),
+            nn.Linear(embed_dim, 1 * patch_size * patch_size)
+        )
+
+    def patchify(self, imgs: torch.Tensor, channels: int) -> torch.Tensor:
+        """(B, C, H, W) -> (B, num_patches, C * patch_size * patch_size)"""
+        p = self.patch_size
+        B, C, H, W = imgs.shape
+        h_p, w_p = H // p, W // p
+        x = imgs.reshape(B, C, h_p, p, w_p, p)
+        x = torch.einsum('nchpwq->nhwpqc', x)
+        patches = x.reshape(B, h_p * w_p, C * p * p)
+        return patches
+
+    def generate_random_mask(self, batch_size: int, num_patches: int, mask_ratio: float, device: torch.device):
+        """Generates boolean mask where True indicates MASKED tokens."""
+        len_keep = int(num_patches * (1 - mask_ratio))
+        noise = torch.rand(batch_size, num_patches, device=device)
+        ids_shuffle = torch.argsort(noise, dim=1)
+        mask = torch.ones(batch_size, num_patches, device=device, dtype=torch.bool)
+        mask.scatter_(1, ids_shuffle[:, :len_keep], False)
+        return mask
+
+    def forward(self, rgb: torch.Tensor, depth: torch.Tensor) -> dict:
+        """
+        rgb: (B, 3, H, W)
+        depth: (B, 1, H, W) metric depth map
+        """
+        if depth.dim() == 3:
+            depth = depth.unsqueeze(1)
+        B, _, H, W = rgb.shape
+        device = rgb.device
+
+        # 1. Project to patch tokens
+        rgb_tokens = self.rgb_proj(rgb).flatten(2).transpose(1, 2) # (B, N, D)
+        depth_tokens = self.depth_proj(depth).flatten(2).transpose(1, 2) # (B, N, D)
+        num_patches = rgb_tokens.shape[1]
+
+        # 2. Random masking
+        rgb_mask = self.generate_random_mask(B, num_patches, self.rgb_mask_ratio, device)
+        depth_mask = self.generate_random_mask(B, num_patches, self.depth_mask_ratio, device)
+
+        # Zero-out masked tokens
+        rgb_visible = rgb_tokens * (~rgb_mask.unsqueeze(-1)).float()
+        depth_visible = depth_tokens * (~depth_mask.unsqueeze(-1)).float()
+
+        # 3. Cross-modal conditioning: reconstruct RGB from depth + visible RGB, and depth from RGB + visible depth
+        fused = self.cross_fuse(torch.cat([rgb_visible, depth_visible], dim=-1))
+
+        pred_rgb_patches = self.rgb_decoder(fused)
+        pred_depth_patches = self.depth_decoder(fused)
+
+        # 4. Compute reconstruction losses only on the masked tokens
+        target_rgb_patches = self.patchify(rgb, 3)
+        target_depth_patches = self.patchify(depth, 1)
+
+        loss_rgb = ((pred_rgb_patches - target_rgb_patches) ** 2).mean(dim=-1)
+        loss_rgb = (loss_rgb * rgb_mask.float()).sum() / (rgb_mask.sum().clamp_min(1.0))
+
+        loss_depth = ((pred_depth_patches - target_depth_patches) ** 2).mean(dim=-1)
+        loss_depth = (loss_depth * depth_mask.float()).sum() / (depth_mask.sum().clamp_min(1.0))
+
+        total_loss = loss_rgb + 0.5 * loss_depth
+
+        return {
+            "loss_mma": total_loss,
+            "loss_rgb_recon": loss_rgb.detach(),
+            "loss_depth_recon": loss_depth.detach(),
+            "rgb_mask": rgb_mask,
+            "depth_mask": depth_mask
+        }
+

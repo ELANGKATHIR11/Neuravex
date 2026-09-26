@@ -1,0 +1,38 @@
+Sat Sep 26 10:20:03 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 616.92                 KMD Version: 616.92        CUDA UMD Version: 13.4     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5060 ...  WDDM  |   00000000:02:00.0  On |                  N/A |
+| N/A   50C    P4             14W /   24W |    1428MiB /   8151MiB |      5%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A           14032    C+G   ...INDOWS\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A           15220    C+G   C:\WINDOWS\explorer.exe               N/A      |
+|    0   N/A  N/A           15236    C+G   ...t\Edge\Application\msedge.exe      N/A      |
+|    0   N/A  N/A           15544    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           16820    C+G   ...IA App\CEF\NVIDIA Overlay.exe      N/A      |
+|    0   N/A  N/A           16880    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           16904    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17880    C+G   ...IA App\CEF\NVIDIA Overlay.exe      N/A      |
+|    0   N/A  N/A           18840    C+G   ...mba6cd70vzyy\ArmouryCrate.exe      N/A      |
+|    0   N/A  N/A           20856    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           22856    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           23196    C+G   ...avity IDE\Antigravity IDE.exe      N/A      |
+|    0   N/A  N/A           24136    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           24656    C+G   ...avity IDE\Antigravity IDE.exe      N/A      |
+|    0   N/A  N/A           25628    C+G   ...t\Edge\Application\msedge.exe      N/A      |
+|    0   N/A  N/A           28848    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           28884    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           30736    C+G   ...0_x64__8j3eq9eme6ctt\IGCC.exe      N/A      |
+|    0   N/A  N/A           30876    C+G   ...8wekyb3d8bbwe\SecHealthUI.exe      N/A      |
++-----------------------------------------------------------------------------------------+

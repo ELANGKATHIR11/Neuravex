@@ -1,0 +1,29 @@
+{
+  "neuravex": {
+    "architecture": "Neuravex Unified Foundation Model (Multi-Task)",
+    "tasks": [
+      "2D Detection",
+      "3D Bounding Box (XYZ/LWH/Yaw)",
+      "Dense Elevation & Depth (DEM)",
+      "Semantic/Boundary Mask",
+      "Human Pose",
+      "ST-Intelligence"
+    ],
+    "total_params_M": 22.3207,
+    "trainable_params_M": 22.3207,
+    "gflops_640": 62.74,
+    "weights_status": "Architectural PyTorch Initialization (No specialized trained weights file on disk)",
+    "file_size_mb": "In-Memory Module (~89.2 MB equivalent FP32)"
+  },
+  "yolo26": {
+    "architecture": "Ultralytics YOLO11 Nano (YOLO26 baseline reference)",
+    "tasks": [
+      "2D Object Detection"
+    ],
+    "total_params_M": 2.6241,
+    "trainable_params_M": 0.0,
+    "gflops_640": 3.31,
+    "weights_status": "COCO Pretrained Official Checkpoint (yolo11n.pt)",
+    "file_size_mb": 5.35
+  }
+}

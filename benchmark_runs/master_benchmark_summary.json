@@ -1,0 +1,43 @@
+{
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "vram_gb": 7.93,
+    "driver": "616.92",
+    "cuda": "13.0",
+    "cudnn": 92400,
+    "pytorch": "2.14.0"
+  },
+  "dataset": {
+    "name": "Indian Animals Dataset",
+    "total_test_images": 326,
+    "classes": 6,
+    "ground_truth_status": "Unlabeled Classification Images (Evaluated for detection zero-shot, saliency overlap, and multi-task capability)"
+  },
+  "models": {
+    "neuravex": {
+      "parameters_M": 22.32,
+      "gflops": 62.7,
+      "multi_task": "Yes (Detection, 3D Bounding Cuboid, Dense Elevation Model/DEM, Pose, Segmentation)",
+      "trained_weights_found": false,
+      "mean_latency_ms": 40.73,
+      "median_latency_ms": 32.77,
+      "p95_latency_ms": 63.06,
+      "fps": 24.6,
+      "peak_vram_mb": 258.4
+    },
+    "yolo26": {
+      "parameters_M": 2.62,
+      "gflops": 3.3,
+      "multi_task": "No (Pure 2D Bounding Box Detection)",
+      "trained_weights_found": true,
+      "mean_latency_ms": 20.35,
+      "median_latency_ms": 13.99,
+      "p95_latency_ms": 30.82,
+      "fps": 49.1,
+      "peak_vram_mb": 118.2,
+      "detection_rate_pct": 91.4,
+      "mean_iou_salient": 0.3631,
+      "mean_bos_salient": 0.2764
+    }
+  }
+}

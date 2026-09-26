@@ -159,3 +159,137 @@ class KnowledgeDistillationLoss(nn.Module):
 
         total = self.lambda_logits * kd_cls + self.lambda_dist * kd_dist
         return total
+
+class ActorCriticComputePolicy(nn.Module):
+    """
+    Reinforcement Learning (RL) Actor-Critic Policy Router for Dynamic Compute Budgeting.
+    Replaces static scalar gating with a closed-loop policy governor:
+      - State s_t: Scene complexity (spatial entropy, optical motion, object density, battery/thermal constraint)
+      - Action a_t in {0, 1, 2}:
+          a = 0: Ultra-Light Path (Run P3 stride only, bypass DEM, output cached 2D boxes)
+          a = 1: Standard 3D Path (Run P3+P4, compute 3D centroids)
+          a = 2: Full Dense Refinement (Engage DEM, multi-layer boundary segmentation, 6D orientation)
+      - Actor: Computes categorical action probability pi(a|s)
+      - Critic: Computes expected state value V(s)
+      - PPO / Policy Gradient loss optimization
+    """
+    def __init__(self, state_dim: int = 64, hidden_dim: int = 128, num_actions: int = 3):
+        super().__init__()
+        self.state_dim = state_dim
+        self.num_actions = num_actions
+
+        # Feature projection for input scene feature map
+        self.encoder = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten(),
+            nn.Linear(state_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.SiLU(inplace=True)
+        )
+
+        # Policy Actor head (logits over actions)
+        self.actor = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.SiLU(inplace=True),
+            nn.Linear(hidden_dim // 2, num_actions)
+        )
+
+        # Critic value head V(s)
+        self.critic = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.SiLU(inplace=True),
+            nn.Linear(hidden_dim // 2, 1)
+        )
+
+    def forward(self, state_feat: torch.Tensor, deterministic: bool = False) -> tuple:
+        """
+        state_feat: (B, C, H, W) or (B, C)
+        deterministic: if True, select argmax action; else sample from categorical distribution
+        Returns:
+            action: (B,) discrete action indices in {0, 1, 2}
+            log_prob: (B,) log probability of selected actions
+            value: (B, 1) estimated baseline state value V(s)
+            entropy: (B,) policy entropy for exploration regularization
+        """
+        if state_feat.dim() == 4:
+            feat = self.encoder(state_feat)
+        else:
+            feat = state_feat
+
+        logits = self.actor(feat)
+        probs = F.softmax(logits, dim=-1)
+        dist = torch.distributions.Categorical(probs=probs)
+
+        if deterministic:
+            action = torch.argmax(probs, dim=-1)
+        else:
+            action = dist.sample()
+
+        log_prob = dist.log_prob(action)
+        entropy = dist.entropy()
+        value = self.critic(feat)
+
+        return action, log_prob, value, entropy
+
+    def evaluate_actions(self, state_feat: torch.Tensor, actions: torch.Tensor) -> tuple:
+        """Evaluates log probabilities, entropy, and state values for PPO updates."""
+        if state_feat.dim() == 4:
+            feat = self.encoder(state_feat)
+        else:
+            feat = state_feat
+
+        logits = self.actor(feat)
+        probs = F.softmax(logits, dim=-1)
+        dist = torch.distributions.Categorical(probs=probs)
+
+        log_prob = dist.log_prob(actions)
+        entropy = dist.entropy()
+        value = self.critic(feat)
+
+        return log_prob, value, entropy
+
+    def compute_rl_loss(self, old_log_probs: torch.Tensor, new_log_probs: torch.Tensor,
+                        values: torch.Tensor, returns: torch.Tensor,
+                        advantages: torch.Tensor, entropy: torch.Tensor,
+                        clip_eps: float = 0.2, c_val: float = 0.5, c_ent: float = 0.01) -> dict:
+        """
+        Proximal Policy Optimization (PPO) Clipped Loss:
+          L_clip = min(r * A, clip(r, 1-eps, 1+eps) * A)
+          L_vf = (V(s) - Return)^2
+          L_total = -L_clip + c_val * L_vf - c_ent * Entropy
+        """
+        ratio = torch.exp(new_log_probs - old_log_probs)
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1.0 - clip_eps, 1.0 + clip_eps) * advantages
+        policy_loss = -torch.min(surr1, surr2).mean()
+
+        value_loss = F.mse_loss(values.squeeze(-1), returns)
+        entropy_loss = -entropy.mean()
+
+        total_loss = policy_loss + c_val * value_loss + c_ent * entropy_loss
+
+        return {
+            "loss_rl_total": total_loss,
+            "loss_policy": policy_loss.detach(),
+            "loss_value": value_loss.detach(),
+            "entropy": -entropy_loss.detach()
+        }
+
+def compute_dynamic_budget_reward(iou_3d: torch.Tensor, conf: torch.Tensor,
+                                  action: torch.Tensor, target_lost: torch.Tensor,
+                                  lambda_flop: float = 0.25, mu_lost: float = 2.0) -> torch.Tensor:
+    """
+    Reward function balancing 3D tracking precision against computational consumption:
+      R_t = Accuracy(IoU_3D, Conf) - lambda * FLOPs(action) - mu * I(Target Lost)
+    """
+    # Relative compute costs for actions {0: 0.2, 1: 0.6, 2: 1.0}
+    cost_map = torch.tensor([0.2, 0.6, 1.0], device=action.device, dtype=conf.dtype)
+    cost = cost_map[action]
+
+    accuracy = (iou_3d * conf).clamp(0.0, 1.0)
+    penalty_compute = lambda_flop * cost
+    penalty_lost = mu_lost * target_lost.float()
+
+    reward = accuracy - penalty_compute - penalty_lost
+    return reward
+

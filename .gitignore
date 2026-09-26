@@ -1,7 +1,13 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyd
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -15,15 +21,31 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+
+# Large Weights & Datasets
+*.pt
+*.pth
+*.onnx
+*.engine
+*.bin
+yolo11n.pt
+animals/
+
+# Fullstack Frontend exclusions
+node_modules/
+src/
+frontend/
+.env
+.env.example
+
+# PyTest & IDE
 .pytest_cache/
-.coverage
-htmlcov/
-*.log
 .vscode/
 .idea/
-weights/
-*.onnx
-/data/
+*.ini
+desktop.ini

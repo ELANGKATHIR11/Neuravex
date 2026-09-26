@@ -1,7 +1,8 @@
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..geometry.oriented_iou3d import oriented_iou_3d
+from ..geometry.oriented_iou3d import oriented_iou_3d, rotation_6d_to_matrix, matrix_to_yaw
 
 def scale_invariant_log_depth_loss(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_mask: torch.Tensor, eps: float = 1e-4) -> torch.Tensor:
     """
@@ -36,7 +37,7 @@ def depth_gradient_loss(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_
     return loss_x + loss_y
 
 def comprehensive_metric_depth_loss(pred_depth: torch.Tensor, gt_depth: torch.Tensor, valid_mask: torch.Tensor,
-                                    pred_confidence: torch.Tensor = None,
+                                    pred_confidence: Optional[torch.Tensor] = None,
                                     lambda_silog: float = 1.0, lambda_abs: float = 0.5, lambda_grad: float = 0.5,
                                     lambda_conf: float = 0.2) -> torch.Tensor:
     """
@@ -69,12 +70,15 @@ def comprehensive_metric_depth_loss(pred_depth: torch.Tensor, gt_depth: torch.Te
 def loss_3d_detection(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw_sincos: torch.Tensor,
                       gt_xyz: torch.Tensor, gt_lwh: torch.Tensor, gt_yaw: torch.Tensor,
                       pos_mask: torch.Tensor,
-                      log_sigma_xyz: torch.Tensor = None,
-                      log_sigma_lwh: torch.Tensor = None,
-                      log_sigma_yaw: torch.Tensor = None) -> tuple:
+                      log_sigma_xyz: Optional[torch.Tensor] = None,
+                      log_sigma_lwh: Optional[torch.Tensor] = None,
+                      log_sigma_yaw: Optional[torch.Tensor] = None) -> tuple:
     """
     Object-specific 3D supervision on assigned positive detections:
     L_3D = L_xyz + L_lwh + L_theta + L_IoU3D
+    Supports:
+      - Instance-level or global heteroscedastic uncertainty (log_sigma_xyz, log_sigma_lwh)
+      - Either continuous 6D rotation (pred_yaw_sincos.shape[-1] == 6) or planar yaw (shape[-1] == 2)
     """
     if pos_mask.sum() == 0:
         zero = (pred_xyz.sum() + pred_lwh.sum() + pred_yaw_sincos.sum()) * 0.0
@@ -84,39 +88,65 @@ def loss_3d_detection(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw_s
     g_xyz = gt_xyz[pos_mask]
     p_lwh = pred_lwh[pos_mask]
     g_lwh = gt_lwh[pos_mask]
-    p_yaw_sc = pred_yaw_sincos[pos_mask]
+    p_yaw = pred_yaw_sincos[pos_mask]
     g_yaw = gt_yaw[pos_mask]
     if g_yaw.ndim == 1:
         g_yaw = g_yaw.unsqueeze(-1)
 
-    # 1. Center XYZ loss
+    # 1. Center XYZ loss with heteroscedastic NLL
     if log_sigma_xyz is not None:
-        sigma_xyz = torch.exp(log_sigma_xyz.clamp(-5.0, 5.0))
-        loss_xyz = (F.smooth_l1_loss(p_xyz, g_xyz, reduction="none") / sigma_xyz + log_sigma_xyz).mean()
+        ls_xyz = log_sigma_xyz[pos_mask] if log_sigma_xyz.shape[:2] == pred_xyz.shape[:2] else log_sigma_xyz
+        ls_xyz = ls_xyz.clamp(-5.0, 5.0)
+        sigma_xyz = torch.exp(ls_xyz)
+        loss_xyz = (F.smooth_l1_loss(p_xyz, g_xyz, reduction="none") / sigma_xyz + ls_xyz).mean()
     else:
         loss_xyz = F.smooth_l1_loss(p_xyz, g_xyz)
 
-    # 2. Dimensions LWH loss in log space
+    # 2. Dimensions LWH loss in log space with heteroscedastic NLL
     log_p_lwh = torch.log(p_lwh.clamp_min(1e-4))
     log_g_lwh = torch.log(g_lwh.clamp_min(1e-4))
     if log_sigma_lwh is not None:
-        sigma_lwh = torch.exp(log_sigma_lwh.clamp(-5.0, 5.0))
-        loss_lwh = (F.smooth_l1_loss(log_p_lwh, log_g_lwh, reduction="none") / sigma_lwh + log_sigma_lwh).mean()
+        ls_lwh = log_sigma_lwh[pos_mask] if log_sigma_lwh.shape[:2] == pred_lwh.shape[:2] else log_sigma_lwh
+        ls_lwh = ls_lwh.clamp(-5.0, 5.0)
+        sigma_lwh = torch.exp(ls_lwh)
+        loss_lwh = (F.smooth_l1_loss(log_p_lwh, log_g_lwh, reduction="none") / sigma_lwh + ls_lwh).mean()
     else:
         loss_lwh = F.smooth_l1_loss(log_p_lwh, log_g_lwh)
 
-    # 3. Periodic Yaw loss with normalized sin/cos
-    p_sc_norm = F.normalize(p_yaw_sc, dim=-1)
-    g_sc = torch.cat([torch.sin(g_yaw), torch.cos(g_yaw)], dim=-1)
-    loss_yaw_cos = (1.0 - (p_sc_norm * g_sc).sum(dim=-1)).mean()
-    recovered_pred_yaw = torch.atan2(p_sc_norm[:, 0], p_sc_norm[:, 1])
+    # 3. Orientation loss: 6D continuous rotation matrix or 2D (sin, cos)
+    if p_yaw.shape[-1] == 6:
+        # Full 6D rotation matrix
+        R_pred = rotation_6d_to_matrix(p_yaw)
+        recovered_pred_yaw = matrix_to_yaw(R_pred)
+        # Cosine alignment on recovered yaw vs ground truth
+        p_sc_norm = torch.stack([torch.sin(recovered_pred_yaw), torch.cos(recovered_pred_yaw)], dim=-1)
+        g_sc = torch.cat([torch.sin(g_yaw), torch.cos(g_yaw)], dim=-1)
+        loss_yaw_cos = (1.0 - (p_sc_norm * g_sc).sum(dim=-1)).mean()
+    else:
+        p_sc_norm = F.normalize(p_yaw, dim=-1)
+        g_sc = torch.cat([torch.sin(g_yaw), torch.cos(g_yaw)], dim=-1)
+        loss_yaw_cos = (1.0 - (p_sc_norm * g_sc).sum(dim=-1)).mean()
+        recovered_pred_yaw = torch.atan2(p_sc_norm[:, 0], p_sc_norm[:, 1])
 
-    # 4. Oriented 3D IoU loss
+    # 4. Oriented 3D IoU loss with 3D Center Distance (3D DIoU / CIoU)
     iou_3d = oriented_iou_3d(
         p_xyz, p_lwh, recovered_pred_yaw,
         g_xyz, g_lwh, g_yaw.squeeze(-1)
     )
-    loss_iou3d = (1.0 - iou_3d).mean()
+    
+    # 3D Center Euclidean distance penalty
+    rho2_3d = ((p_xyz - g_xyz) ** 2).sum(dim=-1)
+    
+    # Enclosing 3D volume diagonal squared
+    min_corner = torch.min(p_xyz - 0.5 * p_lwh, g_xyz - 0.5 * g_lwh)
+    max_corner = torch.max(p_xyz + 0.5 * p_lwh, g_xyz + 0.5 * g_lwh)
+    diag2_3d = ((max_corner - min_corner) ** 2).sum(dim=-1).clamp_min(1e-4)
+    
+    diou_penalty_3d = (rho2_3d / diag2_3d).clamp(0.0, 1.0)
+    loss_iou3d = (1.0 - iou_3d + 0.5 * diou_penalty_3d).mean()
+
+    # 3D Box Overlap Score (BoS_3D)
+    bos_3d = (iou_3d * torch.exp(-torch.sqrt(rho2_3d / diag2_3d))).clamp(0.0, 1.0)
 
     total_3d = loss_xyz + loss_lwh + loss_yaw_cos + loss_iou3d
     metrics = {
@@ -124,6 +154,9 @@ def loss_3d_detection(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw_s
         "loss_lwh": loss_lwh.detach(),
         "loss_yaw": loss_yaw_cos.detach(),
         "loss_iou3d": loss_iou3d.detach(),
-        "mean_iou3d": iou_3d.mean().detach()
+        "mean_iou3d": iou_3d.mean().detach(),
+        "mean_bos3d": bos_3d.mean().detach()
     }
     return total_3d, metrics
+
+

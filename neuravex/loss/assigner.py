@@ -119,3 +119,95 @@ class TaskAlignedAssigner(nn.Module):
                     target_scores[b, m_anchors, c_id] = norm_scores.clamp(0.0, 1.0)
 
         return target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx
+
+class HungarianOneToOneAssigner(nn.Module):
+    """
+    Exact One-to-One (O2I) Hungarian Assigner for NMS-Free End-to-End Detection (YOLOv10 / RT-DETR style).
+    Performs optimal bipartite matching between predictions and ground-truth boxes.
+    Cost:
+        C = lambda_cls * C_cls + lambda_l1 * C_l1 + lambda_giou * C_giou
+    """
+    def __init__(self, num_classes: int = 80, cost_cls: float = 1.0, cost_l1: float = 5.0, cost_giou: float = 2.0, eps: float = 1e-7):
+        super().__init__()
+        self.num_classes = num_classes
+        self.cost_cls = cost_cls
+        self.cost_l1 = cost_l1
+        self.cost_giou = cost_giou
+        self.eps = eps
+
+    @torch.no_grad()
+    def forward(self, pd_scores: torch.Tensor, pd_bboxes: torch.Tensor,
+                anc_points: torch.Tensor, gt_labels: torch.Tensor, gt_bboxes: torch.Tensor,
+                mask_gt: torch.Tensor):
+        """
+        Args:
+            pd_scores: (B, N, num_classes) sigmoid/logits scores
+            pd_bboxes: (B, N, 4) in xyxy format
+            anc_points: (N, 2) anchor points
+            gt_labels: (B, M, 1) or (B, M) class indices
+            gt_bboxes: (B, M, 4) in xyxy format
+            mask_gt: (B, M, 1) or (B, M) valid ground truth mask
+        """
+        from scipy.optimize import linear_sum_assignment
+
+        B, N, C = pd_scores.shape
+        max_gt = gt_bboxes.shape[1]
+
+        target_labels = torch.full((B, N), self.num_classes, dtype=torch.long, device=pd_scores.device)
+        target_bboxes = torch.zeros((B, N, 4), dtype=torch.float32, device=pd_bboxes.device)
+        target_scores = torch.zeros((B, N, C), dtype=torch.float32, device=pd_scores.device)
+        fg_mask = torch.zeros((B, N), dtype=torch.bool, device=pd_scores.device)
+        target_gt_idx = torch.full((B, N), -1, dtype=torch.long, device=pd_scores.device)
+
+        if max_gt == 0 or not mask_gt.bool().any():
+            return target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx
+
+        # Sigmoid prob for matching cost
+        probs = pd_scores.sigmoid() if pd_scores.min() < 0.0 or pd_scores.max() > 1.0 else pd_scores
+
+        for b in range(B):
+            n_gt = mask_gt[b].reshape(-1).sum().item()
+            if n_gt == 0:
+                continue
+
+            b_gt_boxes = gt_bboxes[b, :int(n_gt)]  # (M, 4)
+            b_gt_labels = gt_labels[b, :int(n_gt)].long().reshape(-1)  # (M,)
+            b_pd_boxes = pd_bboxes[b]  # (N, 4)
+            b_pd_probs = probs[b]  # (N, C)
+
+            # 1. Classification Cost (Focal cost: -prob for true class)
+            # For each GT box m, cost against each anchor n is -prob[n, label_m]
+            cls_cost = -b_pd_probs[:, b_gt_labels].T  # (M, N)
+
+            # 2. L1 Distance Cost
+            l1_cost = torch.cdist(b_gt_boxes, b_pd_boxes, p=1) / 1000.0  # (M, N) normalized scale
+
+            # 3. IoU Cost (1.0 - IoU)
+            pairwise_iou = box_iou_2d(b_gt_boxes, b_pd_boxes, eps=self.eps)  # (M, N)
+            giou_cost = 1.0 - pairwise_iou
+
+            # Total cost matrix (M, N)
+            total_cost = (self.cost_cls * cls_cost + 
+                          self.cost_l1 * l1_cost + 
+                          self.cost_giou * giou_cost)
+
+            # Scipy Hungarian assignment
+            cost_np = total_cost.detach().cpu().numpy()
+            gt_ind, pd_ind = linear_sum_assignment(cost_np)
+
+            if len(pd_ind) > 0:
+                pd_ind_tensor = torch.as_tensor(pd_ind, dtype=torch.long, device=pd_scores.device)
+                gt_ind_tensor = torch.as_tensor(gt_ind, dtype=torch.long, device=pd_scores.device)
+
+                fg_mask[b, pd_ind_tensor] = True
+                target_labels[b, pd_ind_tensor] = b_gt_labels[gt_ind_tensor]
+                target_bboxes[b, pd_ind_tensor] = b_gt_boxes[gt_ind_tensor]
+                target_gt_idx[b, pd_ind_tensor] = gt_ind_tensor
+
+                for idx, (g_i, p_i) in enumerate(zip(gt_ind, pd_ind)):
+                    c_id = b_gt_labels[g_i].item()
+                    # Soft score based on matched IoU
+                    target_scores[b, p_i, c_id] = pairwise_iou[g_i, p_i].clamp(0.0, 1.0)
+
+        return target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx
+
