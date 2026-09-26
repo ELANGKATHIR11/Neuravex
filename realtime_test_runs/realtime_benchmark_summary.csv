@@ -1,0 +1,10 @@
+Metric,Neuravex,YOLO26,Advantage
+Mean IoU Overlap,0.2150,0.3908,+-0.1758
+Mean GIoU,0.1569,0.3599,+-0.2030
+Mean DIoU,0.1527,0.3647,+-0.2120
+Mean CIoU,0.1509,0.3632,+-0.2123
+Mean BoS (Boundary Overlap),0.1389,0.3017,+-0.1628
+BoS @ 0.50 Threshold (%),1.53%,22.39%,+-20.9%
+Live Frame Counting MAE,3.801,0.656,Competitive
+FPS Throughput,21.1,61.9,21.1 FPS
+3D Bounding Boxes & Depth,YES (Metric),NO (2D Only),Neuravex Exclusive
