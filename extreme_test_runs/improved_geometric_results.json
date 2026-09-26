@@ -1,0 +1,20 @@
+{
+  "neuravex": {
+    "mean_iou": 0.572,
+    "mean_giou": 0.5429,
+    "mean_diou": 0.5615,
+    "mean_ciou": 0.5603,
+    "mean_bos": 0.4525,
+    "bos_at_50": 25.2,
+    "bos_at_75": 0.3
+  },
+  "yolo26": {
+    "mean_iou": 0.3908,
+    "mean_giou": 0.3599,
+    "mean_diou": 0.3647,
+    "mean_ciou": 0.3632,
+    "mean_bos": 0.3017,
+    "bos_at_50": 22.4,
+    "bos_at_75": 8.0
+  }
+}
