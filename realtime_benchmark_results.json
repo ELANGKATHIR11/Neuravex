@@ -1,0 +1,35 @@
+{
+    "benchmark_environment": {
+        "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU",
+        "total_images": 326,
+        "resolution": "640x640",
+        "benchmark_time_sec": 35.12
+    },
+    "neuravex_metrics": {
+        "mean_latency_ms": 43.11,
+        "fps": 23.2,
+        "mean_iou": 0.4833,
+        "mean_giou": 0.4545,
+        "mean_diou": 0.4614,
+        "mean_ciou": 0.4601,
+        "mean_bos": 0.3827,
+        "bos_50_percent": 29.14,
+        "bos_75_percent": 9.2,
+        "counting_mae": 0.801,
+        "mean_3d_depth_m": 1.0,
+        "std_3d_depth_m": 0.0
+    },
+    "yolo_metrics": {
+        "mean_latency_ms": 19.3,
+        "fps": 51.8,
+        "mean_iou": 0.9601,
+        "mean_giou": 0.9601,
+        "mean_diou": 0.9601,
+        "mean_ciou": 0.9601,
+        "mean_bos": 0.9601,
+        "bos_50_percent": 96.01,
+        "bos_75_percent": 96.01,
+        "counting_mae": 0.04,
+        "mean_3d_depth_m": null
+    }
+}
