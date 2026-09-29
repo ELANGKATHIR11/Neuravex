@@ -1,8 +1,13 @@
+<p align="center">
+  <img src="../assets/neuravex_logo.svg" alt="Neuravex Logo" width="220" />
+</p>
+
 # neuravex-spatial3d
 
 High-Performance Native 3D Spatial Perception, Photo, Image & Video Analysis, Sensor Fusion, Native DEM, and Volumetric Flow Counting SDK.
 
 [![Release](https://img.shields.io/badge/Release-v0.1.0-brightgreen.svg)](https://github.com/ELANGKATHIR11/Neuravex)
+[![CLI: neuravex-spatial3d](https://img.shields.io/badge/CLI-Global%20Command-blue.svg)](https://github.com/ELANGKATHIR11/Neuravex)
 [![Python: 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![CUDA & cuDNN](https://img.shields.io/badge/CUDA%20%7C%20cuDNN-Accelerated-76b900.svg)](https://nvidia.com)
 [![Intel & AMD](https://img.shields.io/badge/Hardware-Intel%20%26%20AMD%20AVX2%2F512-blueviolet.svg)](https://github.com/ELANGKATHIR11/Neuravex)

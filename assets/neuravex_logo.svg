@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#0a1128"/>
+      <stop offset="60%" stop-color="#030712"/>
+      <stop offset="100%" stop-color="#000208"/>
+    </radialGradient>
+
+    <!-- Neon Cyan & Electric Violet Gradients -->
+    <linearGradient id="neonCyanViolet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f5d4"/>
+      <stop offset="50%" stop-color="#00bbf9"/>
+      <stop offset="100%" stop-color="#9b5de5"/>
+    </linearGradient>
+
+    <linearGradient id="neonLaser" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f72585"/>
+      <stop offset="40%" stop-color="#7209b7"/>
+      <stop offset="100%" stop-color="#4361ee"/>
+    </linearGradient>
+
+    <linearGradient id="depthGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f5d4" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7209b7" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="laserGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur1"/>
+      <feGaussianBlur stdDeviation="18" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Deep Obsidian Canvas -->
+  <rect width="800" height="800" rx="160" fill="url(#bgGlow)" />
+
+  <!-- Subtle Perspective Spatial Grid -->
+  <g opacity="0.18" stroke="#00bbf9" stroke-width="1.2">
+    <line x1="200" y1="560" x2="600" y2="560" />
+    <line x1="160" y1="610" x2="640" y2="610" />
+    <line x1="100" y1="670" x2="700" y2="670" />
+    <line x1="30" y1="740" x2="770" y2="740" />
+
+    <line x1="400" y1="500" x2="100" y2="760" />
+    <line x1="400" y1="500" x2="250" y2="760" />
+    <line x1="400" y1="500" x2="400" y2="760" />
+    <line x1="400" y1="500" x2="550" y2="760" />
+    <line x1="400" y1="500" x2="700" y2="760" />
+  </g>
+
+  <!-- Volumetric Isometric 3D Bounding Box Structure -->
+  <g filter="url(#laserGlow)">
+    <!-- Back / Depth Faces -->
+    <polygon points="400,200 580,290 580,480 400,390" fill="url(#depthGradient)" opacity="0.25" />
+    <polygon points="400,200 220,290 220,480 400,390" fill="url(#depthGradient)" opacity="0.35" />
+    <polygon points="400,390 580,480 400,570 220,480" fill="url(#depthGradient)" opacity="0.45" />
+
+    <!-- Isometric Wireframe Edges -->
+    <path d="M400,170 L610,280 L610,500 L400,610 L190,500 L190,280 Z" 
+          fill="none" stroke="url(#neonCyanViolet)" stroke-width="4.5" stroke-linejoin="round" />
+    
+    <!-- Central Isometric Axes -->
+    <line x1="400" y1="390" x2="400" y2="610" stroke="url(#neonCyanViolet)" stroke-width="4" />
+    <line x1="400" y1="390" x2="610" y2="280" stroke="url(#neonCyanViolet)" stroke-width="4" />
+    <line x1="400" y1="390" x2="190" y2="280" stroke="url(#neonCyanViolet)" stroke-width="4" />
+    <line x1="400" y1="390" x2="400" y2="170" stroke="url(#neonLaser)" stroke-width="3" stroke-dasharray="6,6" opacity="0.8" />
+  </g>
+
+  <!-- Inner Neural Core: Interconnected Neural Synapses & "N" Geometry -->
+  <g filter="url(#softGlow)">
+    <!-- Stylized "N" & "V" Neural Ribbon -->
+    <path d="M290,460 L290,300 L400,430 L510,300 L510,460" 
+          fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+
+    <path d="M290,460 L290,300 L400,430 L510,300 L510,460" 
+          fill="none" stroke="url(#neonCyanViolet)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Neural Coordinate Nodes (L, W, H vertices) -->
+    <!-- Top Apex -->
+    <circle cx="400" cy="170" r="10" fill="#00f5d4" filter="url(#laserGlow)" />
+    <circle cx="400" cy="170" r="5" fill="#ffffff" />
+
+    <!-- Top Right -->
+    <circle cx="610" cy="280" r="9" fill="#00bbf9" />
+    <circle cx="610" cy="280" r="4" fill="#ffffff" />
+
+    <!-- Bottom Right -->
+    <circle cx="610" cy="500" r="9" fill="#9b5de5" />
+    <circle cx="610" cy="500" r="4" fill="#ffffff" />
+
+    <!-- Bottom Apex -->
+    <circle cx="400" cy="610" r="10" fill="#f72585" filter="url(#laserGlow)" />
+    <circle cx="400" cy="610" r="5" fill="#ffffff" />
+
+    <!-- Bottom Left -->
+    <circle cx="190" cy="500" r="9" fill="#7209b7" />
+    <circle cx="190" cy="500" r="4" fill="#ffffff" />
+
+    <!-- Top Left -->
+    <circle cx="190" cy="280" r="9" fill="#00f5d4" />
+    <circle cx="190" cy="280" r="4" fill="#ffffff" />
+
+    <!-- Center Node (Focal Origin) -->
+    <circle cx="400" cy="390" r="12" fill="#00f5d4" filter="url(#laserGlow)" />
+    <circle cx="400" cy="390" r="6" fill="#ffffff" />
+
+    <!-- Inner Keypoints -->
+    <circle cx="290" cy="300" r="7" fill="#00f5d4" />
+    <circle cx="510" cy="300" r="7" fill="#9b5de5" />
+    <circle cx="290" cy="460" r="7" fill="#00bbf9" />
+    <circle cx="510" cy="460" r="7" fill="#f72585" />
+    <circle cx="400" cy="430" r="8" fill="#ffffff" filter="url(#laserGlow)" />
+  </g>
+
+  <!-- Typography: NEURAVEX -->
+  <text x="400" y="695" 
+        text-anchor="middle" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+        font-size="44" 
+        font-weight="900" 
+        letter-spacing="12" 
+        fill="#ffffff">NEURAVEX</text>
+
+  <!-- Subtitle: SPATIAL 3D VISION -->
+  <text x="400" y="730" 
+        text-anchor="middle" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+        font-size="15" 
+        font-weight="700" 
+        letter-spacing="6" 
+        fill="#00f5d4">SPATIAL 3D &bull; SENSOR FUSION &bull; NATIVE DL</text>
+</svg>

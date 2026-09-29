@@ -1,15 +1,23 @@
+<p align="center">
+  <img src="assets/neuravex_logo.svg" alt="Neuravex Logo" width="240" />
+</p>
+
 # Neuravex v0.2.0: Hardware-Adaptive Unified Computer-Vision Architecture
 
 [![Release: v0.2.0](https://img.shields.io/badge/Release-v0.2.0-brightgreen.svg)](https://github.com/ELANGKATHIR11/Neuravex/releases)
+[![Global Package](https://img.shields.io/badge/Package-neuravex--spatial3d-blueviolet.svg)](https://github.com/ELANGKATHIR11/Neuravex)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+[![Python: 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Tests: 20/20 Subsystems](https://img.shields.io/badge/Subsystems-20%2F20%20Verified-success.svg)](https://github.com/ELANGKATHIR11/Neuravex)
 [![Hardware Verified](https://img.shields.io/badge/RTX%205060%20%7C%20CPU-Empirically%20Verified-76b900.svg)](https://nvidia.com/)
 
-**Neuravex v0.2.0** is an independent, production-grade deep learning architecture and hardware-adaptive computer-vision SDK. It unifies high-accuracy anchor-free detection, real-time metric depth estimation, 3D spatial bounding, instance segmentation, spatio-temporal video intelligence, and multi-stage distillation & quantization to achieve Pareto-optimal performance across edge and server hardware.
+**Neuravex** is an independent, production-grade deep learning architecture and hardware-adaptive computer-vision ecosystem comprising two global packages:
+1. **`neuravex`**: The core deep learning neural network architecture, multi-scale backbone (`RepConv` + `P-RepBlock`), detection/segmentation/pose heads, distillation engine, and INT8/FP16 deployment backends.
+2. **`neuravex-spatial3d`**: The dedicated 3D spatial perception, photo, image, and real-time live video analysis SDK supporting native 3D bounding boxes, physical $L, W, H$ calculation, camera & LiDAR sensor fusion, native DEM surface fitting, 3D segmentation volume isolation, persistent entity marking, and volumetric flow counting.
 
 > [!IMPORTANT]
-> **Independent DL Foundation**: Neuravex is an original, dedicated deep learning architecture and training/inference engine. All frontend UI/UX dependencies and web servers have been excised; the repository is exclusively focused on native Deep Learning models, neural heads, geometric transformations, and deployment runtimes (PyTorch, ONNX, TensorRT).
+> **Independent DL Foundation**: Neuravex is an original, dedicated deep learning architecture and training/inference engine. All frontend UI/UX dependencies and web servers have been excised; the repository is exclusively focused on native Deep Learning models, neural heads, geometric transformations, and deployment runtimes (PyTorch, ONNX, TensorRT, CUDA/cuDNN, Intel oneDNN, and AMD ROCm).
 
 ### Primary Objective
 
@@ -29,9 +37,9 @@ Neuravex transforms the traditional paradigm of static vision models into an ada
 
 $$\text{User Dataset} + \text{Hardware Constraints} \longrightarrow \mathbf{Dataset\ Analyzer} \longrightarrow \mathbf{Architecture\ Generator} \longrightarrow \mathbf{Specialized\ Neuravex} \longrightarrow \mathbf{Deploy}$$
 
-1. **Dataset-Conditioned Specialization**: Analyzes target datasets into a 16-dimensional complexity vector and synthesizes tailored network topologies.
-2. **20-Subsystem Architecture Upgrade**: Complete suite featuring dynamic resolution routing, spatial token pruning, intermediate early exits, and temporal feature caching.
-3. **Hardware-Aware Controller**: Auto-profiles CPU/GPU capabilities, RAM/VRAM budgets, and dynamically configures precision (FP32, FP16, INT8 PTQ) and execution providers.
+1. **Global Python Packages**: Fully modularized into `neuravex` and `neuravex-spatial3d` with global CLI entrypoints (`neuravex` and `neuravex-spatial3d`).
+2. **Native Live Video Pipeline**: Real-time continuous stream processing for concurrent 3D bounding boxes, physical dimensions ($L, W, H$), live instance masks, DEM terrain slopes, and persistent track IDs.
+3. **Hardware-Aware Execution**: Cross-platform acceleration across NVIDIA CUDA (v12+), cuDNN (v9.2+), Intel CPUs (oneDNN/AVX-512), and AMD processors/GPUs (ROCm/AVX2).
 4. **SOTA Distillation & Feature Hinting**: Multi-tier knowledge distillation with FitNets intermediate hint loss, DFL distribution transfer, and boundary-aware refinement.
 5. **Real-Time Metric Depth & 3D Spatial Unprojection**: Pinhole camera geometry integrating metric depth estimation with 3D oriented bounding boxes and Kalman state tracking.
 
@@ -41,7 +49,7 @@ $$\text{User Dataset} + \text{Hardware Constraints} \longrightarrow \mathbf{Data
 
 ```mermaid
 flowchart TD
-    Input["Input Frame (B, 3, H, W)"] --> Stem["Stem & Multi-Scale RepConv (Strides 2, 4)"]
+    Input["Input Frame (Image / Photo / Live Video)"] --> Stem["Stem & Multi-Scale RepConv (Strides 2, 4)"]
     Stem --> DynRes["Dynamic Resolution & Token Router (320 / 512 / 640)"]
     DynRes --> P2Opt["P2 High-Res Map (Stride 4) [Micro Objects]"]
     DynRes --> P3["P3 Feature Map (Stride 8)"]
@@ -71,10 +79,19 @@ flowchart TD
         CrossAdapter --> FlowHead["Spatio-Temporal Tracking & Neural Flow Zone Counter"]
     end
 
-    subgraph EdgeDeploy["Deployment & Optimization Engine"]
-        FastPath & Auxiliary --> Pruning["Structural Channel Pruner (L1-Norm)"]
+    subgraph Spatial3D["neuravex-spatial3d Global SDK Engine"]
+        FastPath & Auxiliary --> CamLiDAR["Camera Pinhole & LiDAR Sensor Fusion SE(3)"]
+        CamLiDAR --> LiveStream["Live Video Stream Processor (Webcam / RTSP / MP4)"]
+        LiveStream --> LiveDEM["Live DEM Elevation Profile, Slope & Ground Plane"]
+        LiveStream --> LiveLWH["Live Physical L, W, H Calculation & Volumetric Box"]
+        LiveStream --> LiveMark["Persistent Entity Tracking ID & Spatial Memory Store"]
+        LiveStream --> LiveCount["Volumetric 3D Counting Zones & Tripwires"]
+    end
+
+    subgraph EdgeDeploy["Deployment & Hardware Acceleration Engine"]
+        Spatial3D --> Pruning["Structural Channel Pruner (L1-Norm)"]
         Pruning --> Quant["INT8 / FP16 Quantization Engine (PTQ / QAT)"]
-        Quant --> ONNX["ONNX / TensorRT / OpenVINO Runtime Engine"]
+        Quant --> CrossHW["CUDA + cuDNN (NVIDIA) | oneDNN / AVX-512 (Intel) | ROCm / AVX2 (AMD)"]
     end
 ```
 

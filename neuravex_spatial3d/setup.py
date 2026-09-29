@@ -12,6 +12,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ELANGKATHIR11/Neuravex",
     packages=["neuravex_spatial3d"],
+    package_dir={"neuravex_spatial3d": "."},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.11",
@@ -31,5 +32,10 @@ setup(
     extras_require={
         "cuda": ["torch>=2.0.0"],
         "dev": ["pytest>=7.0.0", "ruff>=0.1.0"],
+    },
+    entry_points={
+        "console_scripts": [
+            "neuravex-spatial3d=neuravex_spatial3d.cli:main",
+        ],
     }
 )
