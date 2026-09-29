@@ -1,0 +1,151 @@
+{
+  "device": "cuda:0",
+  "evaluation_timestamp": "2026-09-27 13:39:03",
+  "accelerator_benchmarks": [
+    {
+      "variant": "Neuravex-Pico",
+      "params_M": 0.545,
+      "gflops": 1.713,
+      "p50_latency_ms": 10.14,
+      "mean_latency_ms": 9.1,
+      "std_latency_ms": 2.25,
+      "fps": 109.9,
+      "peak_vram_mb": 29.72,
+      "peak_ram_mb": 1593.93,
+      "energy_per_image_mj": 727.74,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    },
+    {
+      "variant": "Neuravex-Femto",
+      "params_M": 1.164,
+      "gflops": 3.729,
+      "p50_latency_ms": 6.46,
+      "mean_latency_ms": 7.31,
+      "std_latency_ms": 1.82,
+      "fps": 136.8,
+      "peak_vram_mb": 34.44,
+      "peak_ram_mb": 1570.19,
+      "energy_per_image_mj": 584.66,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    },
+    {
+      "variant": "Neuravex-Nano",
+      "params_M": 2.019,
+      "gflops": 6.517,
+      "p50_latency_ms": 6.48,
+      "mean_latency_ms": 7.22,
+      "std_latency_ms": 1.35,
+      "fps": 138.5,
+      "peak_vram_mb": 43.2,
+      "peak_ram_mb": 1576.31,
+      "energy_per_image_mj": 577.58,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    },
+    {
+      "variant": "Neuravex-Lite",
+      "params_M": 4.581,
+      "gflops": 15.115,
+      "p50_latency_ms": 13.44,
+      "mean_latency_ms": 14.24,
+      "std_latency_ms": 2.1,
+      "fps": 70.2,
+      "peak_vram_mb": 66.53,
+      "peak_ram_mb": 1588.49,
+      "energy_per_image_mj": 1139.54,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    },
+    {
+      "variant": "Neuravex-Edge",
+      "params_M": 9.086,
+      "gflops": 26.624,
+      "p50_latency_ms": 10.76,
+      "mean_latency_ms": 11.28,
+      "std_latency_ms": 3.09,
+      "fps": 88.6,
+      "peak_vram_mb": 96.14,
+      "peak_ram_mb": 1575.98,
+      "energy_per_image_mj": 902.72,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    },
+    {
+      "variant": "Neuravex-Pro",
+      "params_M": 22.359,
+      "gflops": 64.808,
+      "p50_latency_ms": 14.33,
+      "mean_latency_ms": 15.45,
+      "std_latency_ms": 2.67,
+      "fps": 64.7,
+      "peak_vram_mb": 171.79,
+      "peak_ram_mb": 1623.98,
+      "energy_per_image_mj": 1235.77,
+      "resolution": [
+        640,
+        640
+      ],
+      "device": "cuda:0"
+    }
+  ],
+  "cpu_first_benchmarks": [
+    {
+      "variant": "Neuravex-Pico (CPU)",
+      "resolution": [
+        320,
+        320
+      ],
+      "params_M": 0.545,
+      "gflops": 0.428,
+      "p50_latency_ms": 17.75,
+      "mean_latency_ms": 18.37,
+      "fps": 54.4,
+      "peak_ram_mb": 1575.78,
+      "energy_per_image_mj": 643.03
+    },
+    {
+      "variant": "Neuravex-Nano (CPU)",
+      "resolution": [
+        320,
+        320
+      ],
+      "params_M": 2.019,
+      "gflops": 1.644,
+      "p50_latency_ms": 29.74,
+      "mean_latency_ms": 28.67,
+      "fps": 34.9,
+      "peak_ram_mb": 1581.07,
+      "energy_per_image_mj": 1003.49
+    }
+  ],
+  "industry_baseline": {
+    "name": "YOLO11n Baseline",
+    "params_M": 2.624,
+    "p50_latency_ms": 8.84,
+    "mean_latency_ms": 10.72,
+    "std_latency_ms": 4.14,
+    "fps": 93.3,
+    "resolution": [
+      640,
+      640
+    ],
+    "device": "cuda:0"
+  }
+}

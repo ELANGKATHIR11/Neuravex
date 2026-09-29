@@ -1,0 +1,2507 @@
+{
+  "neuravex_nano": [
+    {
+      "filename": "000009.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.2772250175476074,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.2772250175476074,
+        "Indian Cow": 0.11948128044605255,
+        "Indian Dog": 0.15196067094802856,
+        "Indian Macaque": 0.09738784283399582,
+        "Langur": 0.23342503607273102,
+        "tiger": 0.12052014470100403
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3739624321460724,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3739624321460724,
+        "Indian Cow": 0.08427118510007858,
+        "Indian Dog": 0.1770300716161728,
+        "Indian Macaque": 0.12737376987934113,
+        "Langur": 0.12639863789081573,
+        "tiger": 0.11096391826868057
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.24084670841693878,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.24084670841693878,
+        "Indian Cow": 0.08496289700269699,
+        "Indian Dog": 0.2041478306055069,
+        "Indian Macaque": 0.14615947008132935,
+        "Langur": 0.1456151157617569,
+        "tiger": 0.1782679557800293
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.6175220012664795,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.6175220012664795,
+        "Indian Cow": 0.11946006119251251,
+        "Indian Dog": 0.050639525055885315,
+        "Indian Macaque": 0.07247637212276459,
+        "Langur": 0.0877370834350586,
+        "tiger": 0.05216499790549278
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.2848091125488281,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.2009873241186142,
+        "Indian Cow": 0.1128440573811531,
+        "Indian Dog": 0.09523572772741318,
+        "Indian Macaque": 0.2848091125488281,
+        "Langur": 0.1388474404811859,
+        "tiger": 0.1672763079404831
+      }
+    },
+    {
+      "filename": "000002.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3537040054798126,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3537040054798126,
+        "Indian Cow": 0.15108774602413177,
+        "Indian Dog": 0.19778653979301453,
+        "Indian Macaque": 0.08159658312797546,
+        "Langur": 0.07316622138023376,
+        "tiger": 0.14265894889831543
+      }
+    },
+    {
+      "filename": "000010.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.4416825473308563,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.4416825473308563,
+        "Indian Cow": 0.07787376642227173,
+        "Indian Dog": 0.09205275774002075,
+        "Indian Macaque": 0.16424252092838287,
+        "Langur": 0.1422102302312851,
+        "tiger": 0.08193821460008621
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.557468593120575,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.557468593120575,
+        "Indian Cow": 0.07120921462774277,
+        "Indian Dog": 0.08825495839118958,
+        "Indian Macaque": 0.12369216233491898,
+        "Langur": 0.10211990773677826,
+        "tiger": 0.0572550930082798
+      }
+    },
+    {
+      "filename": "000031.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.4414771497249603,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.11895286291837692,
+        "Indian Cow": 0.1920500099658966,
+        "Indian Dog": 0.12148256599903107,
+        "Indian Macaque": 0.06500790268182755,
+        "Langur": 0.06102955713868141,
+        "tiger": 0.4414771497249603
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.23729965090751648,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08959031105041504,
+        "Indian Cow": 0.23729965090751648,
+        "Indian Dog": 0.1345856785774231,
+        "Indian Macaque": 0.1713263839483261,
+        "Langur": 0.160971537232399,
+        "tiger": 0.2062264084815979
+      }
+    },
+    {
+      "filename": "000045.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.24678096175193787,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.15502861142158508,
+        "Indian Cow": 0.16990436613559723,
+        "Indian Dog": 0.0989229828119278,
+        "Indian Macaque": 0.24678096175193787,
+        "Langur": 0.2386655956506729,
+        "tiger": 0.09069759398698807
+      }
+    },
+    {
+      "filename": "000015.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.47697901725769043,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.06701871752738953,
+        "Indian Cow": 0.47697901725769043,
+        "Indian Dog": 0.12017934024333954,
+        "Indian Macaque": 0.10755830258131027,
+        "Langur": 0.09763588756322861,
+        "tiger": 0.13062869012355804
+      }
+    },
+    {
+      "filename": "000028.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.3146352767944336,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.06034322455525398,
+        "Indian Cow": 0.1691192388534546,
+        "Indian Dog": 0.2651367783546448,
+        "Indian Macaque": 0.08606812357902527,
+        "Langur": 0.3146352767944336,
+        "tiger": 0.10469739884138107
+      }
+    },
+    {
+      "filename": "000006.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.7710893154144287,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.039547719061374664,
+        "Indian Cow": 0.7710893154144287,
+        "Indian Dog": 0.045275285840034485,
+        "Indian Macaque": 0.04748828709125519,
+        "Langur": 0.046384163200855255,
+        "tiger": 0.05021527037024498
+      }
+    },
+    {
+      "filename": "000018.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.8029811382293701,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.003997820895165205,
+        "Indian Cow": 0.8029811382293701,
+        "Indian Dog": 0.03125659003853798,
+        "Indian Macaque": 0.010235864669084549,
+        "Langur": 0.005288393702358007,
+        "tiger": 0.1462402492761612
+      }
+    },
+    {
+      "filename": "000008.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3571211099624634,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.11158906668424606,
+        "Indian Cow": 0.2042783945798874,
+        "Indian Dog": 0.11733786016702652,
+        "Indian Macaque": 0.0727347880601883,
+        "Langur": 0.13693875074386597,
+        "tiger": 0.3571211099624634
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3041614890098572,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.1026243343949318,
+        "Indian Cow": 0.13047762215137482,
+        "Indian Dog": 0.20905503630638123,
+        "Indian Macaque": 0.3041614890098572,
+        "Langur": 0.1619686335325241,
+        "tiger": 0.09171289205551147
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.46697998046875,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.039696019142866135,
+        "Indian Cow": 0.46697998046875,
+        "Indian Dog": 0.14429765939712524,
+        "Indian Macaque": 0.0690525621175766,
+        "Langur": 0.061477504670619965,
+        "tiger": 0.21849627792835236
+      }
+    },
+    {
+      "filename": "000009.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.32258620858192444,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.2318146973848343,
+        "Indian Cow": 0.18436364829540253,
+        "Indian Dog": 0.32258620858192444,
+        "Indian Macaque": 0.09702853858470917,
+        "Langur": 0.08784566819667816,
+        "tiger": 0.07636120915412903
+      }
+    },
+    {
+      "filename": "000020.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.4349113404750824,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.4349113404750824,
+        "Indian Cow": 0.0976497232913971,
+        "Indian Dog": 0.12354139238595963,
+        "Indian Macaque": 0.11170604079961777,
+        "Langur": 0.12145737558603287,
+        "tiger": 0.1107342392206192
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.7265857458114624,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.0695522204041481,
+        "Indian Cow": 0.060992658138275146,
+        "Indian Dog": 0.7265857458114624,
+        "Indian Macaque": 0.04814126715064049,
+        "Langur": 0.03748338669538498,
+        "tiger": 0.057244766503572464
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.589623749256134,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.06311294436454773,
+        "Indian Cow": 0.09137342125177383,
+        "Indian Dog": 0.589623749256134,
+        "Indian Macaque": 0.07557620108127594,
+        "Langur": 0.07984887808561325,
+        "tiger": 0.1004648432135582
+      }
+    },
+    {
+      "filename": "000046.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.42451587319374084,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07123462110757828,
+        "Indian Cow": 0.21339614689350128,
+        "Indian Dog": 0.42451587319374084,
+        "Indian Macaque": 0.09263848513364792,
+        "Langur": 0.09814000874757767,
+        "tiger": 0.1000748798251152
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.5704944729804993,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07032783329486847,
+        "Indian Cow": 0.0777728483080864,
+        "Indian Dog": 0.5704944729804993,
+        "Indian Macaque": 0.11741266399621964,
+        "Langur": 0.08995901793241501,
+        "tiger": 0.07403315603733063
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4013794958591461,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07048692554235458,
+        "Indian Cow": 0.10848841071128845,
+        "Indian Dog": 0.07894667983055115,
+        "Indian Macaque": 0.4013794958591461,
+        "Langur": 0.24755389988422394,
+        "tiger": 0.09314460307359695
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3586499094963074,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.3586499094963074,
+        "Indian Cow": 0.1525716334581375,
+        "Indian Dog": 0.14145943522453308,
+        "Indian Macaque": 0.15726473927497864,
+        "Langur": 0.10922547429800034,
+        "tiger": 0.08082881569862366
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.5374667644500732,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.5374667644500732,
+        "Indian Cow": 0.08196952939033508,
+        "Indian Dog": 0.06545184552669525,
+        "Indian Macaque": 0.1435459554195404,
+        "Langur": 0.09928739815950394,
+        "tiger": 0.07227854430675507
+      }
+    },
+    {
+      "filename": "000047.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.2988263666629791,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.13274984061717987,
+        "Indian Cow": 0.13314484059810638,
+        "Indian Dog": 0.08463683724403381,
+        "Indian Macaque": 0.2988263666629791,
+        "Langur": 0.2605287730693817,
+        "tiger": 0.09011330455541611
+      }
+    },
+    {
+      "filename": "000001.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.5042693018913269,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11289435625076294,
+        "Indian Cow": 0.07209642231464386,
+        "Indian Dog": 0.11157730221748352,
+        "Indian Macaque": 0.5042693018913269,
+        "Langur": 0.11683143675327301,
+        "tiger": 0.08233118057250977
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3673616647720337,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11630597710609436,
+        "Indian Cow": 0.10664691030979156,
+        "Indian Dog": 0.1506670117378235,
+        "Indian Macaque": 0.3673616647720337,
+        "Langur": 0.16274644434452057,
+        "tiger": 0.09627200663089752
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4510900676250458,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08006484061479568,
+        "Indian Cow": 0.14873942732810974,
+        "Indian Dog": 0.10727190226316452,
+        "Indian Macaque": 0.4510900676250458,
+        "Langur": 0.09817808866500854,
+        "tiger": 0.1146557405591011
+      }
+    },
+    {
+      "filename": "000005.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.380464643239975,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10247040539979935,
+        "Indian Cow": 0.1454549878835678,
+        "Indian Dog": 0.1551341563463211,
+        "Indian Macaque": 0.12252669781446457,
+        "Langur": 0.380464643239975,
+        "tiger": 0.0939491018652916
+      }
+    },
+    {
+      "filename": "000015.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.4867936968803406,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.05686875805258751,
+        "Indian Cow": 0.08047546446323395,
+        "Indian Dog": 0.21754689514636993,
+        "Indian Macaque": 0.07455798983573914,
+        "Langur": 0.4867936968803406,
+        "tiger": 0.083757184445858
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.21916896104812622,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.19746333360671997,
+        "Indian Cow": 0.12376333028078079,
+        "Indian Dog": 0.12982751429080963,
+        "Indian Macaque": 0.21916896104812622,
+        "Langur": 0.21628603339195251,
+        "tiger": 0.11349083483219147
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.28779640793800354,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.13383398950099945,
+        "Indian Cow": 0.11039819568395615,
+        "Indian Dog": 0.17654341459274292,
+        "Indian Macaque": 0.11826802045106888,
+        "Langur": 0.17315997183322906,
+        "tiger": 0.28779640793800354
+      }
+    },
+    {
+      "filename": "000050.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.5326193571090698,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.047387417405843735,
+        "Indian Cow": 0.5326193571090698,
+        "Indian Dog": 0.1762852519750595,
+        "Indian Macaque": 0.08177468925714493,
+        "Langur": 0.0902508944272995,
+        "tiger": 0.07168231159448624
+      }
+    },
+    {
+      "filename": "000034.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.32071414589881897,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.32071414589881897,
+        "Indian Cow": 0.08510564267635345,
+        "Indian Dog": 0.11656547337770462,
+        "Indian Macaque": 0.087172731757164,
+        "Langur": 0.3194933235645294,
+        "tiger": 0.07094866782426834
+      }
+    },
+    {
+      "filename": "000029.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.43625640869140625,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08737245202064514,
+        "Indian Cow": 0.11700661480426788,
+        "Indian Dog": 0.122955821454525,
+        "Indian Macaque": 0.1357424557209015,
+        "Langur": 0.43625640869140625,
+        "tiger": 0.10066624730825424
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.25370359420776367,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.20984028279781342,
+        "Indian Cow": 0.25370359420776367,
+        "Indian Dog": 0.16182297468185425,
+        "Indian Macaque": 0.2051747888326645,
+        "Langur": 0.07977256178855896,
+        "tiger": 0.08968573063611984
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.2661760151386261,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.2661760151386261,
+        "Indian Cow": 0.08144330978393555,
+        "Indian Dog": 0.2590198814868927,
+        "Indian Macaque": 0.08983593434095383,
+        "Langur": 0.15655440092086792,
+        "tiger": 0.1469704508781433
+      }
+    },
+    {
+      "filename": "000055.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.22462019324302673,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.1270776242017746,
+        "Indian Cow": 0.1490054428577423,
+        "Indian Dog": 0.1578735113143921,
+        "Indian Macaque": 0.19377131760120392,
+        "Langur": 0.14765200018882751,
+        "tiger": 0.22462019324302673
+      }
+    },
+    {
+      "filename": "000064.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.6070427894592285,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07592501491308212,
+        "Indian Cow": 0.08411963284015656,
+        "Indian Dog": 0.07509804517030716,
+        "Indian Macaque": 0.07488159090280533,
+        "Langur": 0.0829329863190651,
+        "tiger": 0.6070427894592285
+      }
+    },
+    {
+      "filename": "000024.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.69832843542099,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.0526961013674736,
+        "Indian Cow": 0.07357397675514221,
+        "Indian Dog": 0.0586199089884758,
+        "Indian Macaque": 0.05798415467143059,
+        "Langur": 0.0587974488735199,
+        "tiger": 0.69832843542099
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3214448094367981,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.16636160016059875,
+        "Indian Cow": 0.11593318730592728,
+        "Indian Dog": 0.2420438826084137,
+        "Indian Macaque": 0.09298580139875412,
+        "Langur": 0.06123070791363716,
+        "tiger": 0.3214448094367981
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.35789868235588074,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09783966839313507,
+        "Indian Cow": 0.17450395226478577,
+        "Indian Dog": 0.11719761043787003,
+        "Indian Macaque": 0.09614785760641098,
+        "Langur": 0.1564122438430786,
+        "tiger": 0.35789868235588074
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.37141045928001404,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.25268349051475525,
+        "Indian Cow": 0.10221949964761734,
+        "Indian Dog": 0.0845942422747612,
+        "Indian Macaque": 0.09858435392379761,
+        "Langur": 0.09050804376602173,
+        "tiger": 0.37141045928001404
+      }
+    },
+    {
+      "filename": "000049.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.38502487540245056,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.13564123213291168,
+        "Indian Cow": 0.19662077724933624,
+        "Indian Dog": 0.08501473069190979,
+        "Indian Macaque": 0.0851498618721962,
+        "Langur": 0.11254853010177612,
+        "tiger": 0.38502487540245056
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3957708477973938,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.17272359132766724,
+        "Indian Cow": 0.13693241775035858,
+        "Indian Dog": 0.10211414843797684,
+        "Indian Macaque": 0.1035713478922844,
+        "Langur": 0.08888760954141617,
+        "tiger": 0.3957708477973938
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.569617509841919,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10125870257616043,
+        "Indian Cow": 0.09418557584285736,
+        "Indian Dog": 0.07542581856250763,
+        "Indian Macaque": 0.08018472790718079,
+        "Langur": 0.07932764291763306,
+        "tiger": 0.569617509841919
+      }
+    }
+  ],
+  "neuravex_edge": [
+    {
+      "filename": "000009.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.252193421125412,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.20560745894908905,
+        "Indian Cow": 0.073981374502182,
+        "Indian Dog": 0.252193421125412,
+        "Indian Macaque": 0.14272327721118927,
+        "Langur": 0.23851121962070465,
+        "tiger": 0.08698327094316483
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3503357768058777,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3503357768058777,
+        "Indian Cow": 0.15880388021469116,
+        "Indian Dog": 0.21192508935928345,
+        "Indian Macaque": 0.05927487835288048,
+        "Langur": 0.10224656015634537,
+        "tiger": 0.11741376668214798
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.39470142126083374,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.39470142126083374,
+        "Indian Cow": 0.10295075923204422,
+        "Indian Dog": 0.12245744466781616,
+        "Indian Macaque": 0.06555595993995667,
+        "Langur": 0.17561642825603485,
+        "tiger": 0.13871799409389496
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.4269464910030365,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.4269464910030365,
+        "Indian Cow": 0.10933595895767212,
+        "Indian Dog": 0.1487235575914383,
+        "Indian Macaque": 0.06309757381677628,
+        "Langur": 0.16625262796878815,
+        "tiger": 0.08564376831054688
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.36518195271492004,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.36518195271492004,
+        "Indian Cow": 0.08857614547014236,
+        "Indian Dog": 0.1319134682416916,
+        "Indian Macaque": 0.12641946971416473,
+        "Langur": 0.1649204045534134,
+        "tiger": 0.12298861145973206
+      }
+    },
+    {
+      "filename": "000002.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.2325039654970169,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.2325039654970169,
+        "Indian Cow": 0.2316758632659912,
+        "Indian Dog": 0.17846855521202087,
+        "Indian Macaque": 0.11002333462238312,
+        "Langur": 0.1385164111852646,
+        "tiger": 0.1088118627667427
+      }
+    },
+    {
+      "filename": "000010.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.31951892375946045,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.31951892375946045,
+        "Indian Cow": 0.14704397320747375,
+        "Indian Dog": 0.14490091800689697,
+        "Indian Macaque": 0.13878490030765533,
+        "Langur": 0.1583651900291443,
+        "tiger": 0.09138606488704681
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3271448016166687,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3271448016166687,
+        "Indian Cow": 0.10139841586351395,
+        "Indian Dog": 0.11260338872671127,
+        "Indian Macaque": 0.2169509083032608,
+        "Langur": 0.14613129198551178,
+        "tiger": 0.09577113389968872
+      }
+    },
+    {
+      "filename": "000031.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.3476552963256836,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.22307097911834717,
+        "Indian Cow": 0.11689440906047821,
+        "Indian Dog": 0.3476552963256836,
+        "Indian Macaque": 0.11086072027683258,
+        "Langur": 0.11359701305627823,
+        "tiger": 0.0879216343164444
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.440182626247406,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.440182626247406,
+        "Indian Cow": 0.09267434477806091,
+        "Indian Dog": 0.15086786448955536,
+        "Indian Macaque": 0.1500910520553589,
+        "Langur": 0.06828473508358002,
+        "tiger": 0.09789939224720001
+      }
+    },
+    {
+      "filename": "000045.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.262845903635025,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.08537919074296951,
+        "Indian Cow": 0.09027837216854095,
+        "Indian Dog": 0.262845903635025,
+        "Indian Macaque": 0.2469751536846161,
+        "Langur": 0.21292400360107422,
+        "tiger": 0.10159734636545181
+      }
+    },
+    {
+      "filename": "000015.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.35503819584846497,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11203482002019882,
+        "Indian Cow": 0.35503819584846497,
+        "Indian Dog": 0.1865144520998001,
+        "Indian Macaque": 0.10255037993192673,
+        "Langur": 0.10293079167604446,
+        "tiger": 0.1409314125776291
+      }
+    },
+    {
+      "filename": "000028.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.3137328028678894,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.12220674753189087,
+        "Indian Cow": 0.23336367309093475,
+        "Indian Dog": 0.19497063755989075,
+        "Indian Macaque": 0.054975882172584534,
+        "Langur": 0.3137328028678894,
+        "tiger": 0.08075018972158432
+      }
+    },
+    {
+      "filename": "000006.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.6398855447769165,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07863300293684006,
+        "Indian Cow": 0.6398855447769165,
+        "Indian Dog": 0.06291058659553528,
+        "Indian Macaque": 0.0661119744181633,
+        "Langur": 0.08186912536621094,
+        "tiger": 0.07058978080749512
+      }
+    },
+    {
+      "filename": "000018.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.26458993554115295,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09884752333164215,
+        "Indian Cow": 0.26458993554115295,
+        "Indian Dog": 0.2047511786222458,
+        "Indian Macaque": 0.1611996591091156,
+        "Langur": 0.12463521957397461,
+        "tiger": 0.14597652852535248
+      }
+    },
+    {
+      "filename": "000008.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.29199060797691345,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.08228638023138046,
+        "Indian Cow": 0.21780848503112793,
+        "Indian Dog": 0.1310613453388214,
+        "Indian Macaque": 0.07997293770313263,
+        "Langur": 0.19688020646572113,
+        "tiger": 0.29199060797691345
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.23380668461322784,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.23380668461322784,
+        "Indian Cow": 0.1415206342935562,
+        "Indian Dog": 0.22661669552326202,
+        "Indian Macaque": 0.16440634429454803,
+        "Langur": 0.14952492713928223,
+        "tiger": 0.08412470668554306
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.39943569898605347,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.04803386703133583,
+        "Indian Cow": 0.39943569898605347,
+        "Indian Dog": 0.12597154080867767,
+        "Indian Macaque": 0.09263170510530472,
+        "Langur": 0.22922050952911377,
+        "tiger": 0.10470668226480484
+      }
+    },
+    {
+      "filename": "000009.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.32388511300086975,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10755956172943115,
+        "Indian Cow": 0.23771850764751434,
+        "Indian Dog": 0.32388511300086975,
+        "Indian Macaque": 0.1079544872045517,
+        "Langur": 0.10189389437437057,
+        "tiger": 0.12098842859268188
+      }
+    },
+    {
+      "filename": "000020.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.36389368772506714,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.36389368772506714,
+        "Indian Cow": 0.07935255020856857,
+        "Indian Dog": 0.25102463364601135,
+        "Indian Macaque": 0.1218101754784584,
+        "Langur": 0.08283679187297821,
+        "tiger": 0.10108214616775513
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.7528361678123474,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.04721808806061745,
+        "Indian Cow": 0.03813619911670685,
+        "Indian Dog": 0.7528361678123474,
+        "Indian Macaque": 0.04359728842973709,
+        "Langur": 0.060894954949617386,
+        "tiger": 0.05731736868619919
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.3295317590236664,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.1004655659198761,
+        "Indian Cow": 0.20417377352714539,
+        "Indian Dog": 0.3295317590236664,
+        "Indian Macaque": 0.08195172995328903,
+        "Langur": 0.14938479661941528,
+        "tiger": 0.13449232280254364
+      }
+    },
+    {
+      "filename": "000046.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.5962986946105957,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07633951306343079,
+        "Indian Cow": 0.08956961333751678,
+        "Indian Dog": 0.5962986946105957,
+        "Indian Macaque": 0.06408122181892395,
+        "Langur": 0.0815744400024414,
+        "tiger": 0.09213650226593018
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.569417417049408,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.13157011568546295,
+        "Indian Cow": 0.058632947504520416,
+        "Indian Dog": 0.569417417049408,
+        "Indian Macaque": 0.06597834825515747,
+        "Langur": 0.10690126568078995,
+        "tiger": 0.06749995052814484
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.45671406388282776,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07949992269277573,
+        "Indian Cow": 0.09465019404888153,
+        "Indian Dog": 0.09298162907361984,
+        "Indian Macaque": 0.45671406388282776,
+        "Langur": 0.1711714118719101,
+        "tiger": 0.10498277097940445
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3476444482803345,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.14039073884487152,
+        "Indian Cow": 0.1106657013297081,
+        "Indian Dog": 0.1767294853925705,
+        "Indian Macaque": 0.3476444482803345,
+        "Langur": 0.14251640439033508,
+        "tiger": 0.08205317705869675
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.567475438117981,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.567475438117981,
+        "Indian Cow": 0.07854063808917999,
+        "Indian Dog": 0.08228087425231934,
+        "Indian Macaque": 0.08643319457769394,
+        "Langur": 0.08671088516712189,
+        "tiger": 0.0985589548945427
+      }
+    },
+    {
+      "filename": "000047.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3634698987007141,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.1324452906847,
+        "Indian Cow": 0.13077445328235626,
+        "Indian Dog": 0.14260156452655792,
+        "Indian Macaque": 0.3634698987007141,
+        "Langur": 0.1418902426958084,
+        "tiger": 0.08881856501102448
+      }
+    },
+    {
+      "filename": "000001.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.286406010389328,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.286406010389328,
+        "Indian Cow": 0.11551319062709808,
+        "Indian Dog": 0.12139496952295303,
+        "Indian Macaque": 0.14112257957458496,
+        "Langur": 0.24288780987262726,
+        "tiger": 0.09267542511224747
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.40970465540885925,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.12072084099054337,
+        "Indian Cow": 0.11381325870752335,
+        "Indian Dog": 0.14896230399608612,
+        "Indian Macaque": 0.40970465540885925,
+        "Langur": 0.10482747852802277,
+        "tiger": 0.10197142511606216
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4880416989326477,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11198320239782333,
+        "Indian Cow": 0.08997007459402084,
+        "Indian Dog": 0.10705744475126266,
+        "Indian Macaque": 0.4880416989326477,
+        "Langur": 0.10084370523691177,
+        "tiger": 0.10210386663675308
+      }
+    },
+    {
+      "filename": "000005.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.28678959608078003,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.18751263618469238,
+        "Indian Cow": 0.20424042642116547,
+        "Indian Dog": 0.12649163603782654,
+        "Indian Macaque": 0.11161445081233978,
+        "Langur": 0.28678959608078003,
+        "tiger": 0.08335127681493759
+      }
+    },
+    {
+      "filename": "000015.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.5151359438896179,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09694532305002213,
+        "Indian Cow": 0.0947907492518425,
+        "Indian Dog": 0.12189517915248871,
+        "Indian Macaque": 0.08250967413187027,
+        "Langur": 0.5151359438896179,
+        "tiger": 0.08872310072183609
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3053080439567566,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.3053080439567566,
+        "Indian Cow": 0.13233382999897003,
+        "Indian Dog": 0.15129463374614716,
+        "Indian Macaque": 0.13726162910461426,
+        "Langur": 0.1740451157093048,
+        "tiger": 0.09975674003362656
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4364067018032074,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.11825583875179291,
+        "Indian Cow": 0.1304756999015808,
+        "Indian Dog": 0.09220960736274719,
+        "Indian Macaque": 0.4364067018032074,
+        "Langur": 0.1050160825252533,
+        "tiger": 0.11763601750135422
+      }
+    },
+    {
+      "filename": "000050.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.3281320035457611,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.1047484278678894,
+        "Indian Cow": 0.3281320035457611,
+        "Indian Dog": 0.16428513824939728,
+        "Indian Macaque": 0.1351931393146515,
+        "Langur": 0.19331799447536469,
+        "tiger": 0.07432332634925842
+      }
+    },
+    {
+      "filename": "000034.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.4213511347770691,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.1472959667444229,
+        "Indian Cow": 0.09892424196004868,
+        "Indian Dog": 0.13181602954864502,
+        "Indian Macaque": 0.11804515868425369,
+        "Langur": 0.4213511347770691,
+        "tiger": 0.08256746083498001
+      }
+    },
+    {
+      "filename": "000029.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.23187951743602753,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.15712983906269073,
+        "Indian Cow": 0.18047942221164703,
+        "Indian Dog": 0.1257031112909317,
+        "Indian Macaque": 0.23187951743602753,
+        "Langur": 0.2082761526107788,
+        "tiger": 0.09653190523386002
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.22693994641304016,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.15861111879348755,
+        "Indian Cow": 0.1284790337085724,
+        "Indian Dog": 0.22473962604999542,
+        "Indian Macaque": 0.15135537087917328,
+        "Langur": 0.10987485200166702,
+        "tiger": 0.22693994641304016
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3641666769981384,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.3641666769981384,
+        "Indian Cow": 0.09635823965072632,
+        "Indian Dog": 0.09786326438188553,
+        "Indian Macaque": 0.08312764018774033,
+        "Langur": 0.12178114801645279,
+        "tiger": 0.2367030382156372
+      }
+    },
+    {
+      "filename": "000055.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.24693819880485535,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.19475625455379486,
+        "Indian Cow": 0.15249380469322205,
+        "Indian Dog": 0.24693819880485535,
+        "Indian Macaque": 0.07837584614753723,
+        "Langur": 0.11478588730096817,
+        "tiger": 0.21264998614788055
+      }
+    },
+    {
+      "filename": "000064.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.5431599020957947,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.12596364319324493,
+        "Indian Cow": 0.08600372076034546,
+        "Indian Dog": 0.06696739047765732,
+        "Indian Macaque": 0.09047913551330566,
+        "Langur": 0.08742628246545792,
+        "tiger": 0.5431599020957947
+      }
+    },
+    {
+      "filename": "000024.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.5937677025794983,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09068474918603897,
+        "Indian Cow": 0.08740673959255219,
+        "Indian Dog": 0.07185651361942291,
+        "Indian Macaque": 0.07376407086849213,
+        "Langur": 0.08252021670341492,
+        "tiger": 0.5937677025794983
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.36461004614830017,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10994172841310501,
+        "Indian Cow": 0.19504232704639435,
+        "Indian Dog": 0.14595896005630493,
+        "Indian Macaque": 0.0954875722527504,
+        "Langur": 0.08895936608314514,
+        "tiger": 0.36461004614830017
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.2628394365310669,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09332197904586792,
+        "Indian Cow": 0.10989785939455032,
+        "Indian Dog": 0.1915103644132614,
+        "Indian Macaque": 0.0932312086224556,
+        "Langur": 0.24919913709163666,
+        "tiger": 0.2628394365310669
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.24693994224071503,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.24693994224071503,
+        "Indian Cow": 0.10840759426355362,
+        "Indian Dog": 0.21929822862148285,
+        "Indian Macaque": 0.08486644178628922,
+        "Langur": 0.12946052849292755,
+        "tiger": 0.21102730929851532
+      }
+    },
+    {
+      "filename": "000049.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.41544511914253235,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.14461228251457214,
+        "Indian Cow": 0.0768817663192749,
+        "Indian Dog": 0.07852491736412048,
+        "Indian Macaque": 0.058951135724782944,
+        "Langur": 0.2255847156047821,
+        "tiger": 0.41544511914253235
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.483954519033432,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.0786270946264267,
+        "Indian Cow": 0.07574980705976486,
+        "Indian Dog": 0.06278324872255325,
+        "Indian Macaque": 0.15426677465438843,
+        "Langur": 0.1446186602115631,
+        "tiger": 0.483954519033432
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.6809802055358887,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11834519356489182,
+        "Indian Cow": 0.053903501480817795,
+        "Indian Dog": 0.044300321489572525,
+        "Indian Macaque": 0.04441414773464203,
+        "Langur": 0.058056510984897614,
+        "tiger": 0.6809802055358887
+      }
+    }
+  ],
+  "neuravex_dynamic": [
+    {
+      "filename": "000009.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.2772250175476074,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.2772250175476074,
+        "Indian Cow": 0.11948128044605255,
+        "Indian Dog": 0.15196067094802856,
+        "Indian Macaque": 0.09738784283399582,
+        "Langur": 0.23342503607273102,
+        "tiger": 0.12052014470100403
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3739624321460724,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3739624321460724,
+        "Indian Cow": 0.08427118510007858,
+        "Indian Dog": 0.1770300716161728,
+        "Indian Macaque": 0.12737376987934113,
+        "Langur": 0.12639863789081573,
+        "tiger": 0.11096391826868057
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.24084670841693878,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.24084670841693878,
+        "Indian Cow": 0.08496289700269699,
+        "Indian Dog": 0.2041478306055069,
+        "Indian Macaque": 0.14615947008132935,
+        "Langur": 0.1456151157617569,
+        "tiger": 0.1782679557800293
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.6175220012664795,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.6175220012664795,
+        "Indian Cow": 0.11946006119251251,
+        "Indian Dog": 0.050639525055885315,
+        "Indian Macaque": 0.07247637212276459,
+        "Langur": 0.0877370834350586,
+        "tiger": 0.05216499790549278
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.2848091125488281,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.2009873241186142,
+        "Indian Cow": 0.1128440573811531,
+        "Indian Dog": 0.09523572772741318,
+        "Indian Macaque": 0.2848091125488281,
+        "Langur": 0.1388474404811859,
+        "tiger": 0.1672763079404831
+      }
+    },
+    {
+      "filename": "000002.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3537040054798126,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.3537040054798126,
+        "Indian Cow": 0.15108774602413177,
+        "Indian Dog": 0.19778653979301453,
+        "Indian Macaque": 0.08159658312797546,
+        "Langur": 0.07316622138023376,
+        "tiger": 0.14265894889831543
+      }
+    },
+    {
+      "filename": "000010.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.4416825473308563,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.4416825473308563,
+        "Indian Cow": 0.07787376642227173,
+        "Indian Dog": 0.09205275774002075,
+        "Indian Macaque": 0.16424252092838287,
+        "Langur": 0.1422102302312851,
+        "tiger": 0.08193821460008621
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "Asiatic Lion",
+      "true_class_id": 0,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.557468593120575,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.557468593120575,
+        "Indian Cow": 0.07120921462774277,
+        "Indian Dog": 0.08825495839118958,
+        "Indian Macaque": 0.12369216233491898,
+        "Langur": 0.10211990773677826,
+        "tiger": 0.0572550930082798
+      }
+    },
+    {
+      "filename": "000031.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.4414771497249603,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.11895286291837692,
+        "Indian Cow": 0.1920500099658966,
+        "Indian Dog": 0.12148256599903107,
+        "Indian Macaque": 0.06500790268182755,
+        "Langur": 0.06102955713868141,
+        "tiger": 0.4414771497249603
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.23729965090751648,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08959031105041504,
+        "Indian Cow": 0.23729965090751648,
+        "Indian Dog": 0.1345856785774231,
+        "Indian Macaque": 0.1713263839483261,
+        "Langur": 0.160971537232399,
+        "tiger": 0.2062264084815979
+      }
+    },
+    {
+      "filename": "000045.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.24678096175193787,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.15502861142158508,
+        "Indian Cow": 0.16990436613559723,
+        "Indian Dog": 0.0989229828119278,
+        "Indian Macaque": 0.24678096175193787,
+        "Langur": 0.2386655956506729,
+        "tiger": 0.09069759398698807
+      }
+    },
+    {
+      "filename": "000015.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.47697901725769043,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.06701871752738953,
+        "Indian Cow": 0.47697901725769043,
+        "Indian Dog": 0.12017934024333954,
+        "Indian Macaque": 0.10755830258131027,
+        "Langur": 0.09763588756322861,
+        "tiger": 0.13062869012355804
+      }
+    },
+    {
+      "filename": "000028.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.3146352767944336,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.06034322455525398,
+        "Indian Cow": 0.1691192388534546,
+        "Indian Dog": 0.2651367783546448,
+        "Indian Macaque": 0.08606812357902527,
+        "Langur": 0.3146352767944336,
+        "tiger": 0.10469739884138107
+      }
+    },
+    {
+      "filename": "000006.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.7710893154144287,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.039547719061374664,
+        "Indian Cow": 0.7710893154144287,
+        "Indian Dog": 0.045275285840034485,
+        "Indian Macaque": 0.04748828709125519,
+        "Langur": 0.046384163200855255,
+        "tiger": 0.05021527037024498
+      }
+    },
+    {
+      "filename": "000018.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.8029811382293701,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.003997820895165205,
+        "Indian Cow": 0.8029811382293701,
+        "Indian Dog": 0.03125659003853798,
+        "Indian Macaque": 0.010235864669084549,
+        "Langur": 0.005288393702358007,
+        "tiger": 0.1462402492761612
+      }
+    },
+    {
+      "filename": "000008.jpeg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3571211099624634,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.11158906668424606,
+        "Indian Cow": 0.2042783945798874,
+        "Indian Dog": 0.11733786016702652,
+        "Indian Macaque": 0.0727347880601883,
+        "Langur": 0.13693875074386597,
+        "tiger": 0.3571211099624634
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "Indian Cow",
+      "true_class_id": 1,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3041614890098572,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.1026243343949318,
+        "Indian Cow": 0.13047762215137482,
+        "Indian Dog": 0.20905503630638123,
+        "Indian Macaque": 0.3041614890098572,
+        "Langur": 0.1619686335325241,
+        "tiger": 0.09171289205551147
+      }
+    },
+    {
+      "filename": "000019.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.46697998046875,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.039696019142866135,
+        "Indian Cow": 0.46697998046875,
+        "Indian Dog": 0.14429765939712524,
+        "Indian Macaque": 0.0690525621175766,
+        "Langur": 0.061477504670619965,
+        "tiger": 0.21849627792835236
+      }
+    },
+    {
+      "filename": "000009.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.32258620858192444,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.2318146973848343,
+        "Indian Cow": 0.18436364829540253,
+        "Indian Dog": 0.32258620858192444,
+        "Indian Macaque": 0.09702853858470917,
+        "Langur": 0.08784566819667816,
+        "tiger": 0.07636120915412903
+      }
+    },
+    {
+      "filename": "000020.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.4349113404750824,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.4349113404750824,
+        "Indian Cow": 0.0976497232913971,
+        "Indian Dog": 0.12354139238595963,
+        "Indian Macaque": 0.11170604079961777,
+        "Langur": 0.12145737558603287,
+        "tiger": 0.1107342392206192
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.7265857458114624,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.0695522204041481,
+        "Indian Cow": 0.060992658138275146,
+        "Indian Dog": 0.7265857458114624,
+        "Indian Macaque": 0.04814126715064049,
+        "Langur": 0.03748338669538498,
+        "tiger": 0.057244766503572464
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.589623749256134,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.06311294436454773,
+        "Indian Cow": 0.09137342125177383,
+        "Indian Dog": 0.589623749256134,
+        "Indian Macaque": 0.07557620108127594,
+        "Langur": 0.07984887808561325,
+        "tiger": 0.1004648432135582
+      }
+    },
+    {
+      "filename": "000046.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.42451587319374084,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07123462110757828,
+        "Indian Cow": 0.21339614689350128,
+        "Indian Dog": 0.42451587319374084,
+        "Indian Macaque": 0.09263848513364792,
+        "Langur": 0.09814000874757767,
+        "tiger": 0.1000748798251152
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Dog",
+      "true_class_id": 2,
+      "pred_class_id": 2,
+      "pred_class_name": "Indian Dog",
+      "confidence": 0.5704944729804993,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07032783329486847,
+        "Indian Cow": 0.0777728483080864,
+        "Indian Dog": 0.5704944729804993,
+        "Indian Macaque": 0.11741266399621964,
+        "Langur": 0.08995901793241501,
+        "tiger": 0.07403315603733063
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4013794958591461,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07048692554235458,
+        "Indian Cow": 0.10848841071128845,
+        "Indian Dog": 0.07894667983055115,
+        "Indian Macaque": 0.4013794958591461,
+        "Langur": 0.24755389988422394,
+        "tiger": 0.09314460307359695
+      }
+    },
+    {
+      "filename": "000033.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.3586499094963074,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.3586499094963074,
+        "Indian Cow": 0.1525716334581375,
+        "Indian Dog": 0.14145943522453308,
+        "Indian Macaque": 0.15726473927497864,
+        "Langur": 0.10922547429800034,
+        "tiger": 0.08082881569862366
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.5374667644500732,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.5374667644500732,
+        "Indian Cow": 0.08196952939033508,
+        "Indian Dog": 0.06545184552669525,
+        "Indian Macaque": 0.1435459554195404,
+        "Langur": 0.09928739815950394,
+        "tiger": 0.07227854430675507
+      }
+    },
+    {
+      "filename": "000047.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.2988263666629791,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.13274984061717987,
+        "Indian Cow": 0.13314484059810638,
+        "Indian Dog": 0.08463683724403381,
+        "Indian Macaque": 0.2988263666629791,
+        "Langur": 0.2605287730693817,
+        "tiger": 0.09011330455541611
+      }
+    },
+    {
+      "filename": "000001.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.5042693018913269,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11289435625076294,
+        "Indian Cow": 0.07209642231464386,
+        "Indian Dog": 0.11157730221748352,
+        "Indian Macaque": 0.5042693018913269,
+        "Langur": 0.11683143675327301,
+        "tiger": 0.08233118057250977
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.3673616647720337,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.11630597710609436,
+        "Indian Cow": 0.10664691030979156,
+        "Indian Dog": 0.1506670117378235,
+        "Indian Macaque": 0.3673616647720337,
+        "Langur": 0.16274644434452057,
+        "tiger": 0.09627200663089752
+      }
+    },
+    {
+      "filename": "000011.jpg",
+      "class_name": "Indian Macaque",
+      "true_class_id": 3,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.4510900676250458,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08006484061479568,
+        "Indian Cow": 0.14873942732810974,
+        "Indian Dog": 0.10727190226316452,
+        "Indian Macaque": 0.4510900676250458,
+        "Langur": 0.09817808866500854,
+        "tiger": 0.1146557405591011
+      }
+    },
+    {
+      "filename": "000005.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.380464643239975,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10247040539979935,
+        "Indian Cow": 0.1454549878835678,
+        "Indian Dog": 0.1551341563463211,
+        "Indian Macaque": 0.12252669781446457,
+        "Langur": 0.380464643239975,
+        "tiger": 0.0939491018652916
+      }
+    },
+    {
+      "filename": "000015.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.4867936968803406,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.05686875805258751,
+        "Indian Cow": 0.08047546446323395,
+        "Indian Dog": 0.21754689514636993,
+        "Indian Macaque": 0.07455798983573914,
+        "Langur": 0.4867936968803406,
+        "tiger": 0.083757184445858
+      }
+    },
+    {
+      "filename": "000016.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 3,
+      "pred_class_name": "Indian Macaque",
+      "confidence": 0.21916896104812622,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.19746333360671997,
+        "Indian Cow": 0.12376333028078079,
+        "Indian Dog": 0.12982751429080963,
+        "Indian Macaque": 0.21916896104812622,
+        "Langur": 0.21628603339195251,
+        "tiger": 0.11349083483219147
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.28779640793800354,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.13383398950099945,
+        "Indian Cow": 0.11039819568395615,
+        "Indian Dog": 0.17654341459274292,
+        "Indian Macaque": 0.11826802045106888,
+        "Langur": 0.17315997183322906,
+        "tiger": 0.28779640793800354
+      }
+    },
+    {
+      "filename": "000050.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.5326193571090698,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.047387417405843735,
+        "Indian Cow": 0.5326193571090698,
+        "Indian Dog": 0.1762852519750595,
+        "Indian Macaque": 0.08177468925714493,
+        "Langur": 0.0902508944272995,
+        "tiger": 0.07168231159448624
+      }
+    },
+    {
+      "filename": "000034.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.32071414589881897,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.32071414589881897,
+        "Indian Cow": 0.08510564267635345,
+        "Indian Dog": 0.11656547337770462,
+        "Indian Macaque": 0.087172731757164,
+        "Langur": 0.3194933235645294,
+        "tiger": 0.07094866782426834
+      }
+    },
+    {
+      "filename": "000029.jpg",
+      "class_name": "Langur",
+      "true_class_id": 4,
+      "pred_class_id": 4,
+      "pred_class_name": "Langur",
+      "confidence": 0.43625640869140625,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.08737245202064514,
+        "Indian Cow": 0.11700661480426788,
+        "Indian Dog": 0.122955821454525,
+        "Indian Macaque": 0.1357424557209015,
+        "Langur": 0.43625640869140625,
+        "tiger": 0.10066624730825424
+      }
+    },
+    {
+      "filename": "000027.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 1,
+      "pred_class_name": "Indian Cow",
+      "confidence": 0.25370359420776367,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.20984028279781342,
+        "Indian Cow": 0.25370359420776367,
+        "Indian Dog": 0.16182297468185425,
+        "Indian Macaque": 0.2051747888326645,
+        "Langur": 0.07977256178855896,
+        "tiger": 0.08968573063611984
+      }
+    },
+    {
+      "filename": "000017.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 0,
+      "pred_class_name": "Asiatic Lion",
+      "confidence": 0.2661760151386261,
+      "correct": false,
+      "probabilities": {
+        "Asiatic Lion": 0.2661760151386261,
+        "Indian Cow": 0.08144330978393555,
+        "Indian Dog": 0.2590198814868927,
+        "Indian Macaque": 0.08983593434095383,
+        "Langur": 0.15655440092086792,
+        "tiger": 0.1469704508781433
+      }
+    },
+    {
+      "filename": "000055.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.22462019324302673,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.1270776242017746,
+        "Indian Cow": 0.1490054428577423,
+        "Indian Dog": 0.1578735113143921,
+        "Indian Macaque": 0.19377131760120392,
+        "Langur": 0.14765200018882751,
+        "tiger": 0.22462019324302673
+      }
+    },
+    {
+      "filename": "000064.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.6070427894592285,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.07592501491308212,
+        "Indian Cow": 0.08411963284015656,
+        "Indian Dog": 0.07509804517030716,
+        "Indian Macaque": 0.07488159090280533,
+        "Langur": 0.0829329863190651,
+        "tiger": 0.6070427894592285
+      }
+    },
+    {
+      "filename": "000024.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.69832843542099,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.0526961013674736,
+        "Indian Cow": 0.07357397675514221,
+        "Indian Dog": 0.0586199089884758,
+        "Indian Macaque": 0.05798415467143059,
+        "Langur": 0.0587974488735199,
+        "tiger": 0.69832843542099
+      }
+    },
+    {
+      "filename": "000030.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3214448094367981,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.16636160016059875,
+        "Indian Cow": 0.11593318730592728,
+        "Indian Dog": 0.2420438826084137,
+        "Indian Macaque": 0.09298580139875412,
+        "Langur": 0.06123070791363716,
+        "tiger": 0.3214448094367981
+      }
+    },
+    {
+      "filename": "000013.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.35789868235588074,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.09783966839313507,
+        "Indian Cow": 0.17450395226478577,
+        "Indian Dog": 0.11719761043787003,
+        "Indian Macaque": 0.09614785760641098,
+        "Langur": 0.1564122438430786,
+        "tiger": 0.35789868235588074
+      }
+    },
+    {
+      "filename": "000042.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.37141045928001404,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.25268349051475525,
+        "Indian Cow": 0.10221949964761734,
+        "Indian Dog": 0.0845942422747612,
+        "Indian Macaque": 0.09858435392379761,
+        "Langur": 0.09050804376602173,
+        "tiger": 0.37141045928001404
+      }
+    },
+    {
+      "filename": "000049.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.38502487540245056,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.13564123213291168,
+        "Indian Cow": 0.19662077724933624,
+        "Indian Dog": 0.08501473069190979,
+        "Indian Macaque": 0.0851498618721962,
+        "Langur": 0.11254853010177612,
+        "tiger": 0.38502487540245056
+      }
+    },
+    {
+      "filename": "000008.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.3957708477973938,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.17272359132766724,
+        "Indian Cow": 0.13693241775035858,
+        "Indian Dog": 0.10211414843797684,
+        "Indian Macaque": 0.1035713478922844,
+        "Langur": 0.08888760954141617,
+        "tiger": 0.3957708477973938
+      }
+    },
+    {
+      "filename": "000012.jpg",
+      "class_name": "tiger",
+      "true_class_id": 5,
+      "pred_class_id": 5,
+      "pred_class_name": "tiger",
+      "confidence": 0.569617509841919,
+      "correct": true,
+      "probabilities": {
+        "Asiatic Lion": 0.10125870257616043,
+        "Indian Cow": 0.09418557584285736,
+        "Indian Dog": 0.07542581856250763,
+        "Indian Macaque": 0.08018472790718079,
+        "Langur": 0.07932764291763306,
+        "tiger": 0.569617509841919
+      }
+    }
+  ]
+}

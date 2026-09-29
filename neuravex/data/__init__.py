@@ -1,2 +1,5 @@
 from .augmentation import GeometricMultiViewAugment, invert_box_transform, invert_yaw_transform
 from .coco_dataset import COCOMultiTaskDataset, coco_collate_fn, boundary_from_binary_mask
+from .unsupervised_image_dataset import UnsupervisedImageFolderDataset
+from .dem_loader import DEMTerrainDataset
+

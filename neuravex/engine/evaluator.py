@@ -18,11 +18,14 @@ class NeuravexInferencePostProcessor:
     def __call__(self, outputs: dict, intrinsics=None, tracker=None, dt: float = 1.0 / 30.0) -> dict:
         pred_cls = torch.sigmoid(outputs["class_logits"])  # (B, N, C)
         pred_boxes = outputs["pred_boxes"]                  # (B, N, 4) in xyxy
-        pred_xyz = outputs["pred_xyz"]                      # (B, N, 3)
-        pred_lwh = outputs["pred_lwh"]                      # (B, N, 3)
-        pred_yaw_sc = outputs["pred_yaw_sincos"]            # (B, N, 2)
-        yaw_norm = F.normalize(pred_yaw_sc, dim=-1)
-        recovered_yaw = torch.atan2(yaw_norm[..., 0], yaw_norm[..., 1]).unsqueeze(-1)
+        pred_xyz = outputs.get("pred_xyz", None)
+        pred_lwh = outputs.get("pred_lwh", None)
+        pred_yaw_sc = outputs.get("pred_yaw_sincos", None)
+        if pred_yaw_sc is not None:
+            yaw_norm = F.normalize(pred_yaw_sc, dim=-1)
+            recovered_yaw = torch.atan2(yaw_norm[..., 0], yaw_norm[..., 1]).unsqueeze(-1)
+        else:
+            recovered_yaw = None
 
         B = pred_cls.shape[0]
         batch_detections = []
@@ -54,9 +57,9 @@ class NeuravexInferencePostProcessor:
             f_boxes = pred_boxes[b, keep_mask]
             f_scores = scores[keep_mask]
             f_labels = labels[keep_mask]
-            f_xyz = pred_xyz[b, keep_mask]
-            f_lwh = pred_lwh[b, keep_mask]
-            f_yaw = recovered_yaw[b, keep_mask]
+            f_xyz = pred_xyz[b, keep_mask] if pred_xyz is not None else torch.zeros((len(f_boxes), 3), device=f_boxes.device)
+            f_lwh = pred_lwh[b, keep_mask] if pred_lwh is not None else torch.zeros((len(f_boxes), 3), device=f_boxes.device)
+            f_yaw = recovered_yaw[b, keep_mask] if recovered_yaw is not None else torch.zeros((len(f_boxes), 1), device=f_boxes.device)
 
             # True class-aware batched NMS
             keep = batched_nms(f_boxes, f_scores, f_labels, self.iou_thresh)
@@ -102,10 +105,23 @@ class NeuravexInferencePostProcessor:
             cur_depth = depth_map[b] if depth_map is not None else None
             cur_conf = depth_conf[b] if depth_conf is not None else None
 
-            # Get semantic predictions for true instance masking if available
-            sem_pred_b = None
-            if semantic_masks is not None:
-                sem_pred_b = torch.argmax(semantic_masks[b], dim=0)  # (H, W)
+            # Proto masks and mask coefficients for YOLACT-style instance mask assembly
+            proto_b = outputs.get("proto_masks")
+            mask_coeffs_raw = outputs.get("pred_mask_coeffs")
+
+            # Pre-compute instance masks for all detections in this batch
+            instance_masks_b = []
+            if proto_b is not None and mask_coeffs_raw is not None and len(det_boxes) > 0:
+                protos = proto_b[b]  # (num_proto, Hp, Wp)
+                # Get mask coefficients for kept detections
+                all_coeffs = mask_coeffs_raw[b, keep_mask]
+                kept_coeffs = all_coeffs[keep]  # (N_det, num_proto)
+                Hp, Wp = protos.shape[1], protos.shape[2]
+                # mask_logits = coeffs @ protos → (N_det, Hp, Wp)
+                mask_logits = torch.einsum("nc,chw->nhw", kept_coeffs, protos)
+                mask_probs_all = torch.sigmoid(mask_logits)
+                for k in range(len(det_boxes)):
+                    instance_masks_b.append(mask_probs_all[k])
 
             for i in range(len(det_boxes)):
                 box = det_boxes[i]
@@ -113,27 +129,38 @@ class NeuravexInferencePostProcessor:
                 label = int(det_labels[i].item())
                 x1, y1, x2, y2 = int(box[0].item()), int(box[1].item()), int(box[2].item()), int(box[3].item())
 
-                # Extract TRUE instance mask
+                # TRUE instance mask: proto_assembly or box_fallback
                 obj_mask = None
+                mask_source = "none"
                 if cur_depth is not None:
                     _, H_d, W_d = cur_depth.shape if cur_depth.ndim == 3 else (1, cur_depth.shape[0], cur_depth.shape[1])
-                    obj_mask = torch.zeros((H_d, W_d), dtype=torch.bool, device=box.device)
-                    x1_c = max(0, min(W_d - 1, x1))
-                    x2_c = max(0, min(W_d, x2))
-                    y1_c = max(0, min(H_d - 1, y1))
-                    y2_c = max(0, min(H_d, y2))
 
-                    if x2_c > x1_c and y2_c > y1_c:
-                        if sem_pred_b is not None:
-                            # True semantic/instance mask within bbox
-                            class_mask = (sem_pred_b[y1_c:y2_c, x1_c:x2_c] == label)
-                            if class_mask.any():
-                                obj_mask[y1_c:y2_c, x1_c:x2_c] = class_mask
-                            else:
-                                # Fallback to central region of bbox (rejecting border pixels)
-                                obj_mask[y1_c:y2_c, x1_c:x2_c] = True
-                        else:
+                    if i < len(instance_masks_b):
+                        # YOLACT-style: resize proto mask to depth map resolution, crop to bbox
+                        proto_mask = instance_masks_b[i]  # (Hp, Wp) probabilities
+                        proto_resized = F.interpolate(
+                            proto_mask.unsqueeze(0).unsqueeze(0),
+                            size=(H_d, W_d), mode="bilinear", align_corners=False,
+                        ).squeeze()
+                        # Crop to bbox to prevent cross-object leakage
+                        obj_mask = torch.zeros((H_d, W_d), dtype=torch.bool, device=box.device)
+                        x1_c = max(0, min(W_d - 1, x1))
+                        x2_c = max(0, min(W_d, x2))
+                        y1_c = max(0, min(H_d - 1, y1))
+                        y2_c = max(0, min(H_d, y2))
+                        if x2_c > x1_c and y2_c > y1_c:
+                            obj_mask[y1_c:y2_c, x1_c:x2_c] = (proto_resized[y1_c:y2_c, x1_c:x2_c] > 0.5)
+                        mask_source = "proto_assembly"
+                    else:
+                        # Fallback: box region (explicitly marked, not pretending to be instance mask)
+                        obj_mask = torch.zeros((H_d, W_d), dtype=torch.bool, device=box.device)
+                        x1_c = max(0, min(W_d - 1, x1))
+                        x2_c = max(0, min(W_d, x2))
+                        y1_c = max(0, min(H_d - 1, y1))
+                        y2_c = max(0, min(H_d, y2))
+                        if x2_c > x1_c and y2_c > y1_c:
                             obj_mask[y1_c:y2_c, x1_c:x2_c] = True
+                        mask_source = "box_fallback"
 
                     # Robust confidence-weighted trimmed/median depth
                     z_est, u_c, v_c, d_conf = robust_mask_depth_estimator(
@@ -161,14 +188,16 @@ class NeuravexInferencePostProcessor:
                     z_cam = float(det_xyz[i, 2].item())
                     dist = float(np.sqrt(x_cam ** 2 + y_cam ** 2 + z_cam ** 2))
                     d_conf = float(score)
+                    mask_source = "none"
 
-                # 3D Physical Dimensions & Orientation decoding
-                raw_l = float(det_lwh[i, 0].item()) if det_lwh.numel() > 0 else 1.0
-                raw_w = float(det_lwh[i, 1].item()) if det_lwh.numel() > 0 else 0.8
-                raw_h = float(det_lwh[i, 2].item()) if det_lwh.numel() > 0 else 1.2
-                dim_l = float(np.exp(raw_l)) if raw_l < 0.1 else max(0.2, raw_l)
-                dim_w = float(np.exp(raw_w)) if raw_w < 0.1 else max(0.2, raw_w)
-                dim_h = float(np.exp(raw_h)) if raw_h < 0.1 else max(0.2, raw_h)
+                # 3D Physical Dimensions from model head (no heuristic multipliers)
+                raw_l = float(det_lwh[i, 0].item()) if det_lwh.numel() > 0 else None
+                raw_w = float(det_lwh[i, 1].item()) if det_lwh.numel() > 0 else None
+                raw_h = float(det_lwh[i, 2].item()) if det_lwh.numel() > 0 else None
+                # LWH must be positive; they come from exp-clamped head output
+                dim_l = max(0.01, raw_l) if raw_l is not None else None
+                dim_w = max(0.01, raw_w) if raw_w is not None else None
+                dim_h = max(0.01, raw_h) if raw_h is not None else None
                 yaw_deg = float(det_yaw[i, 0].item() * 180.0 / np.pi) if det_yaw.numel() > 0 else 0.0
 
                 frame_objects.append({
@@ -177,6 +206,7 @@ class NeuravexInferencePostProcessor:
                     "score": score,
                     "bbox": [float(box[0].item()), float(box[1].item()), float(box[2].item()), float(box[3].item())],
                     "mask": obj_mask,
+                    "mask_source": mask_source,
                     "x": x_cam,
                     "y": y_cam,
                     "z": z_cam,
@@ -184,9 +214,9 @@ class NeuravexInferencePostProcessor:
                     "distance": dist,
                     "depth_confidence": float(d_conf),
                     "dimensions3D": {
-                        "length": round(dim_l, 2),
-                        "width": round(dim_w, 2),
-                        "height": round(dim_h, 2)
+                        "length": round(dim_l, 3) if dim_l is not None else None,
+                        "width": round(dim_w, 3) if dim_w is not None else None,
+                        "height": round(dim_h, 3) if dim_h is not None else None,
                     },
                     "yawDeg": round(yaw_deg, 1)
                 })

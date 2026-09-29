@@ -1,0 +1,35 @@
+{
+  "timestamp_utc": "2026-09-28T05:27:31Z",
+  "os": {
+    "system": "Windows",
+    "release": "10",
+    "version": "10.0.26200",
+    "machine": "AMD64",
+    "platform_string": "Windows-10-10.0.26200-SP0"
+  },
+  "cpu": {
+    "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "physical_cores": 24,
+    "logical_cores": 24,
+    "total_ram_gb": 15.38
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "capability": [
+      12,
+      0
+    ],
+    "total_vram_gb": 7.933,
+    "multi_processor_count": 26,
+    "cuda_version": "13.0",
+    "cudnn_version": 92400
+  },
+  "software": {
+    "python": "3.11.15",
+    "pytorch": "2.14.0",
+    "ultralytics": "8.4.163",
+    "numpy": "2.4.6",
+    "opencv": "5.0.0",
+    "matplotlib": "3.11.2"
+  }
+}

@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuravex"
+version = "0.2.0"
+description = "Neuravex: Production-grade cross-platform native perception/learning SDK"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+requires-python = ">=3.8"
+authors = [
+    {name = "ELANGKATHIR11"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+# Core dependencies — minimal set for import neuravex to work
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+# Full ML stack
+torch = ["torch>=2.0.0", "torchvision>=0.15.0"]
+# Computer vision
+cv = ["opencv-python>=4.5.0", "Pillow>=8.0.0"]
+# COCO evaluation
+coco = ["pycocotools>=2.0.0"]
+# Tracking (Hungarian assignment)
+tracking = ["scipy>=1.7.0"]
+# ONNX export/runtime
+onnx = ["onnx>=1.12.0", "onnxruntime>=1.12.0"]
+# OpenVINO
+openvino = ["openvino>=2023.0.0"]
+# TensorRT
+tensorrt = ["tensorrt>=8.0.0"]
+# Training
+train = ["torch>=2.0.0", "torchvision>=0.15.0", "scipy>=1.7.0", "matplotlib>=3.5.0"]
+# Self-supervised learning
+ssl = ["torch>=2.0.0", "torchvision>=0.15.0"]
+# Reinforcement learning
+rl = ["torch>=2.0.0", "gymnasium>=0.26.0"]
+# Edge / embedded
+edge = ["onnxruntime>=1.12.0"]
+# Raspberry Pi
+raspberrypi = ["onnxruntime>=1.12.0", "picamera2; platform_machine=='aarch64'"]
+# Full install (everything except hardware-specific)
+full = [
+    "torch>=2.0.0", "torchvision>=0.15.0",
+    "opencv-python>=4.5.0", "Pillow>=8.0.0",
+    "pycocotools>=2.0.0", "scipy>=1.7.0",
+    "matplotlib>=3.5.0", "onnx>=1.12.0", "onnxruntime>=1.12.0",
+]
+# Development
+dev = [
+    "pytest>=7.0.0", "pytest-cov>=4.0.0",
+    "ruff>=0.1.0", "mypy>=1.0.0",
+]
+
+[project.scripts]
+neuravex = "neuravex.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ELANGKATHIR11/Neuravex"
+Repository = "https://github.com/ELANGKATHIR11/Neuravex"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neuravex*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

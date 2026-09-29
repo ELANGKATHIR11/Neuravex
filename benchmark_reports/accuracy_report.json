@@ -1,0 +1,20 @@
+{
+  "num_samples_evaluated": 30,
+  "num_runs": 2,
+  "resolution": [
+    320,
+    320
+  ],
+  "precision": "fp32",
+  "device": "cuda:0",
+  "params_M": 2.019,
+  "map50_mean": 0.0,
+  "map50_std": 0.0,
+  "map50_95_mean": 0.0,
+  "map50_95_std": 0.0,
+  "mean_iou": 0.3309,
+  "mean_bos": 0.2042,
+  "p50_latency_ms": 8.74,
+  "fps": 104.2,
+  "peak_vram_mb": 171.79
+}

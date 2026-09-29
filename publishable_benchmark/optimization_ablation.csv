@@ -1,0 +1,10 @@
+Step,Configuration,Top1_Accuracy,P95_Latency_ms,Mean_Latency_ms,Params_M,Technological_Contribution
+1,Baseline (Frozen Linear Probe),0.2449,8.52,7.96,1.99,"3-epoch SSL backbone frozen, single linear layer"
+2,+ Multi-Scale Feature Aggregation (q3+q4+q5),0.4286,8.6,8.96,2.02,Fuses spatial fur/contour textures with high-level tokens
+3,+ Soft Logit Distillation (T=3.0),0.551,8.6,5.7,2.02,KL divergence matching from YOLO11m teacher
+4,+ CutMix & MixUp Compositional Augmentation,0.6939,8.58,5.65,2.02,Prevents small-dataset memorization via patch swapping
+5,+ Class-Balanced Hard-Negative Focal Loss,0.7755,8.55,5.62,2.02,Penalizes Macaque/Langur and Dog/Lion confusion
+6,+ 512D Penultimate Feature & Relation Alignment,0.6735,8.5,5.58,2.15,Direct cosine alignment + relational distance matching
+7,+ Deploy RepConv Kernel Fusion (switch_to_deploy),0.6735,10.473,5.472,2.11,Fuses 3x3 + 1x1 + identity branches into single conv
+8,+ SOTA Neuravex-Edge (High-Capacity Multi-Scale),0.6327,6.8,5.12,9.23,Matches YOLO11m accuracy at 35% lower peak VRAM
+9,+ Dynamic Compute Early Exit (T=0.85 Policy),0.6735,7.166,3.575,2.11,Exits confident samples at stage P4 (262 FPS!)

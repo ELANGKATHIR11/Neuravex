@@ -92,11 +92,51 @@ class StructuredChannelPruner:
             sensitivity[name] = float(std.item() / (filter_norms.mean().item() + 1e-6))
         return sensitivity
 
-    def prune(self, model: nn.Module) -> Tuple[nn.Module, PruningResult]:
+    def prune(self, model: nn.Module, structural: bool = False) -> Tuple[nn.Module, PruningResult]:
         """
-        Apply magnitude-based filter pruning (conservative mask mode).
+        Apply magnitude-based filter pruning.
+        If structural=True, performs true channel/filter pruning + graph tensor reconstruction,
+        physically reducing parameter count and FLOPs.
+        If structural=False, performs conservative zero-masking for backwards compatibility.
         Returns (pruned_model, PruningResult).
         """
+        if structural:
+            from .structural_pruner import StructuralGraphPruner
+            pruner = StructuralGraphPruner(prune_ratio=self.sparsity, min_channels=self.min_channels)
+            pruned_model, stats = pruner.prune_model_stem_and_heads(model)
+            orig_params = stats["original_parameters"] / 1e6
+            pruned_params = stats["pruned_parameters"] / 1e6
+            compression = orig_params / max(pruned_params, 1e-6)
+            sparsity_achieved = (orig_params - pruned_params) / max(orig_params, 1e-6)
+            
+            valid = True
+            errors = []
+            try:
+                pruned_model.eval()
+                x = torch.randn(1, 3, 320, 320)
+                with torch.no_grad():
+                    out = pruned_model(x, tasks=("det",))
+                for k, v in out.items():
+                    if isinstance(v, torch.Tensor):
+                        if torch.isnan(v).any() or torch.isinf(v).any():
+                            errors.append(f"NaN/Inf in output key '{k}' after structural pruning.")
+                            valid = False
+                            break
+            except Exception as e:
+                errors.append(f"Forward pass failed after structural pruning: {e}")
+                valid = False
+
+            result = PruningResult(
+                original_params_M=orig_params,
+                pruned_params_M=pruned_params,
+                compression_ratio=compression,
+                pruned_layers=stats["pruned_layers"],
+                sparsity_achieved=sparsity_achieved,
+                valid=valid,
+                errors=errors
+            )
+            return pruned_model, result
+
         pruned_model = copy.deepcopy(model)
         orig_params = _count_params(model)
         pruned_layers = []

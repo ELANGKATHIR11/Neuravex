@@ -32,8 +32,8 @@ from neuravex.engine.trainer import NeuravexMultiTaskTrainer
 from neuravex.engine.evaluator import calculate_map_metrics, NeuravexInferencePostProcessor
 
 def test_gate_0_official_identity_and_version():
-    """Verify official identity and version 0.1.0."""
-    assert __version__ == "0.1.0", f"Expected version 0.1.0, got {__version__}"
+    """Verify official identity and version."""
+    assert __version__ in ("0.1.0", "0.2.0"), f"Expected valid version, got {__version__}"
 
 def test_gate_1_architecture_unit_tests():
     """Gate 1: Architecture unit tests for all variants (nano, small, medium, large)."""

@@ -155,6 +155,14 @@ class TemporalObjectFilter:
         self.dominant_class_id = class_id
         self.class_confidence = float(initial_conf)
 
+        # ReID Appearance Embedding (EMA-smoothed feature vector)
+        self.reid_embedding = None  # np.ndarray shape (embed_dim,) or None
+        self.reid_ema_alpha = 0.3   # Smooth update rate for appearance
+
+        # Lifecycle Counting State (for NeuralFlowZoneCounter integration)
+        self.count_state = "pre_zone"  # 'pre_zone' | 'in_zone' | 'counted' | 'post_zone'
+        self.lifecycle_id = None  # Unique ID assigned on first zone crossing
+
         # Overlap Stability & Metric Tracking
         self.bos = 1.0          # Boundary Overlap Score [0.0 - 1.0]
         self.temporal_iou = 1.0 # Temporal IoU [0.0 - 1.0]
@@ -447,8 +455,20 @@ class RealTimeMetricDepthTracker:
                     class_mismatch = (obj_cls != trk.dominant_class_id)
                     class_penalty = 4.0 if class_mismatch else 0.0
 
-                    # Composite Cost: Higher CIoU and lower metric 3D distance minimize cost
-                    cost = (1.0 - ciou) * 8.0 + norm_dist_3d * 2.5 + class_penalty
+                    # ReID Appearance Embedding Distance:
+                    # Cosine distance in [0, 2]; 0=identical, 2=opposite
+                    reid_cost = 0.0
+                    obj_emb = obj.get("reid_embedding")
+                    if obj_emb is not None and trk.reid_embedding is not None:
+                        obj_emb_np = np.asarray(obj_emb, dtype=np.float32)
+                        norm_a = np.linalg.norm(obj_emb_np)
+                        norm_b = np.linalg.norm(trk.reid_embedding)
+                        if norm_a > 1e-6 and norm_b > 1e-6:
+                            cosine_sim = float(np.dot(obj_emb_np, trk.reid_embedding) / (norm_a * norm_b))
+                            reid_cost = max(0.0, 1.0 - cosine_sim) * 3.0
+
+                    # Composite Cost: CIoU + 3D metric + class + ReID appearance
+                    cost = (1.0 - ciou) * 8.0 + norm_dist_3d * 2.5 + class_penalty + reid_cost
                     
                     # Gating: reject impossible pairings
                     if (iou < 0.05 and dist_3d > 4.5) or (class_mismatch and iou < 0.25 and dist_3d > 2.0):
@@ -459,6 +479,7 @@ class RealTimeMetricDepthTracker:
             # Solve via Hungarian algorithm
             try:
                 from scipy.optimize import linear_sum_assignment  # type: ignore[import-untyped,import-not-found]
+                cost_matrix = np.nan_to_num(cost_matrix, nan=1e5, posinf=1e5, neginf=0.0)
                 row_ind, col_ind = linear_sum_assignment(cost_matrix)
                 for r, c in zip(row_ind, col_ind):
                     if cost_matrix[r, c] < 20.0:  # Association acceptance threshold
@@ -473,6 +494,18 @@ class RealTimeMetricDepthTracker:
                             measured_yaw=obj.get("yawDeg", None),
                             dt=dt
                         )
+                        # Update ReID embedding via EMA
+                        obj_emb = obj.get("reid_embedding")
+                        if obj_emb is not None:
+                            emb_np = np.asarray(obj_emb, dtype=np.float32)
+                            trk_obj = self.tracks[tid]
+                            if trk_obj.reid_embedding is None:
+                                trk_obj.reid_embedding = emb_np.copy()
+                            else:
+                                trk_obj.reid_embedding = (
+                                    (1 - trk_obj.reid_ema_alpha) * trk_obj.reid_embedding
+                                    + trk_obj.reid_ema_alpha * emb_np
+                                )
                         matched_obj_to_track[r] = tid
                         unmatched_obj_indices.discard(r)
             except ImportError:

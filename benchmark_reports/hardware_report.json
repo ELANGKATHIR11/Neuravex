@@ -1,0 +1,21 @@
+{
+  "hardware_profile": {
+    "cpu_cores_physical": 24,
+    "cpu_cores_logical": 24,
+    "ram_total_gb": 15.38,
+    "ram_available_gb": 6.4,
+    "gpu_available": true,
+    "gpu_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+    "vram_total_gb": 7.93,
+    "vram_free_gb": 6.88,
+    "cuda_compute_capability": "12.0"
+  },
+  "recommendation": {
+    "model_variant": "edge",
+    "precision": "fp16",
+    "input_resolution": 640,
+    "backend": "onnxruntime_cuda",
+    "routing_budget": "high_throughput_gpu",
+    "rationale": "Detected high-capability GPU (NVIDIA GeForce RTX 5060 Laptop GPU, 7.9GB VRAM). Configured for FP16 CUDA acceleration."
+  }
+}

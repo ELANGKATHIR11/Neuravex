@@ -49,3 +49,17 @@ frontend/
 .idea/
 *.ini
 desktop.ini
+
+# Benchmark datasets & image splits
+data/
+Dataset/
+*.pdf
+*.cache
+*.pt
+*.pth
+*.onnx
+*.engine
+*.bin
+
+checkpoints/
+

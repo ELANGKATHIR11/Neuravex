@@ -1,0 +1,44 @@
+{
+  "YOLO11n-cls": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\yolo11n-cls.pt",
+    "sha256": "c62d41bf9625777760018bf914d2e6cd472420ccd01706d97a61cb6c82502bd7",
+    "size_mb": 5.52,
+    "status": "Available"
+  },
+  "YOLO11s-cls": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\yolo11s-cls.pt",
+    "sha256": "e2b605d1c8c212b434a75a32759a6f7adf1d2b29c35f76bdccd4c794cb653cf2",
+    "size_mb": 13.0,
+    "status": "Available"
+  },
+  "YOLO11m-cls": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\yolo11m-cls.pt",
+    "sha256": "80583b974e44292d56fc5ba4d26cd0bb04e77edc8bbf4317f7ce678147156dd5",
+    "size_mb": 22.4,
+    "status": "Available"
+  },
+  "YOLO11n-det": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\yolo11n.pt",
+    "sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+    "size_mb": 5.35,
+    "status": "Available"
+  },
+  "YOLO11n-seg": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\yolo11n-seg.pt",
+    "sha256": "55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152",
+    "size_mb": 5.9,
+    "status": "Available"
+  },
+  "Neuravex-SSL-Pretrained": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\checkpoints\\animals_ssl\\best_animals_model.pt",
+    "sha256": "0128ade30202537ad6275ed2bc5f7fcd1c23c8b2b25d7a66b04bbdc1d0706a58",
+    "size_mb": 8.77,
+    "status": "Available"
+  },
+  "Neuravex-Animals-Trained": {
+    "path": "C:\\Users\\elang\\Downloads\\neuravex-cv\\ml_neuravex\\training_runs\\neuravex_animals_best.pth",
+    "sha256": "10802c2ce9c72565848c32b2a0f26cd486a55e2df990b399c1db1106aaab55ed",
+    "size_mb": 20.38,
+    "status": "Available"
+  }
+}

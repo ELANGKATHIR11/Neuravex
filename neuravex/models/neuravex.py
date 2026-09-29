@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+from typing import Optional, Tuple, Dict, Any, Union
+import numpy as np
 from .backbone import Backbone
 from .neck import PANetNeck, BidirectionalCrossTaskFusion
 from .heads_det import MultiScaleDetectionHead
@@ -45,9 +47,10 @@ class Neuravex(nn.Module):
         # Cross-Task Fusion at multi-scale
         self.fusion_p3 = BidirectionalCrossTaskFusion(neck_c)
 
-        # Task Heads
-        self.det_head = MultiScaleDetectionHead(in_channels=neck_c, num_classes=num_classes, reg_max=reg_max)
+        # Task Heads — seg_head constructed first to provide num_prototypes for det↔mask coupling
         self.seg_head = MultiLayerSegmentationHead(in_channels=neck_c, num_classes=num_classes, embed_dim=seg_embed, num_parts=num_parts)
+        self.det_head = MultiScaleDetectionHead(in_channels=neck_c, num_classes=num_classes, reg_max=reg_max,
+                                                num_prototypes=self.seg_head.num_prototypes)
         self.dem_head = CameraAwareDEM(in_channels=neck_c)
         self.pose_head = DepthAwareGeometryPoseHead(in_channels=neck_c) if enable_pose else None
         self.st_head = SpatioTemporalIntelligenceHead(token_dim=64, hidden_dim=128) if enable_st_intel else None
@@ -65,10 +68,10 @@ class Neuravex(nn.Module):
         self.router_p3 = AdaptiveComputeRouter(neck_c)
         self.rl_policy = ActorCriticComputePolicy(state_dim=neck_c)
 
-    def forward(self, x: torch.Tensor, intrinsics: CameraIntrinsics = None, tasks: tuple = None,
+    def forward(self, x: torch.Tensor, intrinsics: Optional[CameraIntrinsics] = None, tasks: Optional[Tuple[str, ...]] = None,
                 routing_threshold: float = 0.5, force_full_compute: bool = False,
-                use_rl_policy: bool = False, trajectory_tokens: torch.Tensor = None,
-                pairwise_indices: torch.Tensor = None, prompt_prototype: torch.Tensor = None) -> dict:
+                use_rl_policy: bool = False, trajectory_tokens: Optional[torch.Tensor] = None,
+                pairwise_indices: Optional[torch.Tensor] = None, prompt_prototype: Optional[torch.Tensor] = None) -> dict:
         """
         tasks: tuple of active tasks. If None, runs all configured modalities.
         For detection-only inference: pass tasks=('det',), which bypasses seg and DEM heads
@@ -123,8 +126,9 @@ class Neuravex(nn.Module):
             )
             outputs["routing_stats"] = routing_stats
 
+            compute_3d = (tasks is None) or ("geometry_3d" in tasks) or ("3d" in tasks) or (("dem" in tasks or "depth" in tasks) and "det" in tasks)
             det_feats = [q3_det, q4, q5]
-            det_out = self.det_head(det_feats, intrinsics=intrinsics, dem_depth_map=dem_depth_map)
+            det_out = self.det_head(det_feats, intrinsics=intrinsics, dem_depth_map=dem_depth_map, compute_3d=compute_3d)
             outputs.update(det_out)
 
         # 5. Multi-layer segmentation
@@ -160,43 +164,81 @@ class Neuravex(nn.Module):
     def switch_to_deploy(self):
         """Switches all reparameterizable blocks in the backbone to fused 3x3 convolutions."""
         for m in self.modules():
-            if m is not self and hasattr(m, "switch_to_deploy"):
-                m.switch_to_deploy()
+            if m is not self:
+                fn = getattr(m, "switch_to_deploy", None)
+                if callable(fn):
+                    fn()
 
-def build_neuravex(size: str = "medium", num_classes: int = 80, reg_max: int = 16, enable_pose: bool = True, enable_st_intel: bool = True, enable_prompt: bool = True) -> Neuravex:
+    def analyze(self, image_path_or_array: Union[str, np.ndarray], conf_thresh: float = 0.20,
+                output_vis_path: Optional[str] = None, output_json_path: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Production precision multi-modal perception on any future image:
+        - Instance contours & exact animal segmentation
+        - Perspective 3D bounding cubes tightly framing localized targets
+        - Dense CameraAwareDEM metric depth (Z) and surface elevation
+        - High-contrast legible HUD badges with leader lines
+        - 3D spatial metrics (X, Y, Z, L, B, H) in meters
+        """
+        from ..engine.precision_perception import PrecisionPerceptionPipeline
+        params = list(self.parameters())
+        device = params[0].device if len(params) > 0 else "cpu"
+        pipeline = PrecisionPerceptionPipeline(conf_thresh=conf_thresh, device=str(device))
+        return pipeline.analyze(image_path_or_array, output_vis_path=output_vis_path, output_json_path=output_json_path)
+
+def build_neuravex(size: str = "nano", num_classes: int = 80, reg_max: int = 16,
+                   enable_pose: Optional[bool] = None, enable_st_intel: Optional[bool] = None,
+                   enable_prompt: Optional[bool] = None, enable_slots: bool = False,
+                   num_slots: int = 8) -> Neuravex:
     """
     Factory function for scalable Neuravex variants spanning IoT/CPU to Data-Center GPUs:
-      pico   : base_c = 8,  depth_mul = 0.25 (Ultra-low compute for microcontrollers/embedded zero-GPU IoT)
+      pico   : base_c = 8,  depth_mul = 0.25 (Ultra-low compute for microcontrollers/IoT)
       femto  : base_c = 12, depth_mul = 0.33 (Low-power edge CPU / Raspberry Pi)
       nano   : base_c = 16, depth_mul = 0.33 (Standard CPU & mobile real-time)
-      micro  : base_c = 24, depth_mul = 0.50 (Entry-level embedded GPUs like Jetson Nano)
-      small  : base_c = 32, depth_mul = 0.67 (Sub-50W edge GPUs like Jetson Orin Nano / RTX 3050)
-      medium : base_c = 48, depth_mul = 1.00 (Standard laptop / workstation GPUs like RTX 4060 / 5060)
-      large  : base_c = 64, depth_mul = 1.33 (High-end workstation & server GPUs)
-      xlarge : base_c = 80, depth_mul = 1.67 (Maximum capacity multi-task foundation)
+      lite   : base_c = 24, depth_mul = 0.50 (High-efficiency CPU / entry-level GPU) [alias: micro]
+      edge   : base_c = 32, depth_mul = 0.67 (Edge GPUs e.g. Jetson Orin / RTX 3050) [alias: small]
+      pro    : base_c = 48, depth_mul = 1.00 (Production workstation GPUs e.g. RTX 4060 / 5060) [alias: medium]
+      omni   : base_c = 64, depth_mul = 1.33 (Full multimodal foundation stack) [alias: large]
     """
     configs = {
         "pico":   (8,  0.25),
         "femto":  (12, 0.33),
         "nano":   (16, 0.33),
+        "lite":   (24, 0.50),
         "micro":  (24, 0.50),
+        "edge":   (32, 0.67),
         "small":  (32, 0.67),
+        "pro":    (48, 1.00),
         "medium": (48, 1.00),
+        "omni":   (64, 1.33),
         "large":  (64, 1.33),
         "xlarge": (80, 1.67)
     }
-    # For ultra-constrained models (pico and femto), disable heavy video intelligence heads by default for maximal speed
-    if size.lower() in ("pico", "femto"):
-        enable_pose = False
-        enable_st_intel = False
-        enable_prompt = False
 
-    base, d_mul = configs.get(size.lower(), (48, 1.00))
+    size_clean = size.lower().replace("neuravex-", "").replace("neuravex_", "")
+    base, d_mul = configs.get(size_clean, (16, 0.33))
+
+    # Defaults based on model variant hierarchy if not explicitly set
+    if size_clean in ("pico", "femto", "nano", "lite", "micro"):
+        if enable_pose is None: enable_pose = False
+        if enable_st_intel is None: enable_st_intel = False
+        if enable_prompt is None: enable_prompt = False
+    elif size_clean in ("edge", "small", "pro", "medium"):
+        if enable_pose is None: enable_pose = True
+        if enable_st_intel is None: enable_st_intel = False
+        if enable_prompt is None: enable_prompt = True
+    else:  # omni, large, xlarge
+        if enable_pose is None: enable_pose = True
+        if enable_st_intel is None: enable_st_intel = True
+        if enable_prompt is None: enable_prompt = True
+        enable_slots = True
+
     return Neuravex(
         num_classes=num_classes,
         base_c=base,
         depth_mul=d_mul,
         reg_max=reg_max,
+        enable_slots=enable_slots,
+        num_slots=num_slots,
         enable_pose=enable_pose,
         enable_st_intel=enable_st_intel,
         enable_prompt=enable_prompt

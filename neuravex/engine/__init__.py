@@ -18,4 +18,5 @@ from .adaptive_compute import (
     ActorCriticComputePolicy,
     compute_dynamic_budget_reward
 )
+from .precision_perception import PrecisionPerceptionPipeline
 

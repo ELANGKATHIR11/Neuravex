@@ -48,13 +48,14 @@ class MultiScaleDetectionHead(nn.Module):
       4. DEM-to-3D Depth Cross-Gating: Ground-conditioned depth injection from dense metric DEM.
     """
     def __init__(self, in_channels: int, num_classes: int = 80, strides=(8, 16, 32), reg_max: int = 16,
-                 rot_dim: int = 6):
+                 rot_dim: int = 6, num_prototypes: int = 32):
         super().__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
         self.strides = strides
         self.reg_max = reg_max
         self.rot_dim = rot_dim
+        self.num_prototypes = num_prototypes
         self.dfl = DistributionFocalLoss(reg_max=reg_max)
 
         # Multi-scale decoupled convs
@@ -86,6 +87,13 @@ class MultiScaleDetectionHead(nn.Module):
         self.pred_unc_xyz = nn.ModuleList([nn.Conv2d(in_channels, 3, 1) for _ in strides])
         self.pred_unc_lwh = nn.ModuleList([nn.Conv2d(in_channels, 3, 1) for _ in strides])
 
+        # Per-detection mask coefficients for YOLACT-style instance mask assembly:
+        # Each anchor predicts num_prototypes coefficients that linearly combine proto_masks
+        # mask_i = sigmoid(coeffs_i @ proto_masks)  →  one independent mask per detection
+        self.mask_coeff_preds = nn.ModuleList([
+            nn.Conv2d(in_channels, num_prototypes, 1) for _ in strides
+        ])
+
         # Optional DEM depth cross-gating projection: aligns DEM depth prior with 3D regression
         self.dem_depth_gate = nn.Sequential(
             ConvBNAct(1, 16, 3),
@@ -115,12 +123,13 @@ class MultiScaleDetectionHead(nn.Module):
         return torch.cat([x1, y1, x2, y2], dim=-1)
 
     def forward(self, feats: list, intrinsics = None, dem_depth_map: torch.Tensor = None,
-                return_o2m: bool = None):
+                return_o2m: bool = None, compute_3d: bool = True):
         """
         feats: list of [q3, q4, q5]
         intrinsics: CameraIntrinsics for pinhole unprojection
         dem_depth_map: (B, 1, H, W) metric depth map from CameraAwareDEM for cross-gating
         return_o2m: If True (or during training by default), returns auxiliary O2M head predictions
+        compute_3d: If False, completely skips 3D and DEM cross-gating for zero-overhead 2D detection
         """
         if return_o2m is None:
             return_o2m = self.training
@@ -134,6 +143,7 @@ class MultiScaleDetectionHead(nn.Module):
         all_yaw = []
         all_unc_xyz = []
         all_unc_lwh = []
+        all_mask_coeffs = []
         all_anchors = []
         all_strides = []
         all_dem_priors = []
@@ -147,8 +157,12 @@ class MultiScaleDetectionHead(nn.Module):
             cls_out = self.cls_preds[i](c_feat).permute(0, 2, 3, 1).reshape(B, H * W, self.num_classes)
             box_dist_out = self.box_preds[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 4 * self.reg_max)
 
+            # Per-detection mask coefficients for instance mask assembly
+            mask_coeff_out = self.mask_coeff_preds[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, self.num_prototypes)
+
             all_cls.append(cls_out)
             all_box_dist.append(box_dist_out)
+            all_mask_coeffs.append(mask_coeff_out)
 
             # 2. Auxiliary One-to-Many Head (O2M)
             if return_o2m:
@@ -157,19 +171,20 @@ class MultiScaleDetectionHead(nn.Module):
                 all_cls_o2m.append(cls_o2m)
                 all_box_dist_o2m.append(box_dist_o2m)
 
-            # 3. 3D Head Predictions & Instance Heteroscedastic Uncertainty
-            xyz_out = self.pred_3d_xyz[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
-            lwh_out = self.pred_3d_lwh[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
-            yaw_out = self.pred_3d_yaw[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, self.rot_dim)
+            # 3. 3D Head Predictions & Instance Heteroscedastic Uncertainty (conditional)
+            if compute_3d:
+                xyz_out = self.pred_3d_xyz[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
+                lwh_out = self.pred_3d_lwh[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
+                yaw_out = self.pred_3d_yaw[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, self.rot_dim)
 
-            unc_xyz_out = self.pred_unc_xyz[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
-            unc_lwh_out = self.pred_unc_lwh[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
+                unc_xyz_out = self.pred_unc_xyz[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
+                unc_lwh_out = self.pred_unc_lwh[i](r_feat).permute(0, 2, 3, 1).reshape(B, H * W, 3)
 
-            all_xyz.append(xyz_out)
-            all_lwh.append(lwh_out)
-            all_yaw.append(yaw_out)
-            all_unc_xyz.append(unc_xyz_out)
-            all_unc_lwh.append(unc_lwh_out)
+                all_xyz.append(xyz_out)
+                all_lwh.append(lwh_out)
+                all_yaw.append(yaw_out)
+                all_unc_xyz.append(unc_xyz_out)
+                all_unc_lwh.append(unc_lwh_out)
 
             # Spatial grid & anchors
             yv, xv = torch.meshgrid(
@@ -184,7 +199,7 @@ class MultiScaleDetectionHead(nn.Module):
             all_strides.append(stride_tensor)
 
             # DEM depth cross-gating sample at scale
-            if dem_depth_map is not None:
+            if compute_3d and dem_depth_map is not None:
                 dem_down = F.interpolate(dem_depth_map, size=(H, W), mode="bilinear", align_corners=False)
                 gate = self.dem_depth_gate(dem_down)
                 dem_prior = (dem_down * gate).permute(0, 2, 3, 1).reshape(B, H * W, 1)
@@ -192,11 +207,6 @@ class MultiScaleDetectionHead(nn.Module):
 
         pred_cls = torch.cat(all_cls, dim=1)
         pred_box_dist = torch.cat(all_box_dist, dim=1)
-        pred_xyz_raw = torch.cat(all_xyz, dim=1)
-        pred_lwh_raw = torch.cat(all_lwh, dim=1)
-        pred_yaw_raw = torch.cat(all_yaw, dim=1)
-        pred_unc_xyz = torch.cat(all_unc_xyz, dim=1)
-        pred_unc_lwh = torch.cat(all_unc_lwh, dim=1)
         anchor_points = torch.cat(all_anchors, dim=0)
         strides_cat = torch.cat(all_strides, dim=0)
 
@@ -204,61 +214,82 @@ class MultiScaleDetectionHead(nn.Module):
         decoded_boxes = self._decode_boxes(pred_box_dist, anchor_points, strides_cat)
 
         # 2. Camera-aware 3D decoding with DEM Cross-Gating
-        if len(all_dem_priors) > 0:
-            dem_priors_cat = torch.cat(all_dem_priors, dim=1)
-            # Physical anchor ray depth: Z = Z_dem * (1.0 + 0.5 * tanh(delta_z))
-            delta_z = torch.tanh(pred_xyz_raw[..., 2:3])
-            z_depth = (dem_priors_cat * (1.0 + 0.5 * delta_z)).clamp(min=0.05, max=1000.0)
-        else:
-            z_depth = torch.exp(pred_xyz_raw[..., 2:3].clamp(-4.0, 4.0)) + 0.1
+        decoded_xyz = None
+        decoded_lwh = None
+        pred_yaw_sincos = None
+        pred_rot_matrix = None
+        pred_unc_xyz = None
+        pred_unc_lwh = None
 
-        u_anc = anchor_points[:, 0:1].unsqueeze(0) + pred_xyz_raw[..., 0:1] * strides_cat.unsqueeze(0)
-        v_anc = anchor_points[:, 1:2].unsqueeze(0) + pred_xyz_raw[..., 1:2] * strides_cat.unsqueeze(0)
+        if compute_3d and len(all_xyz) > 0:
+            pred_xyz_raw = torch.cat(all_xyz, dim=1)
+            pred_lwh_raw = torch.cat(all_lwh, dim=1)
+            pred_yaw_raw = torch.cat(all_yaw, dim=1)
+            pred_unc_xyz = torch.cat(all_unc_xyz, dim=1)
+            pred_unc_lwh = torch.cat(all_unc_lwh, dim=1)
 
-        if intrinsics is not None:
-            fx, fy, cx, cy = intrinsics.fx, intrinsics.fy, intrinsics.cx, intrinsics.cy
-            x_cam = (u_anc - cx) * z_depth / fx
-            y_cam = (v_anc - cy) * z_depth / fy
-        else:
-            x_cam = u_anc
-            y_cam = v_anc
+            if len(all_dem_priors) > 0:
+                dem_priors_cat = torch.cat(all_dem_priors, dim=1)
+                # Physical anchor ray depth: Z = Z_dem * (1.0 + 0.5 * tanh(delta_z))
+                delta_z = torch.tanh(pred_xyz_raw[..., 2:3])
+                z_depth = (dem_priors_cat * (1.0 + 0.5 * delta_z)).clamp(min=0.05, max=1000.0)
+            else:
+                z_depth = torch.exp(pred_xyz_raw[..., 2:3].clamp(-4.0, 4.0)) + 0.1
 
-        decoded_xyz = torch.cat([x_cam, y_cam, z_depth], dim=-1)
-        decoded_lwh = torch.exp(pred_lwh_raw.clamp(-4.0, 4.0))
+            u_anc = anchor_points[:, 0:1].unsqueeze(0) + pred_xyz_raw[..., 0:1] * strides_cat.unsqueeze(0)
+            v_anc = anchor_points[:, 1:2].unsqueeze(0) + pred_xyz_raw[..., 1:2] * strides_cat.unsqueeze(0)
 
-        # 3. Continuous 6D Orientation Matrix & Extracted Yaw
-        if self.rot_dim == 6:
-            pred_rot_matrix = rotation_6d_to_matrix(pred_yaw_raw)
-            extracted_yaw = matrix_to_yaw(pred_rot_matrix).unsqueeze(-1)
-            pred_yaw_sincos = torch.cat([torch.sin(extracted_yaw), torch.cos(extracted_yaw)], dim=-1)
-        else:
-            pred_rot_matrix = None
-            pred_yaw_sincos = pred_yaw_raw
+            if intrinsics is not None:
+                fx, fy, cx, cy = intrinsics.fx, intrinsics.fy, intrinsics.cx, intrinsics.cy
+                x_cam = (u_anc - cx) * z_depth / fx
+                y_cam = (v_anc - cy) * z_depth / fy
+            else:
+                x_cam = u_anc
+                y_cam = v_anc
+
+            decoded_xyz = torch.cat([x_cam, y_cam, z_depth], dim=-1)
+            decoded_lwh = torch.exp(pred_lwh_raw.clamp(-4.0, 4.0))
+
+            # Continuous 6D Orientation Matrix & Extracted Yaw
+            if self.rot_dim == 6:
+                pred_rot_matrix = rotation_6d_to_matrix(pred_yaw_raw)
+                extracted_yaw = matrix_to_yaw(pred_rot_matrix).unsqueeze(-1)
+                pred_yaw_sincos = torch.cat([torch.sin(extracted_yaw), torch.cos(extracted_yaw)], dim=-1)
+            else:
+                pred_rot_matrix = None
+                pred_yaw_sincos = pred_yaw_raw
 
         # 4. Energy-Based Unsupervised Density Estimation (OOD Detection)
         temperature = 1.0
         free_energy = -temperature * torch.logsumexp(pred_cls / temperature, dim=-1, keepdim=True)
         ood_score = torch.sigmoid(free_energy - 5.0)
 
+        # Concatenate mask coefficients across all scales
+        pred_mask_coeffs = torch.cat(all_mask_coeffs, dim=1) if len(all_mask_coeffs) > 0 else None
+
         out = {
             # Primary One-to-One Head (Zero-NMS Deployment outputs)
             "class_logits": pred_cls,
             "pred_box_dist": pred_box_dist,
             "pred_boxes": decoded_boxes,
-            "pred_xyz": decoded_xyz,
-            "pred_lwh": decoded_lwh,
-            "pred_yaw_sincos": pred_yaw_sincos,
-            "pred_rot_matrix": pred_rot_matrix,
-            "pred_6d_rot": pred_yaw_raw if self.rot_dim == 6 else None,
+            "pred_mask_coeffs": pred_mask_coeffs,
             "anchor_points": anchor_points,
             "strides": strides_cat,
             "free_energy": free_energy,
             "ood_score": ood_score,
-            # Heteroscedastic instance uncertainties for downstream EKF/Kalman tracking
-            "log_sigma_xyz": pred_unc_xyz.clamp(-5.0, 5.0),
-            "log_sigma_lwh": pred_unc_lwh.clamp(-5.0, 5.0),
-            "log_sigma_yaw": self.log_sigma_yaw.clamp(-5.0, 5.0)
         }
+
+        if compute_3d and decoded_xyz is not None:
+            out.update({
+                "pred_xyz": decoded_xyz,
+                "pred_lwh": decoded_lwh,
+                "pred_yaw_sincos": pred_yaw_sincos,
+                "pred_rot_matrix": pred_rot_matrix,
+                "pred_6d_rot": pred_yaw_raw if self.rot_dim == 6 else None,
+                "log_sigma_xyz": pred_unc_xyz.clamp(-5.0, 5.0),
+                "log_sigma_lwh": pred_unc_lwh.clamp(-5.0, 5.0),
+                "log_sigma_yaw": self.log_sigma_yaw.clamp(-5.0, 5.0)
+            })
 
         # 5. Include O2M head predictions if active
         if return_o2m and len(all_cls_o2m) > 0:
