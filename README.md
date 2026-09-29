@@ -148,17 +148,62 @@ neuravex/
 
 ---
 
-## The Official Model Family Spectrum
+## The Official Model Family Spectrum & Model Hub
 
-| Model Variant | Parameters | 640x640 FLOPs | RTX 5060 FPS | CPU FPS | Target Deployment |
-|---|---|---|---|---|---|
-| 🟢 **Neuravex-Pico** | **0.54 M** | **0.43 G** (320p) | **109.9 FPS** | **54.4 FPS** | Microcontrollers, Raspberry Pi, IoT Edge |
-| 🟢 **Neuravex-Femto** | **1.16 M** | **3.73 G** | **136.8 FPS** | **42.1 FPS** | Ultra-low power edge devices, drones |
-| 🔵 **Neuravex-Nano** | **2.02 M** | **6.52 G** | **138.5 FPS** | **34.9 FPS** | NVIDIA Jetson Nano / Orin, Mobile Vision |
-| 🔵 **Neuravex-Lite** | **4.58 M** | **15.11 G** | **70.2 FPS** | **18.5 FPS** | Robotics, Smart Cameras, Embedded Edge |
-| 🟠 **Neuravex-Edge** | **9.08 M** | **26.62 G** | **88.6 FPS** | **11.2 FPS** | Edge Servers, Industrial Automation |
-| 🔴 **Neuravex-Pro** | **22.36 M** | **64.81 G** | **64.7 FPS** | **5.4 FPS** | High-precision Cloud Video Analytics |
-| 🟣 **Neuravex-Omni** | **35.96 M** | **179.48 G** | **45.0 FPS** | **2.8 FPS** | Unified Foundation Vision (2D/3D/Depth/Seg/Pose/Track) |
+Users can download each model checkpoint, fine-tuned weights, and exported ONNX graph individually:
+
+| Model Variant | Parameters | 640x640 FLOPs | RTX 5060 FPS | CPU FPS | PyTorch Weights (.pth) | ONNX Export (.onnx) | Target Deployment |
+|---|---|---|---|---|---|---|---|
+| 🟢 **Neuravex-Pico** | **0.54 M** | **0.43 G** (320p) | **109.9 FPS** | **54.4 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_pico_weights.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | Microcontrollers, Raspberry Pi, IoT Edge |
+| 🟢 **Neuravex-Femto** | **1.16 M** | **3.73 G** | **136.8 FPS** | **42.1 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_femto_weights.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | Ultra-low power edge devices, drones |
+| 🔵 **Neuravex-Nano** | **2.02 M** | **6.52 G** | **138.5 FPS** | **34.9 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_nano_classifier_best.pth) | [Download (.onnx)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/sota_neuravex_nano.onnx) | NVIDIA Jetson Nano / Orin, Mobile Vision |
+| 🔵 **Neuravex-Nano (SOTA)** | **2.02 M** | **6.52 G** | **138.5 FPS** | **34.9 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/sota_neuravex_nano_best.pth) | [INT8 ONNX](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/sota_neuravex_nano_int8.onnx) | Distilled SOTA FitNets Model |
+| 🔵 **Neuravex-Lite** | **4.58 M** | **15.11 G** | **70.2 FPS** | **18.5 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_lite_weights.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | Robotics, Smart Cameras, Embedded Edge |
+| 🟠 **Neuravex-Edge** | **9.08 M** | **26.62 G** | **88.6 FPS** | **11.2 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_edge_classifier_best.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | Edge Servers, Industrial Automation |
+| 🟠 **Neuravex-Edge (SOTA)** | **9.08 M** | **26.62 G** | **88.6 FPS** | **11.2 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/sota_neuravex_edge_best.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | High-accuracy Workstation Edge |
+| 🔴 **Neuravex-Pro** | **22.36 M** | **64.81 G** | **64.7 FPS** | **5.4 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_pro_weights.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | High-precision Cloud Video Analytics |
+| 🟣 **Neuravex-Omni** | **35.96 M** | **179.48 G** | **45.0 FPS** | **2.8 FPS** | [Download (.pth)](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_omni_foundation.pth) | [Export](https://github.com/ELANGKATHIR11/Neuravex/releases) | Unified Foundation Vision (2D/3D/Depth/Seg/Pose/Track) |
+
+---
+
+### Downloading Models via CLI or Python
+
+You can download any individual model checkpoint directly using either the built-in CLI or one line of Python:
+
+#### Option A: Command-Line Interface (CLI)
+```bash
+# List all available downloadable models in the hub
+neuravex list-models
+
+# Download specific model checkpoints to ~/.cache/neuravex/models/ (or custom directory)
+neuravex download neuravex-nano
+neuravex download neuravex-edge
+neuravex download neuravex-nano-sota
+neuravex download neuravex-nano-onnx
+neuravex download neuravex-nano-int8 --dest ./weights
+```
+
+#### Option B: Python SDK One-Liner
+```python
+import neuravex
+
+# 1. Download checkpoint path only
+checkpoint_path = neuravex.download_model("neuravex-nano")
+print(f"Model saved to: {checkpoint_path}")
+
+# 2. Or download and automatically load model ready for inference
+model = neuravex.load_model("neuravex-nano", num_classes=80)
+model.eval()
+```
+
+#### Option C: Direct Curl / Wget
+```bash
+# Download PyTorch weights
+curl -L -O https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/neuravex_nano_classifier_best.pth
+
+# Download ONNX inference graph
+curl -L -O https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.2.0/sota_neuravex_nano.onnx
+```
 
 ---
 

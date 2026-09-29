@@ -71,6 +71,11 @@ def __getattr__(name):
         "SpecializationPipeline": (".specialization", "SpecializationPipeline"),
         "build_specialized_neuravex": (".specialization", "build_specialized_neuravex"),
         "ExperimentEngine": (".specialization", "ExperimentEngine"),
+        # Hub / Model Zoo
+        "download_model": (".hub", "download_model"),
+        "load_model": (".hub", "load_model"),
+        "list_models": (".hub", "list_models"),
+        "MODEL_REGISTRY": (".hub", "MODEL_REGISTRY"),
     }
 
     if name in _lazy_map:

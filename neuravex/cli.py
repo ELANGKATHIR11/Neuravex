@@ -75,10 +75,25 @@ def main():
     train_p.add_argument("--epochs", type=int, default=100)
     train_p.add_argument("--device", "-d", type=str, default=None)
 
+    # --- models (list model zoo) ---
+    subparsers.add_parser("list-models", help="List all downloadable pretrained Neuravex models")
+
+    # --- download ---
+    download_p = subparsers.add_parser("download", help="Download a pretrained Neuravex model or ONNX graph")
+    download_p.add_argument("model", type=str, help="Model name (e.g. neuravex-nano, neuravex-edge, neuravex-nano-onnx)")
+    download_p.add_argument("--dest", "-d", type=str, default=None, help="Destination directory (default: ~/.cache/neuravex/models)")
+    download_p.add_argument("--force", "-f", action="store_true", help="Force re-download if file exists")
+
     args = parser.parse_args()
 
     if args.command == "info":
         _cmd_info()
+    elif args.command == "list-models":
+        from neuravex.hub import list_models
+        list_models()
+    elif args.command == "download":
+        from neuravex.hub import download_model
+        download_model(args.model, dest_dir=args.dest, force=args.force)
     elif args.command == "analyze":
         _cmd_analyze(args)
     elif args.command == "detect":
