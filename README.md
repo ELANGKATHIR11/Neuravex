@@ -144,6 +144,15 @@ neuravex/
     ├── camera.py                # Camera intrinsics, coordinate unprojection, raycasting
     ├── box_ops.py               # 2D CIoU, GIoU, DIoU, and boundary overlap score (BoS)
     └── oriented_iou3d.py        # 3D oriented bounding box IoU calculation
+
+neuravex_spatial3d/              # Dedicated 3D Spatial Perception & Sensor Fusion SDK
+├── sensors.py                   # Camera Pinhole models & LiDAR sensor fusion (SE3 rigid body)
+├── geometry3d.py                # Native 3D Bounding Boxes (L,W,H, Yaw, 8-corners, 3D IoU)
+├── dem.py                       # Native DEM surface mapping, slope, aspect, ground plane
+├── segmentation.py              # Native 3D instance mask unprojection & volume isolation
+├── marking.py                   # Spatial entity marking, 3D persistent trajectories & memory
+├── counting.py                  # Volumetric 3D counting zones, tripwires, and flow counter
+└── hardware.py                  # CUDA, cuDNN, Intel (oneDNN/AVX-512), AMD (ROCm/AVX2) context
 ```
 
 ---
