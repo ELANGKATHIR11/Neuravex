@@ -39,7 +39,10 @@ class NativeDEMSurface:
         Computes terrain slope (degrees) and aspect (orientation in degrees)
         using central finite differences.
         """
-        grid = self.grid.unsqueeze(0).unsqueeze(0) # (1, 1, H, W)
+        grid = self.grid
+        while grid.ndim > 2:
+            grid = grid.squeeze(0)
+        grid = grid.unsqueeze(0).unsqueeze(0) # (1, 1, H, W)
         
         # Sobel gradient filters for elevation gradient dz/dx, dz/dy
         sobel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32, device=self.device).view(1, 1, 3, 3) / (8.0 * self.res)

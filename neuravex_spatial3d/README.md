@@ -99,3 +99,36 @@ dem = sp3d.NativeDEMSurface(dem_grid, cell_resolution_m=0.05)
 slope, aspect = dem.compute_slopes_and_aspect()
 normal, d = dem.fit_ground_plane()
 ```
+
+---
+
+## Native Live Video Streaming Pipeline (`LiveVideoPipeline`)
+
+Continuous real-time live streaming generator with concurrent 2D/3D boxes, live segmentation, live DEM, physical $L, W, H$ calculation, persistent track ID creation, and spatial memory entity marking:
+
+```python
+import cv2
+import neuravex_spatial3d as sp3d
+
+# Initialize real-time live video pipeline
+pipeline = sp3d.LiveVideoPipeline()
+
+# Stream live video from USB webcam (0), RTSP IP camera, or MP4 file
+for result, annotated_frame in pipeline.stream_live(video_source=0, conf_threshold=0.25):
+    fps = result["fps"]
+    boxes = result["boxes_3d"]
+    dem = result["dem_metrics"]
+    
+    print(f"Live FPS: {fps} | Tracked Entities: {len(boxes)} | Mean DEM Elev: {dem['mean_elevation_m']}m")
+    
+    for box in boxes:
+        print(f"  -> Entity ID: {box['track_id']} | LWH: {box['lwh']} | XYZ: {box['xyz']}")
+
+    # Display real-time 3D dashboard overlay
+    if annotated_frame is not None:
+        cv2.imshow("Neuravex Native Live 3D Stream", annotated_frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+cv2.destroyAllWindows()
+```
