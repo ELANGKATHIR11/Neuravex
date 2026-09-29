@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/neuravex_logo.svg" alt="Neuravex Logo" width="240" />
+  <img src="https://raw.githubusercontent.com/ELANGKATHIR11/Neuravex/main/assets/neuravex_logo.png" alt="Neuravex Logo" width="280" />
 </p>
 
 # Neuravex v0.2.0: Hardware-Adaptive Unified Computer-Vision Architecture
