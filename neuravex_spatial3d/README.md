@@ -1,6 +1,6 @@
 # neuravex-spatial3d
 
-High-Performance Native 3D Spatial Perception, Volumetric Bounding Boxes, Sensor Fusion, Native DEM, and Spatial Flow Counting SDK.
+High-Performance Native 3D Spatial Perception, Photo, Image & Video Analysis, Sensor Fusion, Native DEM, and Volumetric Flow Counting SDK.
 
 [![Release](https://img.shields.io/badge/Release-v0.1.0-brightgreen.svg)](https://github.com/ELANGKATHIR11/Neuravex)
 [![Python: 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
@@ -9,16 +9,22 @@ High-Performance Native 3D Spatial Perception, Volumetric Bounding Boxes, Sensor
 
 ---
 
-## Capabilities
+## Capabilities & Full DL Model Integration
 
-1. **Native 3D Bounding Boxes**: Metric center $(X, Y, Z)$, physical extents $(L, W, H)$, and heading angles $(Yaw, Pitch, Roll)$ with 8-corner vertices computation.
-2. **Native Camera Intrinsics**: Full pinhole model $(f_x, f_y, c_x, c_y)$ with lens distortion correction and pixel unprojection.
-3. **LiDAR Sensor Fusion**: Spherical-to-cartesian unprojection, extrinsic rigid-body $SE(3)$ transformation ($R, T$), and LiDAR-to-image projection.
-4. **Native DEM (Digital Elevation Model)**: Converts metric depth grids into terrain elevation surfaces, computing slope (deg), aspect (deg), and ground plane fitting.
-5. **Native 3D Instance Segmentation**: Back-projects 2D masks into 3D point cloud clusters and isolates object volumes without rectangular bounding box leakage.
-6. **Native Entity Marking & Spatial Memory**: Persistent identity tracking, 3D trajectory recording, and spatial memory querying.
-7. **Native Volumetric Counting**: Virtual 3D zones, tripwires, and cumulative flow counting.
-8. **Cross-Platform Compatibility**: Fully compatible with Python 3.11+, NVIDIA CUDA & cuDNN, Intel CPUs (oneDNN/AVX-512), and AMD processors/GPUs (AVX2/ROCm).
+1. **Native Photo & Image Analysis (`ImageProcessor` & `NativeSpatialAnalyzer`)**:
+   - Accepts JPG, PNG, WebP, BMP, raw NumPy arrays, PIL Images, and PyTorch tensors.
+   - Computes 2D classification, metric depth maps, 3D $(L, W, H)$ bounding boxes, and ground DEM elevation profiles.
+2. **Native Video Stream Analysis (`VideoStreamProcessor` & `VideoWriter`)**:
+   - Processes MP4, AVI, MKV, RTSP/HTTP camera streams, and USB webcams frame-by-frame.
+   - Real-time 3D spatial overlay rendering and direct output video encoding.
+3. **Native 3D Bounding Boxes**: Metric center $(X, Y, Z)$, physical extents $(Length, Width, Height)$, and heading angles $(Yaw, Pitch, Roll)$ with 8-corner camera vertices computation.
+4. **Native Camera Intrinsics**: Full pinhole model $(f_x, f_y, c_x, c_y)$ with lens distortion correction and pixel unprojection.
+5. **LiDAR Sensor Fusion**: Spherical-to-cartesian unprojection, extrinsic rigid-body $SE(3)$ transformation ($R, T$), and LiDAR-to-image projection.
+6. **Native DEM (Digital Elevation Model)**: Converts metric depth grids into terrain elevation surfaces, computing slope (deg), aspect (deg), and ground plane fitting.
+7. **Native 3D Instance Segmentation**: Back-projects 2D masks into 3D point cloud clusters and isolates object volumes without rectangular bounding box leakage.
+8. **Native Entity Marking & Spatial Memory**: Persistent identity tracking, 3D trajectory recording, and spatial memory querying.
+9. **Native Volumetric Counting**: Virtual 3D zones, tripwires, and cumulative flow counting.
+10. **Cross-Platform Compatibility**: Fully compatible with Python 3.11+, NVIDIA CUDA & cuDNN, Intel CPUs (oneDNN/AVX-512), and AMD processors/GPUs (AVX2/ROCm).
 
 ---
 
@@ -31,37 +37,65 @@ pip install -e .
 
 ---
 
-## Quick Example
+## Quickstart: Photo & Image Analysis
+
+```python
+import neuravex_spatial3d as sp3d
+
+# 1. Initialize analyzer with hardware auto-detection (CUDA/cuDNN or Intel/AMD CPU)
+analyzer = sp3d.NativeSpatialAnalyzer(model_name="neuravex-nano")
+
+# 2. Analyze any photo / image directly
+results = analyzer.analyze_image("sample_photo.jpg", conf_threshold=0.25)
+print("Image Latency:", results["latency_ms"], "ms")
+print("3D Bounding Boxes (L,W,H):", results["boxes_3d"])
+print("DEM Elevation (min/max/mean):", results["dem_metrics"])
+```
+
+---
+
+## Quickstart: Real-Time Video Analysis & Stream Processing
+
+```python
+import neuravex_spatial3d as sp3d
+
+analyzer = sp3d.NativeSpatialAnalyzer()
+
+# Define a 3D volumetric counting gate (e.g. entry zone)
+zone = sp3d.CountingZone3D("gate_north", "Main Gate", x_min=-2.0, x_max=2.0, y_min=-1.0, y_max=3.0, z_min=1.0, z_max=15.0)
+analyzer.counter.add_zone(zone)
+
+# Process video file or RTSP stream and save annotated 3D video output
+video_report = analyzer.analyze_video(
+    video_source="traffic_stream.mp4",  # or 0 for live webcam
+    output_path="annotated_output.mp4",
+    max_frames=300
+)
+
+print("Processed FPS:", video_report["fps"])
+print("Cumulative Counts:", video_report["cumulative_counts"])
+print("Zone Counts:", video_report["active_zone_counts"])
+```
+
+---
+
+## Sensor Fusion & Native DEM Example
 
 ```python
 import torch
 import neuravex_spatial3d as sp3d
 
-# 1. Hardware context auto-selects CUDA+cuDNN or AVX Intel/AMD
-ctx = sp3d.DeviceContext()
-print("Hardware:", ctx.backend["device_name"])
-
-# 2. Camera Intrinsics & Unprojection
 cam = sp3d.CameraIntrinsics(fx=1000.0, fy=1000.0, cx=960.0, cy=540.0, width=1920, height=1080)
-u = torch.tensor([960.0])
-v = torch.tensor([540.0])
-depth = torch.tensor([4.5])  # 4.5 meters
-xyz = cam.unproject_pixels(u, v, depth)
+lidar = sp3d.LiDARConfig(num_beams=64, max_range=120.0)
+fusion = sp3d.SensorFusionEngine(camera=cam, lidar=lidar)
 
-# 3. 3D Bounding Box with L, W, H
-box = sp3d.BoundingBox3D(center=xyz[0], size_lwh=(1.8, 0.9, 1.4), yaw=0.15, class_name="vehicle")
-print("Box Volume:", box.volume, "m^3")
-print("8 Corners:\n", box.get_corners())
+# Project LiDAR point clouds onto image plane
+lidar_pts = torch.randn(1000, 3) + torch.tensor([0, 0, 15.0])
+u_proj, v_proj, valid = fusion.project_lidar_to_image(lidar_pts)
 
-# 4. Digital Elevation Model (DEM)
-dem_grid = torch.randn(200, 200) + 12.0
+# DEM Terrain Surface
+dem_grid = torch.randn(200, 200) + 10.0
 dem = sp3d.NativeDEMSurface(dem_grid, cell_resolution_m=0.05)
 slope, aspect = dem.compute_slopes_and_aspect()
-
-# 5. Volumetric Counting Zone
-counter = sp3d.SpatialCounter()
-zone = sp3d.CountingZone3D("gate_1", "North Gate", -2.0, 2.0, -1.0, 3.0, 0.0, 10.0)
-counter.add_zone(zone)
-report = counter.process_detections([box])
-print("Spatial Count Report:", report)
+normal, d = dem.fit_ground_plane()
 ```

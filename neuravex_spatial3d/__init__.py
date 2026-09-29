@@ -28,6 +28,9 @@ from .segmentation import Mask3DProjector, robust_mask_unproject
 from .marking import SpatialMarkerStore, MarkedEntity
 from .counting import SpatialCounter, CountingZone3D
 from .hardware import DeviceContext, get_optimal_device
+from .image_io import ImageProcessor
+from .video_io import VideoStreamProcessor, VideoWriter
+from .analyzer import NativeSpatialAnalyzer
 
 __all__ = [
     "CameraIntrinsics",
@@ -47,4 +50,8 @@ __all__ = [
     "CountingZone3D",
     "DeviceContext",
     "get_optimal_device",
+    "ImageProcessor",
+    "VideoStreamProcessor",
+    "VideoWriter",
+    "NativeSpatialAnalyzer",
 ]
