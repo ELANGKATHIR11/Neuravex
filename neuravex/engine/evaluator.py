@@ -6,13 +6,14 @@ from torchvision.ops import batched_nms
 
 class NeuravexInferencePostProcessor:
     """
-    Decodes predictions, computes probabilities, applies class-aware batched NMS,
-    and formats complete multi-task outputs.
+    Decodes predictions, computes probabilities, performs canonical NMS-free O2O output assembly
+    (or optional legacy/reference class-aware batched NMS), and formats complete multi-task outputs.
     """
-    def __init__(self, conf_thresh: float = 0.25, iou_thresh: float = 0.45, max_det: int = 300):
+    def __init__(self, conf_thresh: float = 0.25, iou_thresh: float = 0.45, max_det: int = 300, use_nms: bool = False):
         self.conf_thresh = conf_thresh
         self.iou_thresh = iou_thresh
         self.max_det = max_det
+        self.use_nms = use_nms  # Default False: Canonical O2O is strictly NMS-free
 
     @torch.no_grad()
     def __call__(self, outputs: dict, intrinsics=None, tracker=None, dt: float = 1.0 / 30.0) -> dict:
@@ -37,6 +38,7 @@ class NeuravexInferencePostProcessor:
         inst_embeddings = outputs.get("instance_embeddings", None)
 
         from .tracker import robust_mask_depth_estimator
+        from ..core import ObjectState, CanonicalPrediction
 
         for b in range(B):
             scores, labels = pred_cls[b].max(dim=-1)
@@ -61,35 +63,46 @@ class NeuravexInferencePostProcessor:
             f_lwh = pred_lwh[b, keep_mask] if pred_lwh is not None else torch.zeros((len(f_boxes), 3), device=f_boxes.device)
             f_yaw = recovered_yaw[b, keep_mask] if recovered_yaw is not None else torch.zeros((len(f_boxes), 1), device=f_boxes.device)
 
-            # True class-aware batched NMS
-            keep = batched_nms(f_boxes, f_scores, f_labels, self.iou_thresh)
-            keep = keep[:self.max_det]
+            if self.use_nms:
+                # Explicit legacy / reference mode only
+                keep = batched_nms(f_boxes, f_scores, f_labels, self.iou_thresh)
+                keep = keep[:self.max_det]
 
-            det_boxes = f_boxes[keep]
-            det_scores = f_scores[keep]
-            det_labels = f_labels[keep]
-            det_xyz = f_xyz[keep]
-            det_lwh = f_lwh[keep]
-            det_yaw = f_yaw[keep]
+                det_boxes = f_boxes[keep]
+                det_scores = f_scores[keep]
+                det_labels = f_labels[keep]
+                det_xyz = f_xyz[keep]
+                det_lwh = f_lwh[keep]
+                det_yaw = f_yaw[keep]
 
-            # Bounding Box Voting (IoU-Weighted BBox Fusion):
-            # Eliminates sub-pixel anchor quantization noise, tightening box boundaries and driving IoU and BoS higher
-            if len(det_boxes) > 0 and len(f_boxes) > len(det_boxes):
-                from ..geometry.box_ops import box_iou_2d
-                ious = box_iou_2d(det_boxes, f_boxes)  # (N_keep, N_all)
-                refined_boxes = []
-                for k in range(len(det_boxes)):
-                    same_class = (f_labels == det_labels[k])
-                    match_mask = same_class & (ious[k] >= 0.50)
-                    if match_mask.any():
-                        match_b = f_boxes[match_mask]
-                        match_s = f_scores[match_mask] * ious[k, match_mask]
-                        w_sum = match_s.sum().clamp_min(1e-6)
-                        voted_b = (match_b * match_s.unsqueeze(-1)).sum(dim=0) / w_sum
-                        refined_boxes.append(voted_b)
-                    else:
-                        refined_boxes.append(det_boxes[k])
-                det_boxes = torch.stack(refined_boxes, dim=0)
+                # Bounding Box Voting (IoU-Weighted BBox Fusion) in legacy mode
+                if len(det_boxes) > 0 and len(f_boxes) > len(det_boxes):
+                    from ..geometry.box_ops import box_iou_2d
+                    ious = box_iou_2d(det_boxes, f_boxes)
+                    refined_boxes = []
+                    for k in range(len(det_boxes)):
+                        same_class = (f_labels == det_labels[k])
+                        match_mask = same_class & (ious[k] >= 0.50)
+                        if match_mask.any():
+                            match_b = f_boxes[match_mask]
+                            match_s = f_scores[match_mask] * ious[k, match_mask]
+                            w_sum = match_s.sum().clamp_min(1e-6)
+                            voted_b = (match_b * match_s.unsqueeze(-1)).sum(dim=0) / w_sum
+                            refined_boxes.append(voted_b)
+                        else:
+                            refined_boxes.append(det_boxes[k])
+                    det_boxes = torch.stack(refined_boxes, dim=0)
+            else:
+                # CANONICAL PRODUCTION PATH: Zero-NMS One-to-One (O2O) End-to-End
+                # Sort by score and top-k truncate without any NMS suppression
+                order = torch.argsort(f_scores, descending=True)[:self.max_det]
+                det_boxes = f_boxes[order]
+                det_scores = f_scores[order]
+                det_labels = f_labels[order]
+                det_xyz = f_xyz[order]
+                det_lwh = f_lwh[order]
+                det_yaw = f_yaw[order]
+                keep = order
 
             batch_detections.append({
                 "boxes": det_boxes,
@@ -516,6 +529,53 @@ def calculate_bos_metrics(pred_boxes: torch.Tensor, gt_boxes: torch.Tensor) -> d
         "mean_bos": mean_bos,
         "bos_at_50": bos_at_50,
         "bos_at_75": bos_at_75
+    }
+
+def calculate_bos_geo(pred_boxes: torch.Tensor, gt_boxes: torch.Tensor) -> dict:
+    """
+    Renamed geometric box alignment metric BoS_geo:
+    Joint IoU, centroid proximity factor, and aspect-ratio consistency.
+    Reserves BoundaryF1 for true segmentation mask boundary quality.
+    """
+    return calculate_bos_metrics(pred_boxes, gt_boxes)
+
+
+def calculate_mask_metrics(pred_masks: torch.Tensor, gt_masks: torch.Tensor, threshold: float = 0.5) -> dict:
+    """
+    Evaluates instance mask segmentation metrics:
+      - Mask IoU
+      - Dice Coefficient
+      - BoundaryF1 (true contour boundary F1 score)
+    """
+    if len(pred_masks) == 0 or len(gt_masks) == 0:
+        return {"mask_iou": 0.0, "dice": 0.0, "boundary_f1": 0.0}
+
+    p = (pred_masks > threshold).float()
+    g = (gt_masks > 0.5).float()
+
+    inter = (p * g).sum(dim=(-2, -1))
+    union = p.sum(dim=(-2, -1)) + g.sum(dim=(-2, -1)) - inter
+    mask_iou = (inter / union.clamp_min(1e-6)).mean().item()
+
+    dice = (2.0 * inter / (p.sum(dim=(-2, -1)) + g.sum(dim=(-2, -1))).clamp_min(1e-6)).mean().item()
+
+    # Boundary F1 via Laplacian contour extraction
+    laplacian = torch.tensor([[0, 1, 0], [1, -4, 1], [0, 1, 0]], dtype=torch.float32, device=p.device).view(1, 1, 3, 3)
+    p_edge = (torch.nn.functional.conv2d(p.unsqueeze(1), laplacian, padding=1).abs() > 0.1).float()
+    g_edge = (torch.nn.functional.conv2d(g.unsqueeze(1), laplacian, padding=1).abs() > 0.1).float()
+
+    edge_tp = (p_edge * g_edge).sum().item()
+    edge_fp = (p_edge * (1.0 - g_edge)).sum().item()
+    edge_fn = ((1.0 - p_edge) * g_edge).sum().item()
+
+    prec = edge_tp / max(edge_tp + edge_fp, 1e-6)
+    rec = edge_tp / max(edge_tp + edge_fn, 1e-6)
+    b_f1 = 2.0 * prec * rec / max(prec + rec, 1e-6)
+
+    return {
+        "mask_iou": float(mask_iou),
+        "dice": float(dice),
+        "boundary_f1": float(b_f1)
     }
 
 def calculate_3d_iou_and_bos(pred_xyz: torch.Tensor, pred_lwh: torch.Tensor, pred_yaw: torch.Tensor,

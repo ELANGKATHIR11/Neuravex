@@ -11,7 +11,7 @@ __version__ = "0.2.0"
 # --------------------------------------------------------------------------
 # Core schema (no heavy deps)
 # --------------------------------------------------------------------------
-from .core import ObjectState, FrameState
+from .core import ObjectState, FrameState, CanonicalPrediction
 
 # --------------------------------------------------------------------------
 # Lazy import helpers — heavy dependencies loaded on first access
@@ -35,7 +35,11 @@ def __getattr__(name):
         "calculate_depth_metrics": (".engine.evaluator", "calculate_depth_metrics"),
         "calculate_boundary_fscore": (".engine.evaluator", "calculate_boundary_fscore"),
         "calculate_bos_metrics": (".engine.evaluator", "calculate_bos_metrics"),
+        "calculate_bos_geo": (".engine.evaluator", "calculate_bos_geo"),
+        "calculate_mask_metrics": (".engine.evaluator", "calculate_mask_metrics"),
         "calculate_3d_iou_and_bos": (".engine.evaluator", "calculate_3d_iou_and_bos"),
+        "runtime": (".runtime", "get_runtime_engine"),
+        "runtime_explain": (".runtime", "explain"),
         "ActorCriticComputePolicy": (".engine.adaptive_compute", "ActorCriticComputePolicy"),
         "compute_dynamic_budget_reward": (".engine.adaptive_compute", "compute_dynamic_budget_reward"),
         "RealTimeSlicedPatchSegmenter": (".engine.sliced_segmenter", "RealTimeSlicedPatchSegmenter"),

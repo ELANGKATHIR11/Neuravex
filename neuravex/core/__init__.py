@@ -1,17 +1,50 @@
 """
-Neuravex Unified Output Schema: ObjectState + FrameState.
+Neuravex Unified Canonical Output Schema: ObjectState, FrameState, and CanonicalPrediction.
 
-Every Neuravex inference produces one FrameState per frame, containing a list of ObjectState
-records — one per detected object. This is the SINGLE source of truth for all downstream
-consumers (tracking, counting, visualization, export, serialization).
-
-Fields that cannot be computed (missing calibration, untrained heads, etc.) are set to None
-with a corresponding source/flag indicating why. Neuravex NEVER fabricates data.
+Every Neuravex inference outputs valid CanonicalPrediction records within FrameState.
+Fields that cannot be computed or are unrequested default to explicit None.
+No incompatible parallel schemas exist across subsystems.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import numpy as np
+
+
+@dataclass
+class CanonicalPrediction:
+    """
+    Contractually specified canonical per-object perception output:
+    object_id, class_id, confidence, bbox_xyxy, mask, center_xy, depth,
+    xyz, lwh, yaw, rotation, terrain_elevation, uncertainty, track_state, ood_score
+    """
+    object_id: int
+    class_id: int
+    confidence: float
+    bbox_xyxy: List[float]                                     # [x1, y1, x2, y2]
+    mask: Optional[np.ndarray] = None                          # (H, W) binary uint8 mask or None
+    center_xy: Optional[List[float]] = None                    # [cx, cy] in pixels
+    depth: Optional[float] = None                              # Metric Z in meters
+    xyz: Optional[List[float]] = None                          # [X, Y, Z] in camera metric frame
+    lwh: Optional[List[float]] = None                          # [L, W, H] physical dimensions
+    yaw: Optional[float] = None                                # Rotation heading in radians
+    rotation: Optional[List[List[float]]] = None               # 3x3 SO(3) rotation matrix
+    terrain_elevation: Optional[float] = None                  # Metric ground elevation
+    uncertainty: Optional[Dict[str, float]] = None             # {"sigma_xyz": ..., "sigma_lwh": ...}
+    track_state: Optional[Dict[str, Any]] = None               # {"track_id": int, "velocity": [...], "age": int}
+    ood_score: Optional[float] = None                          # Free energy out-of-distribution score
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, np.ndarray):
+                if v.size <= 24:
+                    d[k] = v.tolist()
+                else:
+                    d[k] = f"<ndarray shape={v.shape}>"
+            else:
+                d[k] = v
+        return d
 
 
 @dataclass
@@ -56,25 +89,71 @@ class ObjectState:
     acceleration: Optional[List[float]] = None  # [ax, ay, az] m/s²
     heading: Optional[float] = None  # heading angle in degrees
     track_age: int = 0
-    movement_state: str = "unknown"  # 'stationary' | 'walking' | 'running' | 'erratic_turn' | ...
+    movement_state: str = "unknown"
 
-    # Counting (populated when counter is active)
-    count_state: Optional[str] = None  # 'pre_zone' | 'in_zone' | 'counted' | 'post_zone'
+    # Counting
+    count_state: Optional[str] = None
 
-    # Terrain / DEM (populated when real DEM data is available)
-    terrain_elevation: Optional[float] = None  # meters above reference datum
-    height_above_ground: Optional[float] = None  # object bottom - terrain elevation
+    # Terrain / DEM
+    terrain_elevation: Optional[float] = None
+    height_above_ground: Optional[float] = None
 
-    # Uncertainty
-    xyz_uncertainty: Optional[List[float]] = None  # [sigma_x, sigma_y, sigma_z]
-    lwh_uncertainty: Optional[List[float]] = None  # [sigma_l, sigma_w, sigma_h]
+    # Uncertainty & OOD
+    xyz_uncertainty: Optional[List[float]] = None
+    lwh_uncertainty: Optional[List[float]] = None
+    ood_score: Optional[float] = None
+
+    # Canonical prediction representation
+    canonical: Optional[CanonicalPrediction] = None
+
+    def to_canonical(self) -> CanonicalPrediction:
+        """Produce the single canonical contract prediction."""
+        cxcy = None
+        if self.bbox2d is not None and len(self.bbox2d) == 4:
+            cxcy = [(self.bbox2d[0] + self.bbox2d[2]) * 0.5, (self.bbox2d[1] + self.bbox2d[3]) * 0.5]
+
+        unc = {}
+        if self.xyz_uncertainty is not None:
+            unc["xyz_sigma"] = self.xyz_uncertainty
+        if self.lwh_uncertainty is not None:
+            unc["lwh_sigma"] = self.lwh_uncertainty
+
+        trk = None
+        if self.track_id is not None:
+            trk = {
+                "track_id": self.track_id,
+                "velocity": self.velocity,
+                "acceleration": self.acceleration,
+                "heading": self.heading,
+                "age": self.track_age,
+                "movement_state": self.movement_state
+            }
+
+        return CanonicalPrediction(
+            object_id=self.id,
+            class_id=self.class_id,
+            confidence=float(self.score),
+            bbox_xyxy=self.bbox2d if self.bbox2d is not None else [0.0, 0.0, 0.0, 0.0],
+            mask=self.mask,
+            center_xy=cxcy,
+            depth=self.depth,
+            xyz=self.xyz,
+            lwh=self.lwh,
+            yaw=self.yaw,
+            rotation=None,
+            terrain_elevation=self.terrain_elevation,
+            uncertainty=unc if unc else None,
+            track_state=trk,
+            ood_score=self.ood_score
+        )
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize to JSON-safe dictionary, excluding large arrays."""
         d = {}
         for k, v in self.__dict__.items():
+            if k == "canonical":
+                continue
             if isinstance(v, np.ndarray):
-                if v.size <= 24:  # small arrays (corners)
+                if v.size <= 24:
                     d[k] = v.tolist()
                 else:
                     d[k] = f"<ndarray shape={v.shape}>"
@@ -94,27 +173,30 @@ class FrameState:
     # Objects
     objects: List[ObjectState] = field(default_factory=list)
 
-    # Frame-level dense outputs (optional, large)
-    depth_map: Optional[np.ndarray] = None  # (H, W) metric depth
-    terrain_map: Optional[np.ndarray] = None  # (H, W) terrain elevation
-    depth_confidence_map: Optional[np.ndarray] = None  # (H, W) confidence
+    # Frame-level dense outputs
+    depth_map: Optional[np.ndarray] = None
+    terrain_map: Optional[np.ndarray] = None
+    depth_confidence_map: Optional[np.ndarray] = None
 
     # Counts
     total_visible: int = 0
     total_active_tracks: int = 0
     total_unique_ids: int = 0
 
-    # Validation flags — Neuravex never claims what it cannot prove
+    # Validation flags
     depth_validated: bool = False
     masks_validated: bool = False
     intrinsics_provided: bool = False
     dem_data_available: bool = False
 
-    # Routing / compute stats
+    # Routing stats
     routing_stats: Optional[Dict[str, Any]] = None
 
+    def canonical_predictions(self) -> List[CanonicalPrediction]:
+        """Returns list of CanonicalPrediction objects."""
+        return [o.to_canonical() for o in self.objects]
+
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize to JSON-safe dictionary."""
         d = {
             "frame_id": self.frame_id,
             "timestamp": self.timestamp,

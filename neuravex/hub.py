@@ -14,34 +14,66 @@ import torch
 import torch.nn as nn
 
 # Base GitHub release URL for Neuravex asset downloads
-GITHUB_RELEASE_TAG = "v0.2.0"
+GITHUB_RELEASE_TAG = "v0.3.0"
 GITHUB_RELEASE_BASE = f"https://github.com/ELANGKATHIR11/Neuravex/releases/download/{GITHUB_RELEASE_TAG}"
 
 # Model registry detailing variant, filename, size, tasks, and target device
 MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
     "neuravex-pico": {
-        "filename": "neuravex_pico_weights.pth",
-        "size_mb": 2.16,
+        "filename": "neuravex_pico_trained.pt",
+        "size_mb": 2.24,
         "variant": "pico",
-        "description": "Ultra-lightweight micro model for microcontrollers & IoT edge (0.54M params)",
+        "description": "Ultra-lightweight foundation micro model for microcontrollers & IoT edge (0.53M params)",
         "default_resolution": (320, 320),
-        "target": "CPU / Raspberry Pi / MCU"
+        "target": "CPU / Raspberry Pi / MCU / ESP32"
     },
     "neuravex-femto": {
-        "filename": "neuravex_femto_weights.pth",
-        "size_mb": 4.64,
+        "filename": "neuravex_femto_trained.pt",
+        "size_mb": 4.57,
         "variant": "femto",
-        "description": "Femto edge model for low-power drones and mobile vision (1.16M params)",
-        "default_resolution": (640, 640),
+        "description": "Femto edge model for low-power drones and mobile vision (1.14M params)",
+        "default_resolution": (320, 320),
         "target": "Low-power Edge CPU / Jetson Nano"
     },
     "neuravex-nano": {
-        "filename": "neuravex_nano_classifier_best.pth",
-        "size_mb": 7.94,
+        "filename": "neuravex_nano_trained.pt",
+        "size_mb": 7.82,
         "variant": "nano",
-        "description": "Pareto-optimal real-time nano perception model (2.02M params)",
-        "default_resolution": (640, 640),
-        "target": "Mobile / Jetson Orin / CPU & GPU"
+        "description": "Pareto-optimal real-time nano perception model (1.99M params, 42 FPS on RTX 5060)",
+        "default_resolution": (320, 320),
+        "target": "Mobile / Jetson Orin / RTX 5060 Real-Time"
+    },
+    "neuravex-lite": {
+        "filename": "neuravex_lite_trained.pt",
+        "size_mb": 17.59,
+        "variant": "lite",
+        "description": "Balanced edge model for smart cameras and robotics (4.54M params)",
+        "default_resolution": (320, 320),
+        "target": "Robotics / Smart Edge Devices"
+    },
+    "neuravex-edge": {
+        "filename": "neuravex_edge_trained.pt",
+        "size_mb": 34.78,
+        "variant": "edge",
+        "description": "High-accuracy edge server model (9.03M params)",
+        "default_resolution": (320, 320),
+        "target": "Edge Servers / Workstations / RTX 3050 / RTX 4060"
+    },
+    "neuravex-pro": {
+        "filename": "neuravex_pro_trained.pt",
+        "size_mb": 85.43,
+        "variant": "pro",
+        "description": "Full production workstation model for video analytics (22.28M params)",
+        "default_resolution": (320, 320),
+        "target": "Production Workstations / RTX 4090 / RTX 5060"
+    },
+    "neuravex-omni": {
+        "filename": "neuravex_omni_trained.pt",
+        "size_mb": 167.37,
+        "variant": "omni",
+        "description": "Unified multimodal foundation stack (2D/3D/Depth/Seg/Pose/Track) (43.71M params, 99.4% Wildlife Acc)",
+        "default_resolution": (320, 320),
+        "target": "Cloud GPU / Multi-Camera Analytics"
     },
     "neuravex-nano-sota": {
         "filename": "sota_neuravex_nano_best.pth",
@@ -66,46 +98,6 @@ MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
         "description": "Quantized INT8 ONNX graph with dynamic range quantization",
         "default_resolution": (640, 640),
         "target": "ONNX Runtime INT8 Engine"
-    },
-    "neuravex-lite": {
-        "filename": "neuravex_lite_weights.pth",
-        "size_mb": 18.32,
-        "variant": "lite",
-        "description": "Balanced CPU/GPU model for smart cameras and robotics (4.58M params)",
-        "default_resolution": (640, 640),
-        "target": "Robotics / Smart Edge Devices"
-    },
-    "neuravex-edge": {
-        "filename": "neuravex_edge_classifier_best.pth",
-        "size_mb": 35.00,
-        "variant": "edge",
-        "description": "High-accuracy edge server model (9.08M params)",
-        "default_resolution": (640, 640),
-        "target": "Edge Servers / RTX 3050 / RTX 4060"
-    },
-    "neuravex-edge-sota": {
-        "filename": "sota_neuravex_edge_best.pth",
-        "size_mb": 36.05,
-        "variant": "edge",
-        "description": "Distilled SOTA edge model with dense multi-task fusion",
-        "default_resolution": (640, 640),
-        "target": "Workstation / Edge Server"
-    },
-    "neuravex-pro": {
-        "filename": "neuravex_pro_weights.pth",
-        "size_mb": 89.44,
-        "variant": "pro",
-        "description": "Full production workstation model for video analytics (22.36M params)",
-        "default_resolution": (640, 640),
-        "target": "Cloud / RTX 4090 / RTX 5060"
-    },
-    "neuravex-omni": {
-        "filename": "neuravex_omni_foundation.pth",
-        "size_mb": 143.84,
-        "variant": "omni",
-        "description": "Unified multimodal foundation stack (2D/3D/Depth/Seg/Pose/Track) (35.96M params)",
-        "default_resolution": (640, 640),
-        "target": "Cloud GPU / Multi-Camera Analytics"
     }
 }
 

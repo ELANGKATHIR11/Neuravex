@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from ..loss.assigner import TaskAlignedAssigner
-from ..loss.detection_loss import DetectionLoss
+from ..loss.assigner import TaskAlignedAssigner, HungarianOneToOneAssigner
+from ..loss.detection_loss import DetectionLoss, DualAssignmentDetectionLoss
 from ..loss.segmentation_loss import (
     semantic_segmentation_loss, boundary_loss,
     mask_quality_loss, discriminative_instance_loss
@@ -32,9 +32,13 @@ class NeuravexMultiTaskTrainer:
         self.scaler = torch.amp.GradScaler("cuda", enabled=use_amp and torch.cuda.is_available())
 
         # Sub-modules
-        self.assigner = TaskAlignedAssigner(topk=10, num_classes=num_classes)
+        # Sub-modules
+        self.assigner_o2m = TaskAlignedAssigner(topk=10, num_classes=num_classes)
+        self.assigner_o2o = HungarianOneToOneAssigner(num_classes=num_classes)
+        self.assigner = self.assigner_o2m  # backward compatibility alias
         reg_max = getattr(model, "reg_max", 16)
         self.det_loss_fn = DetectionLoss(num_classes=num_classes, reg_max=reg_max)
+        self.dual_det_loss_fn = DualAssignmentDetectionLoss(num_classes=num_classes, reg_max=reg_max)
         self.consistency_loss_fn = TransformAlignedConsistencyLoss()
         self.augmenter = GeometricMultiViewAugment(p_flip=0.5)
 
@@ -69,7 +73,8 @@ class NeuravexMultiTaskTrainer:
             out = self.model(images)
 
             # 2. Dynamic target assignment for 2D/3D detection
-            target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx = self.assigner(
+            # 2.1 One-to-One Hungarian assignment for primary NMS-free head
+            tgt_labels_o2o, tgt_bboxes_o2o, tgt_scores_o2o, fg_mask_o2o, tgt_gt_idx_o2o = self.assigner_o2o(
                 pd_scores=torch.sigmoid(out["class_logits"]),
                 pd_bboxes=out["pred_boxes"],
                 anc_points=out["anchor_points"],
@@ -80,18 +85,37 @@ class NeuravexMultiTaskTrainer:
 
             losses = {}
 
-            # 3.1 Detection loss with DFL
-            loss_det, det_dict = self.det_loss_fn(
-                pred_scores=out["class_logits"],
-                pred_bboxes=out["pred_boxes"],
-                pred_dist=out["pred_box_dist"],
-                anchor_points=out["anchor_points"],
-                strides=out["strides"],
-                target_scores=target_scores,
-                target_bboxes=target_bboxes,
-                fg_mask=fg_mask
-            )
+            # Check if auxiliary O2M head predictions are present
+            if "o2m_preds" in out and out["o2m_preds"] is not None:
+                o2m = out["o2m_preds"]
+                tgt_labels_o2m, tgt_bboxes_o2m, tgt_scores_o2m, fg_mask_o2m, _ = self.assigner_o2m(
+                    pd_scores=torch.sigmoid(o2m["class_logits"]),
+                    pd_bboxes=o2m["pred_boxes"],
+                    anc_points=out["anchor_points"],
+                    gt_labels=gt_labels,
+                    gt_bboxes=gt_boxes,
+                    mask_gt=mask_gt
+                )
+                loss_det, det_dict = self.dual_det_loss_fn(
+                    out, o2m,
+                    out["anchor_points"], out["strides"],
+                    (tgt_scores_o2o, tgt_bboxes_o2o, fg_mask_o2o),
+                    (tgt_scores_o2m, tgt_bboxes_o2m, fg_mask_o2m)
+                )
+            else:
+                loss_det, det_dict = self.det_loss_fn(
+                    pred_scores=out["class_logits"],
+                    pred_bboxes=out["pred_boxes"],
+                    pred_dist=out["pred_box_dist"],
+                    anchor_points=out["anchor_points"],
+                    strides=out["strides"],
+                    target_scores=tgt_scores_o2o,
+                    target_bboxes=tgt_bboxes_o2o,
+                    fg_mask=fg_mask_o2o
+                )
+
             losses["det"] = loss_det
+            target_labels, target_bboxes, target_scores, fg_mask, target_gt_idx = tgt_labels_o2o, tgt_bboxes_o2o, tgt_scores_o2o, fg_mask_o2o, tgt_gt_idx_o2o
 
             # 3.2 Semantic segmentation loss
             losses["semantic"] = semantic_segmentation_loss(out["semantic_masks"], sem_gt)
