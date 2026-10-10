@@ -13,7 +13,10 @@ from typing import Optional, Dict, Any
 import torch
 import torch.nn as nn
 
-# Base GitHub release URL for Neuravex asset downloads
+# Base GitHub URLs for Neuravex asset downloads
+GITHUB_REPO_RAW = "https://raw.githubusercontent.com/ELANGKATHIR11/Neuravex/main/weights"
+GITHUB_MEDIA_BASE = "https://media.githubusercontent.com/media/ELANGKATHIR11/Neuravex/main/weights"
+GITHUB_RAW_BASE = "https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights"
 GITHUB_RELEASE_TAG = "v0.3.0"
 GITHUB_RELEASE_BASE = f"https://github.com/ELANGKATHIR11/Neuravex/releases/download/{GITHUB_RELEASE_TAG}"
 
@@ -157,9 +160,11 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
         print(f"[Neuravex Hub] Using cached model: {local_path} ({os.path.getsize(local_path)/1e6:.2f} MB)")
         return local_path
 
-    url = f"{GITHUB_RELEASE_BASE}/{filename}"
-    print(f"[Neuravex Hub] Downloading {key} ({meta['size_mb']:.2f} MB) from:\n  -> {url}")
-    print(f"  Destination: {local_path}")
+    candidate_urls = [
+        f"{GITHUB_RAW_BASE}/{filename}",
+        f"{GITHUB_MEDIA_BASE}/{filename}",
+        f"{GITHUB_RELEASE_BASE}/{filename}",
+    ]
 
     def progress_bar(block_num, block_size, total_size):
         downloaded = block_num * block_size
@@ -169,19 +174,41 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
             sys.stdout.write(f"\r  [{bar}] {percent:5.1f}% ({downloaded / 1e6:5.2f} / {total_size / 1e6:5.2f} MB)")
             sys.stdout.flush()
 
-    try:
-        urllib.request.urlretrieve(url, local_path, reporthook=progress_bar)
-        print("\n[Neuravex Hub] Download complete successfully!")
-    except Exception as e:
-        if os.path.exists(local_path):
-            os.remove(local_path)
+    download_success = False
+    last_err = None
+    for url in candidate_urls:
+        print(f"[Neuravex Hub] Attempting download for {key} ({meta['size_mb']:.2f} MB) from:\n  -> {url}")
+        print(f"  Destination: {local_path}")
+        try:
+            urllib.request.urlretrieve(url, local_path, reporthook=progress_bar)
+            # If the downloaded file is just an LFS text pointer (< 500 bytes and starts with version), don't treat as valid weight
+            if os.path.exists(local_path) and os.path.getsize(local_path) < 1000 and meta['size_mb'] > 1.0:
+                with open(local_path, "rb") as test_f:
+                    header = test_f.read(30)
+                    if b"git-lfs" in header:
+                        os.remove(local_path)
+                        raise RuntimeError("Received Git LFS pointer instead of binary weights. Trying next endpoint...")
+            print("\n[Neuravex Hub] Download complete successfully!")
+            download_success = True
+            break
+        except Exception as e:
+            if os.path.exists(local_path):
+                try:
+                    os.remove(local_path)
+                except OSError:
+                    pass
+            last_err = e
+            print(f"\n[Neuravex Hub] Endpoint failed ({e}). Trying next fallback...")
+
+    if not download_success:
         raise RuntimeError(
-            f"Failed downloading {filename} from {url}.\n"
-            f"Error: {e}\n"
-            f"Ensure your machine has internet access and the release asset is published at {GITHUB_RELEASE_BASE}"
+            f"Failed downloading {filename} from all candidate URLs.\n"
+            f"Last Error: {last_err}\n"
+            f"Check your internet connection or verify the repository hosting status."
         )
 
     return local_path
+
 
 
 def load_model(model_name: str, num_classes: int = 80, device: Optional[str] = None, **kwargs) -> nn.Module:

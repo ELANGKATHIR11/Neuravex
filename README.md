@@ -28,13 +28,13 @@ Every Neuravex model is available in native PyTorch (`.pt`), TorchScript, and de
 
 | Model Variant | Parameters | Weights File | File Size | Inference Latency | Throughput (FPS) | 2D IoU | 3D BoS | Target Edge Hardware | Direct Download Link |
 |---|---|---|---|---|---|---|---|---|---|
-| **Neuravex-Pico** | **0.53 M** | `neuravex_pico_trained.pt` | **2.24 MB** | **26.2 ms** | **38.2 FPS** | 0.6286 | 0.7242 | MCU / Raspberry Pi / ESP32 | [Download Pico Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_pico_trained.pt) |
-| **Neuravex-Femto** | **1.14 M** | `neuravex_femto_trained.pt` | **4.57 MB** | **24.1 ms** | **41.6 FPS** | 0.6288 | 0.7689 | Drones / Jetson Nano | [Download Femto Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_femto_trained.pt) |
-| **Neuravex-Nano** | **1.99 M** | `neuravex_nano_trained.pt` | **7.82 MB** | **23.9 ms** | **41.9 FPS** | 0.6362 | 0.7994 | Mobile / Jetson Orin / RTX 5060 | [Download Nano Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_nano_trained.pt) |
-| **Neuravex-Lite** | **4.54 M** | `neuravex_lite_trained.pt` | **17.59 MB** | **28.7 ms** | **34.9 FPS** | 0.6385 | 0.8305 | Smart Cameras / Robotics Edge | [Download Lite Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_lite_trained.pt) |
-| **Neuravex-Edge** | **9.03 M** | `neuravex_edge_trained.pt` | **34.78 MB** | **33.5 ms** | **29.9 FPS** | 0.6408 | 0.8704 | Workstations / Edge Servers | [Download Edge Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_edge_trained.pt) |
-| **Neuravex-Pro** | **22.28 M** | `neuravex_pro_trained.pt` | **85.43 MB** | **38.1 ms** | **26.3 FPS** | 0.6399 | 0.9190 | Workstations / Video Analytics | [Download Pro Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_pro_trained.pt) |
-| **Neuravex-Omni** | **43.71 M** | `neuravex_omni_trained.pt` | **167.37 MB** | **45.1 ms** | **22.2 FPS** | **0.6468** | **0.9417** | Cloud Multi-Camera Foundation | [Download Omni Weights](https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/neuravex_omni_trained.pt) |
+| **Neuravex-Pico** | **0.53 M** | `neuravex_pico_trained.pt` | **2.24 MB** | **26.2 ms** | **38.2 FPS** | 0.6286 | 0.7242 | MCU / Raspberry Pi / ESP32 | [Download Pico Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_pico_trained.pt) |
+| **Neuravex-Femto** | **1.14 M** | `neuravex_femto_trained.pt` | **4.57 MB** | **24.1 ms** | **41.6 FPS** | 0.6288 | 0.7689 | Drones / Jetson Nano | [Download Femto Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_femto_trained.pt) |
+| **Neuravex-Nano** | **1.99 M** | `neuravex_nano_trained.pt` | **7.82 MB** | **23.9 ms** | **41.9 FPS** | 0.6362 | 0.7994 | Mobile / Jetson Orin / RTX 5060 | [Download Nano Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_nano_trained.pt) |
+| **Neuravex-Lite** | **4.54 M** | `neuravex_lite_trained.pt` | **17.59 MB** | **28.7 ms** | **34.9 FPS** | 0.6385 | 0.8305 | Smart Cameras / Robotics Edge | [Download Lite Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_lite_trained.pt) |
+| **Neuravex-Edge** | **9.03 M** | `neuravex_edge_trained.pt` | **34.78 MB** | **33.5 ms** | **29.9 FPS** | 0.6408 | 0.8704 | Workstations / Edge Servers | [Download Edge Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_edge_trained.pt) |
+| **Neuravex-Pro** | **22.28 M** | `neuravex_pro_trained.pt` | **85.43 MB** | **38.1 ms** | **26.3 FPS** | 0.6399 | 0.9190 | Workstations / Video Analytics | [Download Pro Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_pro_trained.pt) |
+| **Neuravex-Omni** | **43.71 M** | `neuravex_omni_trained.pt` | **167.37 MB** | **45.1 ms** | **22.2 FPS** | **0.6468** | **0.9417** | Cloud Multi-Camera Foundation | [Download Omni Weights](https://github.com/ELANGKATHIR11/Neuravex/raw/main/weights/neuravex_omni_trained.pt) |
 
 ### Programmatic Checkpoint Loading via Hub SDK
 
