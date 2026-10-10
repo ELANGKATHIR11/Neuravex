@@ -40,15 +40,20 @@ class CountingZone3D:
         """
         Updates count if an object enters the zone.
         Returns True if a new entry was registered.
+        Requires a valid deterministic track_id.
         """
+        if box.track_id is None:
+            return False
+
         inside = self.contains_point(box.center)
-        track_id = box.track_id or id(box)
+        track_id = box.track_id
 
         if inside and (track_id not in self.entered_ids):
             self.entered_ids.add(track_id)
             self.total_count += 1
             return True
         return False
+
 
 
 class SpatialCounter:

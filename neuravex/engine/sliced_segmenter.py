@@ -132,16 +132,10 @@ class RealTimeSlicedPatchSegmenter:
                     all_boxes.append([gx1, gy1, gx2, gy2])
                     all_scores.append(float(s))
 
-        # Include prior validated ground-truth proposals if provided
-        if known_instances:
-            for inst in known_instances:
-                all_boxes.append(list(inst["bbox"]))
-                all_scores.append(float(inst.get("score", 0.95)))
-
         if len(all_boxes) == 0:
             return []
 
-        # 3. Spatial NMS Fusion
+        # 3. Spatial NMS Fusion across tile and full-frame predictions
         b_t = torch.tensor(all_boxes, dtype=torch.float32)
         s_t = torch.tensor(all_scores, dtype=torch.float32)
         keep = torchvision.ops.nms(b_t, s_t, iou_threshold=self.nms_iou_thresh)
@@ -149,50 +143,32 @@ class RealTimeSlicedPatchSegmenter:
         final_detections: List[Dict[str, Any]] = []
         total_count = len(keep)
 
-        # Sort left-to-right spatially for consistent tracking IDs
-        sorted_indices = sorted(keep.tolist(), key=lambda idx: b_t[idx, 0].item())
+        for det_idx in keep.tolist():
+            box = [float(v) for v in b_t[det_idx].numpy()]
+            score = float(s_t[det_idx].item())
 
-        for count_idx, k_idx in enumerate(sorted_indices):
-            box = [float(v) for v in b_t[k_idx].numpy()]
-            score = float(s_t[k_idx].item())
-
-            # 3D spatial coordinate estimation
+            # 2D Bounding Box spatial centers
             x1, y1, x2, y2 = box
             cx_box = (x1 + x2) * 0.5
             cy_box = (y1 + y2) * 0.5
-            bw = max(10, x2 - x1)
-            bh = max(10, y2 - y1)
 
-            # Metric depth estimation (calibrated with focal length K.fx)
-            fx = getattr(K_intrinsics, "fx", 700.0)
-            fy = getattr(K_intrinsics, "fy", 700.0)
-            cx_k = getattr(K_intrinsics, "cx", w_img / 2.0)
-            cy_k = getattr(K_intrinsics, "cy", h_img / 2.0)
-
-            # Approximate physical height: 0.7m for macaque/langur
-            ref_animal_height_m = 0.85 if class_name.lower() in ["langur", "indian macaque"] else 1.2
-            depth_m = max(1.8, min(18.0, (ref_animal_height_m * fy) / bh))
-
-            x_cam = (cx_box - cx_k) * depth_m / fx
-            y_cam = (cy_box - cy_k) * depth_m / fy
-            z_cam = depth_m
-
-            bw_m = bw * depth_m / fx
-            bh_m = bh * depth_m / fy
-            l_m = bw_m * 1.1
-
+            # Contractual Rule: Never invent physical depth, yaw, or LWH from assumed animal heights
+            # Unless calibrated sensor or supervised model depth is present, geometry remains explicitly None.
             final_detections.append({
                 "bbox": box,
                 "score": score,
                 "class_name": class_name,
                 "class_id": class_id,
-                "track_id": count_idx + 1,
-                "count_num": count_idx + 1,
+                "track_id": None,  # Track IDs must be assigned by persistent tracker, not detection rank
+                "count_num": len(final_detections) + 1,
                 "total_in_frame": total_count,
-                "center_xyz": (float(x_cam), float(y_cam), float(z_cam)),
-                "dimensions": (float(l_m), float(bw_m), float(bh_m)),
-                "yaw_deg": 15.0 if count_idx % 2 == 0 else -15.0,
-                "depth_m": float(depth_m)
+                "center_pixel": (float(cx_box), float(cy_box)),
+                "center_xyz": None,
+                "dimensions": None,
+                "yaw_deg": None,
+                "depth_m": None,
+                "geometry_status": "UNVALIDATED_NO_CALIBRATION"
             })
 
         return final_detections
+

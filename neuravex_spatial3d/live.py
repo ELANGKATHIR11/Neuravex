@@ -150,47 +150,88 @@ class LiveVideoPipeline:
             depth_map = outputs.get("depth_map", None)
             seg_logits = outputs.get("seg_logits", None)
 
-            # 1. Native Live DEM Calculation
-            if depth_map is None:
-                depth_map = torch.ones((1, target_size[1], target_size[0]), device=self.device) * 5.0
+            # 1. Native Live Camera-Relative Depth (Separated from Geographical DEM)
+            has_depth = (depth_map is not None)
+            if has_depth:
+                depth_map_2d = torch.clamp(depth_map.squeeze(), min=0.05, max=100.0)
+                dem_surface = NativeDEMSurface(depth_map_2d.cpu(), cell_resolution_m=0.05)
             else:
-                depth_map = torch.clamp(depth_map.squeeze(0), min=0.1, max=100.0)
+                depth_map_2d = None
+                dem_surface = None
 
-            # Fit Native DEM Surface
-            dem_surface = NativeDEMSurface(depth_map.cpu(), cell_resolution_m=0.05)
+            # 2. Live Detections & Real 3D Coordinate Decoding
+            pred_boxes = outputs.get("pred_boxes", None)
+            pred_xyz = outputs.get("pred_xyz", None)
+            pred_lwh = outputs.get("pred_lwh", None)
+            pred_rot = outputs.get("pred_yaw_sincos", None)
 
-            # 2. Live Detections & L, W, H Calculation
+            proto_masks = outputs.get("proto_masks", None)
+            mask_coeffs = outputs.get("pred_mask_coeffs", None)
+
             if cls_logits is not None:
                 probs = torch.sigmoid(cls_logits[0])
                 scores, labels = probs.max(dim=-1)
                 valid_idx = torch.where(scores > conf_threshold)[0]
 
-                # Map to 3D bounding boxes
-                for i in valid_idx[:30]:
+                # Process verified native detections
+                for i in valid_idx[:50]:
                     score = float(scores[i].item())
                     label = int(labels[i].item())
 
-                    # Synthetic or actual mask backprojection
-                    z_est = float(torch.median(depth_map).item())
-                    
-                    # Compute realistic physical L, W, H
-                    l = round(float(0.8 + (label % 4) * 0.4), 2)
-                    w = round(float(0.6 + (label % 3) * 0.3), 2)
-                    h = round(float(0.7 + (label % 5) * 0.3), 2)
+                    # Optional per-instance mask assembly
+                    mask_i = None
+                    if proto_masks is not None and mask_coeffs is not None and i < mask_coeffs.shape[1]:
+                        coeffs_i = mask_coeffs[0, i:i+1] # (1, 32)
+                        p_flat = proto_masks[0].flatten(1) # (32, H*W)
+                        m_logits = torch.matmul(coeffs_i, p_flat).view(target_size[1], target_size[0])
+                        mask_i = (torch.sigmoid(m_logits) > 0.5)
 
-                    center = torch.tensor([(i % 5 - 2) * 1.2, 0.5, z_est], device=self.device)
-                    lwh = torch.tensor([l, w, h], device=self.device)
+                    # True 3D Geometry: from model 3D heads or calibrated mask unprojection
+                    b3d = None
+                    if pred_xyz is not None and pred_lwh is not None:
+                        c_xyz = pred_xyz[0, i]
+                        s_lwh = pred_lwh[0, i]
+                        yaw_val = 0.0
+                        if pred_rot is not None:
+                            yaw_val = float(torch.atan2(pred_rot[0, i, 0], pred_rot[0, i, 1]).item())
+                        b3d = BoundingBox3D(
+                            center=c_xyz,
+                            size_lwh=s_lwh,
+                            yaw=yaw_val,
+                            score=score,
+                            class_id=label,
+                            class_name=f"class_{label}",
+                            device=str(self.device)
+                        )
+                    elif mask_i is not None and depth_map_2d is not None:
+                        b3d = self.projector.extract_instance_box3d(
+                            mask=mask_i,
+                            depth_map=depth_map_2d,
+                            class_id=label,
+                            class_name=f"class_{label}",
+                            score=score
+                        )
+                    elif pred_boxes is not None and depth_map_2d is not None:
+                        # Unproject pixels within 2D bounding box
+                        b_xy = pred_boxes[0, i]
+                        x1 = int(b_xy[0].clamp(0, target_size[0] - 1).item())
+                        y1 = int(b_xy[1].clamp(0, target_size[1] - 1).item())
+                        x2 = int(b_xy[2].clamp(0, target_size[0] - 1).item())
+                        y2 = int(b_xy[3].clamp(0, target_size[1] - 1).item())
+                        if x2 > x1 + 4 and y2 > y1 + 4:
+                            box_mask = torch.zeros_like(depth_map_2d, dtype=torch.bool)
+                            box_mask[y1:y2, x1:x2] = True
+                            b3d = self.projector.extract_instance_box3d(
+                                mask=box_mask,
+                                depth_map=depth_map_2d,
+                                class_id=label,
+                                class_name=f"class_{label}",
+                                score=score
+                            )
 
-                    b3d = BoundingBox3D(
-                        center=center,
-                        size_lwh=lwh,
-                        yaw=0.05 * (i % 6),
-                        score=score,
-                        class_id=label,
-                        class_name=f"class_{label}",
-                        device=str(self.device)
-                    )
-                    boxes_3d.append(b3d)
+                    if b3d is not None:
+                        boxes_3d.append(b3d)
+
 
             # 3. Live Native Segmentation
             if seg_logits is not None:
@@ -220,6 +261,38 @@ class LiveVideoPipeline:
         # Extract DEM slope and ground plane
         slope_deg, aspect_deg = dem_surface.compute_slopes_and_aspect() if dem_surface else (None, None)
 
+        # Construct canonical FrameState & ObjectState records
+        try:
+            from neuravex.core import FrameState, ObjectState
+            canonical_objects = []
+            for b in tracked_boxes:
+                obj = ObjectState(
+                    id=b.track_id if b.track_id is not None else 0,
+                    class_id=b.class_id,
+                    class_name=b.class_name,
+                    score=b.score,
+                    xyz=[float(v.item()) for v in b.center] if b.center is not None else None,
+                    lwh=[float(v.item()) for v in b.lwh] if b.lwh is not None else None,
+                    yaw=b.yaw,
+                    track_id=b.track_id,
+                    geometry_confidence=b.score
+                )
+                canonical_objects.append(obj)
+
+            frame_state = FrameState(
+                frame_id=frame_idx,
+                timestamp=t0,
+                image_width=w_orig,
+                image_height=h_orig,
+                objects=canonical_objects,
+                total_visible=len(canonical_objects),
+                total_active_tracks=len(self.tracker.active_tracks),
+                depth_validated=has_depth,
+                intrinsics_provided=True
+            )
+        except Exception:
+            frame_state = None
+
         return {
             "frame_idx": frame_idx,
             "fps": round(fps, 1),
@@ -235,7 +308,9 @@ class LiveVideoPipeline:
             },
             "spatial_counts": count_report,
             "device": str(self.device),
+            "frame_state": frame_state,
         }
+
 
     def stream_live(
         self,

@@ -109,32 +109,48 @@ class AutoRuntimeEngine:
             rationale["backend"] = f"NVIDIA CUDA acceleration selected on {hw.gpu_name} ({hw.vram_gb} GB VRAM)."
             rationale["precision"] = "FP16 TensorCore mixed-precision selected for optimal throughput."
 
-            if hw.vram_gb >= 12.0:
-                model_size = "large"
+            if hw.vram_gb >= 16.0:
+                model_size = "omni"
                 res = 640
                 batch = 32
-                budget = "high"
-            elif hw.vram_gb >= 6.0:
-                model_size = "small"
-                res = 320
+                budget = "cloud-foundation"
+            elif hw.vram_gb >= 8.0:
+                model_size = "pro"
+                res = 512
                 batch = 16
+                budget = "workstation"
+            elif hw.vram_gb >= 6.0:
+                model_size = "edge"
+                res = 384
+                batch = 16
+                budget = "edge-server"
+            elif hw.vram_gb >= 4.0:
+                model_size = "lite"
+                res = 320
+                batch = 8
                 budget = "balanced"
             else:
                 model_size = "nano"
                 res = 320
-                batch = 8
-                budget = "low"
-            fallback = "pytorch-cpu (FP32, batch=1, resolution=320)"
+                batch = 4
+                budget = "realtime-mobile"
+            fallback = "pytorch-cpu (FP32, batch=1, resolution=320, model=nano)"
         else:
             backend = "pytorch-cpu"
             precision = "fp32"
-            model_size = "nano"
+            if hw.ram_gb < 2.0:
+                model_size = "pico"
+            elif hw.ram_gb < 4.0:
+                model_size = "femto"
+            else:
+                model_size = "nano"
             res = 320
             batch = 1
-            budget = "low"
+            budget = "ultra-low-edge"
             rationale["backend"] = "CPU execution selected (no suitable CUDA GPU detected)."
             rationale["precision"] = "FP32 single precision selected for CPU stability."
             fallback = "abort_on_oom"
+
 
         rationale["model"] = f"Neuravex-{model_size} chosen to match hardware memory envelope."
         rationale["resolution"] = f"{res}x{res} input resolution chosen for target latency."
