@@ -27,15 +27,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Large Weights & Datasets
-*.pt
-*.pth
-*.onnx
-*.engine
-*.bin
-yolo11n.pt
-animals/
-
 # Fullstack Frontend exclusions
 node_modules/
 src/
@@ -55,11 +46,17 @@ data/
 Dataset/
 *.pdf
 *.cache
+
+# Large Weights & Datasets
 *.pt
 *.pth
 *.onnx
 *.engine
 *.bin
-
+yolo11n.pt
+animals/
 checkpoints/
 
+# Allow tracked weights in weights/
+!weights/
+!weights/*
