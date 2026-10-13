@@ -92,12 +92,16 @@ class PromptablePrototypeHead(nn.Module):
         """
         B, C, H, W = feat.shape
         proj_feat = self.proj(feat) # (B, embed_dim, H, W)
-        proj_norm = F.normalize(proj_feat, p=2, dim=1)
 
         if prototype is not None:
+            # Map query features to the exact same prototype MLP embedding space
+            query_tokens = proj_feat.permute(0, 2, 3, 1)  # (B, H, W, embed_dim)
+            query_mapped = self.proto_mlp(query_tokens).permute(0, 3, 1, 2)  # (B, embed_dim, H, W)
+            query_norm = F.normalize(query_mapped, p=2, dim=1)
+
             proto_norm = F.normalize(prototype, p=2, dim=-1).unsqueeze(-1).unsqueeze(-1) # (1, embed_dim, 1, 1)
-            # Cosine similarity map
-            cosine_sim = (proj_norm * proto_norm).sum(dim=1, keepdim=True) # (B, 1, H, W)
+            # Cosine similarity map in shared latent space
+            cosine_sim = (query_norm * proto_norm).sum(dim=1, keepdim=True) # (B, 1, H, W)
             # Affinity classification
             cat_feat = torch.cat([proj_feat, cosine_sim], dim=1)
             mask_logits = self.affinity_conv(cat_feat)

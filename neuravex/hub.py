@@ -78,6 +78,14 @@ MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
         "default_resolution": (320, 320),
         "target": "Cloud GPU / Multi-Camera Analytics"
     },
+    "neuravex-dgpu": {
+        "filename": "neuravex_dgpu_trained.pt",
+        "size_mb": 7.82,
+        "variant": "nano",
+        "description": "Unified 4,497-image DGPU trained multi-task model with MMA autoencoder, Slot Attention & Camera-Aware DEM",
+        "default_resolution": (320, 320),
+        "target": "NVIDIA RTX 5060 / Jetson Orin / Workstation"
+    },
     "neuravex-nano-sota": {
         "filename": "sota_neuravex_nano_best.pth",
         "size_mb": 8.40,
@@ -129,7 +137,7 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
     Download a pretrained model or checkpoint by its model key.
 
     Args:
-        model_name: Model name key (e.g. 'neuravex-nano', 'neuravex-edge', 'neuravex-nano-int8')
+        model_name: Model name key (e.g. 'neuravex-nano', 'neuravex-dgpu', 'neuravex-edge')
         dest_dir: Optional custom destination folder. If None, uses ~/.cache/neuravex/models/
         force: If True, re-downloads even if file already exists locally.
 
@@ -138,7 +146,6 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
     """
     key = model_name.lower().strip()
     if key not in MODEL_REGISTRY:
-        # Check if stripped of prefixes
         matched = None
         for k in MODEL_REGISTRY:
             if k == f"neuravex-{key}" or k.endswith(key):
@@ -156,14 +163,31 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
     os.makedirs(save_folder, exist_ok=True)
     local_path = os.path.join(save_folder, filename)
 
-    if os.path.exists(local_path) and not force and os.path.getsize(local_path) > 0:
+    if os.path.exists(local_path) and not force and os.path.getsize(local_path) > 1000:
         print(f"[Neuravex Hub] Using cached model: {local_path} ({os.path.getsize(local_path)/1e6:.2f} MB)")
         return local_path
 
+    # Check local workspace paths before downloading over network
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    search_paths = [
+        os.path.join(repo_root, "weights", filename),
+        os.path.join(repo_root, "benchmark_runs", "industry_report", filename),
+        os.path.join(repo_root, "benchmark_runs", "family_comparison", "checkpoints", filename),
+        os.path.join(repo_root, "ml_neuravex", "benchmark_runs", "industry_report", filename),
+        os.path.join(repo_root, "ml_neuravex", "weights", filename),
+    ]
+    for sp in search_paths:
+        if os.path.exists(sp) and os.path.getsize(sp) > 1000:
+            import shutil
+            shutil.copy2(sp, local_path)
+            print(f"[Neuravex Hub] Loaded local repository weights from {sp} -> {local_path}")
+            return local_path
+
     candidate_urls = [
+        f"https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.4.0/{filename}",
+        f"https://github.com/ELANGKATHIR11/Neuravex/releases/download/v0.3.0/{filename}",
         f"{GITHUB_RAW_BASE}/{filename}",
         f"{GITHUB_MEDIA_BASE}/{filename}",
-        f"{GITHUB_RELEASE_BASE}/{filename}",
     ]
 
     def progress_bar(block_num, block_size, total_size):
@@ -181,7 +205,6 @@ def download_model(model_name: str, dest_dir: Optional[str] = None, force: bool 
         print(f"  Destination: {local_path}")
         try:
             urllib.request.urlretrieve(url, local_path, reporthook=progress_bar)
-            # If the downloaded file is just an LFS text pointer (< 500 bytes and starts with version), don't treat as valid weight
             if os.path.exists(local_path) and os.path.getsize(local_path) < 1000 and meta['size_mb'] > 1.0:
                 with open(local_path, "rb") as test_f:
                     header = test_f.read(30)
@@ -248,3 +271,8 @@ def load_model(model_name: str, num_classes: int = 80, device: Optional[str] = N
     model.load_state_dict(state_dict, strict=False)
     model.to(target_device).eval()
     return model
+
+
+# Public alias for hub loading
+load_hub_model = load_model
+

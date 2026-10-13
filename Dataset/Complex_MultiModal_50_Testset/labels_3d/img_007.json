@@ -1,0 +1,57 @@
+{
+  "image_id": "img_007",
+  "domain": "UrbanTraffic",
+  "title": "Heavy Freight Transport Highway",
+  "width": 640,
+  "height": 640,
+  "intrinsics": {
+    "fx": 650.0,
+    "fy": 650.0,
+    "cx": 320.0,
+    "cy": 320.0
+  },
+  "annotations_3d": [
+    {
+      "inst_id": 1,
+      "class_name": "Truck",
+      "class_id": 4,
+      "bbox_2d": [
+        40,
+        156,
+        319,
+        579
+      ],
+      "center_xyz": [
+        -1.15,
+        0.25,
+        12.86
+      ],
+      "size_lwh": [
+        11.80,
+        2.55,
+        3.90
+      ],
+      "yaw_rad": -0.0785,
+      "rot_6d": [
+        0.9969,
+        0.0,
+        0.0784,
+        0.0,
+        1.0,
+        0.0
+      ],
+      "depth_range_m": {
+        "front_bumper": 7.22,
+        "rear_trailer": 18.50,
+        "ground_clearance": 0.35
+      }
+    }
+  ],
+  "camera_dem": {
+    "camera_height_m": 1.55,
+    "horizon_y_px": 440.0,
+    "road_depth_near_m": 4.80,
+    "road_depth_horizon_m": 45.0,
+    "sky_background_depth_m": 50.0
+  }
+}

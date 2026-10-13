@@ -70,8 +70,8 @@ def mask_quality_loss(pred_quality: torch.Tensor, pred_masks: torch.Tensor, gt_m
     """
     Mask quality supervision:
     q_gt = IoU(M_p, M_g)
-    L_q = SmoothL1(q_p, q_gt)
-    pred_quality: (B, 1, H, W) predicted quality map (raw logits or sigmoid)
+    L_q = SmoothL1(q_p, q_gt) focused on the object presence footprint.
+    pred_quality: (B, 1, H, W) predicted quality map
     pred_masks: (B, 1, H, W) or (B, N, H, W)
     gt_masks: (B, 1, H, W) or (B, N, H, W)
     """
@@ -83,7 +83,57 @@ def mask_quality_loss(pred_quality: torch.Tensor, pred_masks: torch.Tensor, gt_m
 
     q_pred = torch.sigmoid(pred_quality)
     q_gt_expanded = q_gt.expand_as(q_pred)
-    return F.smooth_l1_loss(q_pred, q_gt_expanded)
+    
+    # Weight loss primarily on the object spatial footprint to avoid background degradation
+    footprint = ((g_mask > 0.5) | (p_mask > 0.5)).float()
+    weight = footprint + 0.05
+    loss = (F.smooth_l1_loss(q_pred, q_gt_expanded, reduction="none") * weight).sum() / weight.sum().clamp_min(1.0)
+    return loss
+
+def prototype_instance_mask_loss(
+    proto_masks: torch.Tensor,
+    pred_coeffs: torch.Tensor,
+    gt_masks: torch.Tensor,
+    matched_anchor_indices: torch.Tensor,
+    eps: float = 1e-6
+) -> torch.Tensor:
+    """
+    End-to-end supervision for YOLACT-style prototype masks and detection mask coefficients.
+    pred_mask_m = sigmoid(coeffs_m @ proto_masks)
+    L_mask = BCE(pred_mask_m, gt_mask_m) + Dice(pred_mask_m, gt_mask_m)
+    """
+    B, num_proto, H, W = proto_masks.shape
+    total_loss = proto_masks.sum() * 0.0
+    n_instances = 0
+
+    for b in range(B):
+        if b >= len(matched_anchor_indices) or len(matched_anchor_indices[b]) == 0:
+            continue
+        m_indices = matched_anchor_indices[b]
+        gt_m = gt_masks[b]
+        if len(gt_m) == 0:
+            continue
+
+        coeffs_b = pred_coeffs[b, m_indices]  # (M, num_proto)
+        protos_b = proto_masks[b]              # (num_proto, H, W)
+
+        pred_mask_logits = torch.einsum("mp,phw->mhw", coeffs_b, protos_b)
+        pred_mask_probs = torch.sigmoid(pred_mask_logits)
+
+        if gt_m.shape[-2:] != (H, W):
+            gt_m = F.interpolate(gt_m.unsqueeze(1).float(), size=(H, W), mode="nearest").squeeze(1)
+
+        bce = F.binary_cross_entropy_with_logits(pred_mask_logits, gt_m.float(), reduction="mean")
+        inter = (pred_mask_probs * gt_m).sum(dim=(-2, -1))
+        union = (pred_mask_probs + gt_m).sum(dim=(-2, -1))
+        dice = 1.0 - (2.0 * inter + eps) / (union + eps)
+
+        total_loss = total_loss + bce + dice.mean()
+        n_instances += 1
+
+    if n_instances > 0:
+        return total_loss / n_instances
+    return total_loss
 
 def discriminative_instance_loss(embeddings: torch.Tensor, instance_ids: torch.Tensor,
                                  delta_v: float = 0.5, delta_d: float = 1.5,

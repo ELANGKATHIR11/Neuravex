@@ -6,7 +6,7 @@ Optional modules (torch, torchvision, scipy, pycocotools, etc.) are imported
 lazily so that `import neuravex` succeeds on minimal environments.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 
 # --------------------------------------------------------------------------
 # Core schema (no heavy deps)
@@ -78,6 +78,7 @@ def __getattr__(name):
         # Hub / Model Zoo
         "download_model": (".hub", "download_model"),
         "load_model": (".hub", "load_model"),
+        "load_hub_model": (".hub", "load_model"),
         "list_models": (".hub", "list_models"),
         "MODEL_REGISTRY": (".hub", "MODEL_REGISTRY"),
     }

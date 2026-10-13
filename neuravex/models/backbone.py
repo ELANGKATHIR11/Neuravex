@@ -263,6 +263,15 @@ class MaskedMultimodalAutoencoder(nn.Module):
         # Visual patch projection
         self.rgb_proj = nn.Conv2d(3, embed_dim, kernel_size=patch_size, stride=patch_size)
 
+        # Multi-scale backbone feature projection to embed_dim
+        b_stem = backbone.stem[0].conv.out_channels
+        p3_c, p4_c, p5_c = b_stem * 4, b_stem * 8, b_stem * 16
+        self.backbone_proj = nn.Sequential(
+            nn.Conv2d(p3_c + p4_c + p5_c, embed_dim, 1),
+            nn.BatchNorm2d(embed_dim),
+            nn.SiLU(inplace=True)
+        )
+
         # Cross-modal fusion bottleneck
         self.cross_fuse = nn.Sequential(
             nn.Linear(embed_dim * 2, embed_dim),
@@ -310,6 +319,7 @@ class MaskedMultimodalAutoencoder(nn.Module):
             depth = depth.unsqueeze(1)
         B, _, H, W = rgb.shape
         device = rgb.device
+        p = self.patch_size
 
         # 1. Project to patch tokens
         rgb_tokens = self.rgb_proj(rgb).flatten(2).transpose(1, 2) # (B, N, D)
@@ -324,8 +334,19 @@ class MaskedMultimodalAutoencoder(nn.Module):
         rgb_visible = rgb_tokens * (~rgb_mask.unsqueeze(-1)).float()
         depth_visible = depth_tokens * (~depth_mask.unsqueeze(-1)).float()
 
-        # 3. Cross-modal conditioning: reconstruct RGB from depth + visible RGB, and depth from RGB + visible depth
-        fused = self.cross_fuse(torch.cat([rgb_visible, depth_visible], dim=-1))
+        # 3. Extract multi-scale representations through self.backbone on partially masked input
+        h_p, w_p = H // p, W // p
+        rgb_spatial_mask = rgb_mask.view(B, 1, h_p, w_p).repeat_interleave(p, dim=2).repeat_interleave(p, dim=3)
+        rgb_masked_input = rgb * (~rgb_spatial_mask).float()
+        p3, p4, p5 = self.backbone(rgb_masked_input)
+
+        p3_res = F.interpolate(p3, size=(h_p, w_p), mode="bilinear", align_corners=False)
+        p4_res = F.interpolate(p4, size=(h_p, w_p), mode="bilinear", align_corners=False)
+        p5_res = F.interpolate(p5, size=(h_p, w_p), mode="bilinear", align_corners=False)
+        bb_tokens = self.backbone_proj(torch.cat([p3_res, p4_res, p5_res], dim=1)).flatten(2).transpose(1, 2)
+
+        # 4. Cross-modal conditioning: reconstruct RGB from depth + visible RGB & backbone features
+        fused = self.cross_fuse(torch.cat([rgb_visible + bb_tokens, depth_visible], dim=-1))
 
         pred_rgb_patches = self.rgb_decoder(fused)
         pred_depth_patches = self.depth_decoder(fused)

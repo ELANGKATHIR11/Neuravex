@@ -132,6 +132,13 @@ class DepthAwareGeometryPoseHead(nn.Module):
             B, C, H, W = f.shape
             pose_f = self.pose_convs[i](f)
 
+            # DEM depth cross-gating conditioning
+            dem_down = None
+            if dem_depth_map is not None:
+                dem_down = F.interpolate(dem_depth_map, size=(H, W), mode="bilinear", align_corners=False)
+                gate = self.depth_gate(dem_down)
+                pose_f = pose_f * (1.0 + gate)
+
             # 2D Keypoint offsets
             xy_out = self.pred_kp_xy[i](pose_f).permute(0, 2, 3, 1).reshape(B, H * W, self.num_keypoints, 2)
             # Visibility confidence
@@ -139,7 +146,7 @@ class DepthAwareGeometryPoseHead(nn.Module):
                 self.pred_kp_conf[i](pose_f).permute(0, 2, 3, 1).reshape(B, H * W, self.num_keypoints)
             )
             # 3D Joint relative offsets (meters)
-            kp_3d_out = self.pred_kp_3d[i](pose_f).permute(0, 2, 3, 1).reshape(B, H * W, self.num_keypoints, 3)
+            kp_3d_offset = self.pred_kp_3d[i](pose_f).permute(0, 2, 3, 1).reshape(B, H * W, self.num_keypoints, 3)
 
             # Spatial grid anchors
             yv, xv = torch.meshgrid(
@@ -153,9 +160,22 @@ class DepthAwareGeometryPoseHead(nn.Module):
             # Scale offset by stride
             decoded_xy = grid_rep + xy_out * s
 
+            # Metric 3D joint grounding with camera pinhole unprojection
+            if dem_down is not None and intrinsics is not None:
+                dem_sample = dem_down.permute(0, 2, 3, 1).reshape(B, H * W, 1, 1).expand(-1, -1, self.num_keypoints, 1)
+                z_kp = (dem_sample + kp_3d_offset[..., 2:3]).clamp(min=0.1, max=100.0)
+                u_kp = decoded_xy[..., 0:1]
+                v_kp = decoded_xy[..., 1:2]
+                fx, fy, cx, cy = intrinsics.fx, intrinsics.fy, intrinsics.cx, intrinsics.cy
+                x_kp = (u_kp - cx) * z_kp / fx + kp_3d_offset[..., 0:1]
+                y_kp = (v_kp - cy) * z_kp / fy + kp_3d_offset[..., 1:2]
+                kp_3d_metric = torch.cat([x_kp, y_kp, z_kp], dim=-1)
+            else:
+                kp_3d_metric = kp_3d_offset
+
             all_kp_xy.append(decoded_xy)
             all_kp_conf.append(conf_out)
-            all_kp_3d.append(kp_3d_out)
+            all_kp_3d.append(kp_3d_metric)
             all_anchors.append(grid)
 
         cat_kp_xy = torch.cat(all_kp_xy, dim=1)

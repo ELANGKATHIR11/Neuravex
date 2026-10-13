@@ -41,12 +41,12 @@ class AdaptiveTaskLoss(nn.Module):
             if mask <= 0.0:
                 continue
 
-            # Clamped log variance for strict stability
-            s = self.log_vars[t].clamp(-4.0, 4.0)
+            # Clamped log variance for strict stability across multi-task training
+            s = self.log_vars[t].clamp(-2.5, 3.0)
             w = torch.exp(-s)
             weights[t] = w.item()
 
-            weighted_l = w * loss_val + s
+            weighted_l = w * loss_val + 0.5 * s
             weighted_losses[t] = weighted_l.item() if isinstance(weighted_l, torch.Tensor) else float(weighted_l)
             total_loss = total_loss + weighted_l
             num_active_tasks += 1

@@ -139,8 +139,10 @@ class UnsupervisedObjectDiscoveryHead(nn.Module):
 
         slots, attn = self.slot_attention(x_flat) # slots: (B, K, D), attn: (B, K, H*W)
 
-        # Spatial masks
-        slot_masks = attn.reshape(B, self.num_slots, H, W)
+        # Spatial masks decoded and gated by slot representation
+        slot_scale = torch.sigmoid(self.mask_decoder(slots)).unsqueeze(-1)  # (B, K, 1, 1)
+        raw_masks = attn.reshape(B, self.num_slots, H, W)
+        slot_masks = (raw_masks * (0.5 + 0.5 * slot_scale)).clamp(0.0, 1.0)
 
         # 3D cuboids & objectness per slot
         pred_3d = self.box_3d_head(slots) # (B, K, 6)

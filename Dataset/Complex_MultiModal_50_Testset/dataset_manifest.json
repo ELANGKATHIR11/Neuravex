@@ -1,0 +1,610 @@
+{
+  "total_images": 50,
+  "image_size": [
+    640,
+    640
+  ],
+  "dataset_dir": "C:\\Users\\elang\\Downloads\\neuravex-cv\\Dataset\\Complex_MultiModal_50_Testset",
+  "items": [
+    {
+      "id": 1,
+      "filename": "img_001.jpg",
+      "domain": "AdverseWeather",
+      "title": "Night Highway Rain Storm",
+      "num_objects": 5,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.1,
+        50.0
+      ]
+    },
+    {
+      "id": 2,
+      "filename": "img_002.jpg",
+      "domain": "AdverseWeather",
+      "title": "Dense Mountain Fog Vehicle",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 3,
+      "filename": "img_003.jpg",
+      "domain": "AdverseWeather",
+      "title": "Night Urban Traffic Glare",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 4,
+      "filename": "img_004.jpg",
+      "domain": "AdverseWeather",
+      "title": "Snow Blinding Road Conditions",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 5,
+      "filename": "img_005.jpg",
+      "domain": "AdverseWeather",
+      "title": "Heavy Rain Windshield Distortion",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.2,
+        50.0
+      ]
+    },
+    {
+      "id": 6,
+      "filename": "img_006.jpg",
+      "domain": "UrbanTraffic",
+      "title": "Metropolitan Rush Hour Congestion",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 7,
+      "filename": "img_007.jpg",
+      "domain": "UrbanTraffic",
+      "title": "Heavy Freight Transport Highway",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 8,
+      "filename": "img_008.jpg",
+      "domain": "UrbanTraffic",
+      "title": "City Intersection Motorcycles & Cars",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.6,
+        50.0
+      ]
+    },
+    {
+      "id": 9,
+      "filename": "img_009.jpg",
+      "domain": "UrbanTraffic",
+      "title": "Urban Transit Bus Lane",
+      "num_objects": 3,
+      "num_poses": 2,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 10,
+      "filename": "img_010.jpg",
+      "domain": "UrbanTraffic",
+      "title": "Bicycle Commuter in Heavy Traffic",
+      "num_objects": 6,
+      "num_poses": 2,
+      "depth_range_m": [
+        2.5,
+        50.0
+      ]
+    },
+    {
+      "id": 11,
+      "filename": "img_011.jpg",
+      "domain": "Industrial",
+      "title": "Warehouse Forklift & Shipping Crates",
+      "num_objects": 6,
+      "num_poses": 2,
+      "depth_range_m": [
+        2.8,
+        50.0
+      ]
+    },
+    {
+      "id": 12,
+      "filename": "img_012.jpg",
+      "domain": "Industrial",
+      "title": "High-Density Logistics Pallet Racks",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.5,
+        50.0
+      ]
+    },
+    {
+      "id": 13,
+      "filename": "img_013.jpg",
+      "domain": "Industrial",
+      "title": "Automated Factory Conveyor Facility",
+      "num_objects": 5,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 14,
+      "filename": "img_014.jpg",
+      "domain": "Industrial",
+      "title": "Port Container Stacks & Crane",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 15,
+      "filename": "img_015.jpg",
+      "domain": "Industrial",
+      "title": "Assembly Line Precision Automation",
+      "num_objects": 6,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 16,
+      "filename": "img_016.jpg",
+      "domain": "Wildlife",
+      "title": "Langur Troop in Dense Tree Foliage",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.6,
+        50.0
+      ]
+    },
+    {
+      "id": 17,
+      "filename": "img_017.jpg",
+      "domain": "Wildlife",
+      "title": "Bengal Tiger in Tall Dry Grass",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.9,
+        50.0
+      ]
+    },
+    {
+      "id": 18,
+      "filename": "img_018.jpg",
+      "domain": "Wildlife",
+      "title": "Asiatic Lion in Rocky Habitat",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.7,
+        50.0
+      ]
+    },
+    {
+      "id": 19,
+      "filename": "img_019.jpg",
+      "domain": "Wildlife",
+      "title": "Rural Cattle Herd on Unpaved Road",
+      "num_objects": 3,
+      "num_poses": 2,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 20,
+      "filename": "img_020.jpg",
+      "domain": "Wildlife",
+      "title": "Indian Macaque with Infant on Ledge",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 21,
+      "filename": "img_021.jpg",
+      "domain": "Surveillance",
+      "title": "Crowded Shopping Center Atrium",
+      "num_objects": 6,
+      "num_poses": 6,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 22,
+      "filename": "img_022.jpg",
+      "domain": "Surveillance",
+      "title": "Airport Terminal Gate Concourse",
+      "num_objects": 3,
+      "num_poses": 1,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 23,
+      "filename": "img_023.jpg",
+      "domain": "Surveillance",
+      "title": "Overhead Metro Station Escalator",
+      "num_objects": 3,
+      "num_poses": 3,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 24,
+      "filename": "img_024.jpg",
+      "domain": "Surveillance",
+      "title": "Public Plaza Pedestrian Flow",
+      "num_objects": 3,
+      "num_poses": 3,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 25,
+      "filename": "img_025.jpg",
+      "domain": "Surveillance",
+      "title": "Security Camera Retail Queue",
+      "num_objects": 6,
+      "num_poses": 6,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 26,
+      "filename": "img_026.jpg",
+      "domain": "Biomechanics",
+      "title": "Construction Worker Scaffold Rigging",
+      "num_objects": 4,
+      "num_poses": 4,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 27,
+      "filename": "img_027.jpg",
+      "domain": "Biomechanics",
+      "title": "Sprinter Track Starting Block Stance",
+      "num_objects": 6,
+      "num_poses": 6,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 28,
+      "filename": "img_028.jpg",
+      "domain": "Biomechanics",
+      "title": "Elderly Walking with Mobility Aid",
+      "num_objects": 6,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.6,
+        50.0
+      ]
+    },
+    {
+      "id": 29,
+      "filename": "img_029.jpg",
+      "domain": "Biomechanics",
+      "title": "Gymnast Mid-Air Inversion Flexion",
+      "num_objects": 4,
+      "num_poses": 4,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 30,
+      "filename": "img_030.jpg",
+      "domain": "Biomechanics",
+      "title": "Emergency Medical Fall Responder",
+      "num_objects": 6,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.3,
+        50.0
+      ]
+    },
+    {
+      "id": 31,
+      "filename": "img_031.jpg",
+      "domain": "TerrainDEM",
+      "title": "Aerial Mountain Switchback Highway",
+      "num_objects": 5,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 32,
+      "filename": "img_032.jpg",
+      "domain": "TerrainDEM",
+      "title": "Quarry Excavation Open-Pit Elevation",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 33,
+      "filename": "img_033.jpg",
+      "domain": "TerrainDEM",
+      "title": "Coastal Cliff Highway Perspective",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.5,
+        50.0
+      ]
+    },
+    {
+      "id": 34,
+      "filename": "img_034.jpg",
+      "domain": "TerrainDEM",
+      "title": "Agricultural Terraced Ridge Elevation",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.1,
+        50.0
+      ]
+    },
+    {
+      "id": 35,
+      "filename": "img_035.jpg",
+      "domain": "TerrainDEM",
+      "title": "Urban Grid Rooftop Drone Perspective",
+      "num_objects": 5,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.5,
+        50.0
+      ]
+    },
+    {
+      "id": 36,
+      "filename": "img_036.jpg",
+      "domain": "MultiScale",
+      "title": "Massive Mining Haul Truck vs Worker",
+      "num_objects": 3,
+      "num_poses": 2,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 37,
+      "filename": "img_037.jpg",
+      "domain": "MultiScale",
+      "title": "Distant Motorway Vehicles from Overpass",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.3,
+        50.0
+      ]
+    },
+    {
+      "id": 38,
+      "filename": "img_038.jpg",
+      "domain": "MultiScale",
+      "title": "Close-Up Bicycle Wheel with Background City",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.1,
+        50.0
+      ]
+    },
+    {
+      "id": 39,
+      "filename": "img_039.jpg",
+      "domain": "MultiScale",
+      "title": "Panoramic Airport Runway Aircraft & Tugs",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 40,
+      "filename": "img_040.jpg",
+      "domain": "MultiScale",
+      "title": "Crowded Harbor Shipping Cranes & Skiffs",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.4,
+        50.0
+      ]
+    },
+    {
+      "id": 41,
+      "filename": "img_041.jpg",
+      "domain": "Occlusion",
+      "title": "Dense Bicycle Parking Clustered Racks",
+      "num_objects": 3,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.2,
+        50.0
+      ]
+    },
+    {
+      "id": 42,
+      "filename": "img_042.jpg",
+      "domain": "Occlusion",
+      "title": "Narrow Alleyway Crowded Market Stalls",
+      "num_objects": 6,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.7,
+        50.0
+      ]
+    },
+    {
+      "id": 43,
+      "filename": "img_043.jpg",
+      "domain": "Occlusion",
+      "title": "Automobile Salvage Yard Stacked Cars",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        3.4,
+        50.0
+      ]
+    },
+    {
+      "id": 44,
+      "filename": "img_044.jpg",
+      "domain": "Occlusion",
+      "title": "Construction Scaffolding Concealed Structure",
+      "num_objects": 6,
+      "num_poses": 3,
+      "depth_range_m": [
+        2.5,
+        50.0
+      ]
+    },
+    {
+      "id": 45,
+      "filename": "img_045.jpg",
+      "domain": "Occlusion",
+      "title": "Botanical Greenhouse Overlapping Plant Canopies",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 46,
+      "filename": "img_046.jpg",
+      "domain": "ProduceFlow",
+      "title": "Conveyor Belt Apple Sizing & Grading",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.1,
+        50.0
+      ]
+    },
+    {
+      "id": 47,
+      "filename": "img_047.jpg",
+      "domain": "ProduceFlow",
+      "title": "Sorting Citrus Orange Crates",
+      "num_objects": 5,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.9,
+        50.0
+      ]
+    },
+    {
+      "id": 48,
+      "filename": "img_048.jpg",
+      "domain": "ProduceFlow",
+      "title": "Industrial Parcel Delivery Sorting Center",
+      "num_objects": 4,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.1,
+        50.0
+      ]
+    },
+    {
+      "id": 49,
+      "filename": "img_049.jpg",
+      "domain": "ProduceFlow",
+      "title": "Bulk Grain Loading Chute & Hopper",
+      "num_objects": 5,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.2,
+        50.0
+      ]
+    },
+    {
+      "id": 50,
+      "filename": "img_050.jpg",
+      "domain": "ProduceFlow",
+      "title": "Fresh Vegetable Multi-Varietal Display",
+      "num_objects": 6,
+      "num_poses": 0,
+      "depth_range_m": [
+        2.3,
+        50.0
+      ]
+    }
+  ]
+}

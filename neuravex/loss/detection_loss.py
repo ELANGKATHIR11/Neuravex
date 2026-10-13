@@ -180,10 +180,11 @@ class DualAssignmentDetectionLoss(nn.Module):
             anchor_points, strides, tgt_scores_o2m, tgt_boxes_o2m, fg_mask_o2m
         )
 
-        # 3. Mutual Distillation Loss: Soft alignment from rich O2M teacher logits to O2I student logits
-        p_s = F.log_softmax(o2i_preds["class_logits"] / self.tau, dim=-1)
-        p_t = F.softmax(o2m_preds["class_logits"].detach() / self.tau, dim=-1)
-        loss_distill = (self.tau ** 2) * F.kl_div(p_s, p_t, reduction="batchmean")
+        # 3. Mutual Distillation Loss: Independent multi-label soft alignment from rich O2M teacher to O2I student
+        p_t = torch.sigmoid(o2m_preds["class_logits"].detach() / self.tau)
+        loss_distill = (self.tau ** 2) * F.binary_cross_entropy_with_logits(
+            o2i_preds["class_logits"] / self.tau, p_t, reduction="mean"
+        )
 
         total_loss = (self.o2i_weight * loss_o2i +
                       self.o2m_weight * loss_o2m +

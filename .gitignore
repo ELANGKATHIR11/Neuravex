@@ -1,62 +1,51 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyd
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Fullstack Frontend exclusions
+# Ignore entire Fullstack frontend and build artifacts
 node_modules/
 src/
-frontend/
+dist/
+index.html
+vite.config.ts
+tsconfig.json
+package.json
+package-lock.json
+bun.lock
+metadata.json
+
+# Ignore raw data files and OS junk
 .env
 .env.example
-
-# PyTest & IDE
-.pytest_cache/
-.vscode/
-.idea/
 *.ini
 desktop.ini
 
-# Benchmark datasets & image splits
-data/
-Dataset/
-*.pdf
-*.cache
-
-# Large Weights & Datasets
+# Ignore large downloaded datasets & weights
 *.pt
+!weights/*.pt
 *.pth
 *.onnx
 *.engine
-*.bin
 yolo11n.pt
 animals/
-checkpoints/
+Dataset/animals/
+Dataset/Count/
+Dataset/Tracking/
+Dataset/UL/
+scratch_*.jpg
+baby_monkey_verified.jpg
+test_*.jpg
+ml_neuravex/
+research/
+*.zip
+dgpu-core-final*
+*.npy
+!Dataset/Complex_MultiModal_50_Testset/depth/*.npy
 
-# Allow tracked weights in weights/
-!weights/
-!weights/*
+# Python cache & temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+env_backups/
+
+# System generated logs
+.system_generated/

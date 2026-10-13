@@ -1,0 +1,11 @@
+{
+  "include": [
+    "backend",
+    "ml_neuravex"
+  ],
+  "extraPaths": [
+    "ml_neuravex",
+    "backend"
+  ],
+  "pythonVersion": "3.12"
+}

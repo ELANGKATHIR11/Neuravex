@@ -1,14 +1,14 @@
 {
   "hardware_telemetry": {
     "device": "NVIDIA GeForce RTX 5060 Laptop GPU",
-    "vram_allocated_mb": 114.84,
-    "mean_latency_ms": 153.94,
-    "p95_latency_ms": 24.69,
-    "throughput_fps": 6.5,
+    "vram_allocated_mb": 1894.97,
+    "mean_latency_ms": 24.12,
+    "p95_latency_ms": 25.93,
+    "throughput_fps": 41.5,
     "model_parameters_m": 1.99
   },
   "datasets": {
-    "Total_Images_Trained": 4382,
+    "Total_Images_Trained": 4497,
     "Cars_Detection": {
       "train": 878,
       "val": 250,
@@ -39,22 +39,30 @@
     "UL_Unsplash": {
       "total_images": 802,
       "evaluated_images": 100
+    },
+    "Complex_MultiModal_50": {
+      "total_images": 50,
+      "evaluated_objects": 237
+    },
+    "Synthetic_Suite": {
+      "total_images": 65,
+      "evaluated_images": 15
     }
   },
   "metrics_summary": {
-    "cars_mean_iou_2d": 0.6878,
-    "cars_mean_bos_2d": 0.7207,
-    "cars_mean_iou_3d": 0.8117,
-    "cars_mean_bos_3d": 0.7936,
-    "cars_iou_at_50": 1.0,
-    "cars_bos_at_50": 1.0,
+    "cars_mean_iou_2d": 0.0295,
+    "cars_mean_bos_2d": 0.0143,
+    "cars_mean_iou_3d": 1.0,
+    "cars_mean_bos_3d": 1.0,
     "animals_mean_iou_2d": 0.8834,
     "animals_mean_bos_2d": 0.9003,
-    "animals_mean_iou_3d": 0.68,
-    "animals_mean_bos_3d": 0.648,
-    "mall_mae": 0.87,
-    "mall_rmse": 1.1,
-    "mall_pearson_r": 0.9847,
-    "ul_depth_dynamic_range_m": 0.01
+    "complex50_mean_iou_2d": 0.0005,
+    "complex50_mean_bos_2d": 0.0003,
+    "complex50_mean_iou_3d": 0.0003,
+    "complex50_mean_bos_3d": 0.0002,
+    "complex50_mean_z_err_m": 4.0998,
+    "mall_mae": 0.94,
+    "mall_rmse": 1.18,
+    "mall_pearson_r": 0.9837
   }
 }

@@ -1,0 +1,20 @@
+{
+  "hardware": {
+    "device": "cuda",
+    "latency_ms": 1190.3,
+    "fps": 0.8
+  },
+  "metrics": {
+    "2d_iou": 0.0015,
+    "2d_bos": 0.0006,
+    "3d_iou": 0.0,
+    "center_err_xyz_m": 21.987,
+    "size_err_lwh_m": 1.049,
+    "yaw_err_deg": 87.67,
+    "depth_abs_rel": 0.7667,
+    "depth_rmse_m": 10.561,
+    "depth_delta_125": 0.0,
+    "pose_pck": 0.8416,
+    "pose_mpjpe_m": 24.687
+  }
+}
